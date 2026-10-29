@@ -1,0 +1,8 @@
+{
+ "nota": "Paquetes de ejemplo firmados con la consola de la edición Lite (consola firmar). El panel Extensiones los verifica en el navegador antes de instalarlos.",
+ "paquetes": [
+  {"archivo": "consultas_sql.ipdeplug", "id": "consultas_sql", "nombre": "Consultas SQL", "descripcion": "Consultas espaciales SQL (PostGIS) sobre las capas del geoportal, en una base que corre en su navegador, o sobre una base PostgreSQL por la pasarela."},
+  {"archivo": "conversor.ipdeplug", "id": "conversor", "nombre": "Conversor de coordenadas", "descripcion": "Grados (WGS 84) ↔ UTM 17N/18N y centra el mapa en el punto."},
+  {"archivo": "hola.ipdeplug", "id": "hola", "nombre": "Hola (ejemplo)", "descripcion": "Extensión mínima: una página estática."}
+ ]
+}

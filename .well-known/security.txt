@@ -1,0 +1,4 @@
+Contact: mailto:edgarmendezduran@gmail.com
+Expires: 2027-10-29T00:00:00Z
+Preferred-Languages: es, en
+Canonical: https://agricien.github.io/geoportal-costa-rica/.well-known/security.txt

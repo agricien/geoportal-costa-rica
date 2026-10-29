@@ -1,0 +1,819 @@
+{
+  "catalogo": "geoportal_costa_rica",
+  "titulo": "Catálogo de Costa Rica",
+  "crs": "EPSG:4326",
+  "generado": "2026-10-29",
+  "nota": "Capas simplificadas para visualización; para análisis use las tablas completas de la base geoportal_costa_rica. Las capas del grupo «Servicios WMS del SNIT» se piden en vivo.",
+  "capas": [
+    {
+      "id": "provincias",
+      "titulo": "Provincias",
+      "descripcion": "Las 7 provincias de Costa Rica (IGN).",
+      "geometria": "Polygon",
+      "archivo": "provincias.geojson",
+      "elementos": 7,
+      "tamano_kb": 82,
+      "fuente": "Instituto Geográfico Nacional (IGN)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Instituto Geográfico Nacional (IGN)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.provincias",
+      "servicio_origen": "https://geos.snitcr.go.cr/be/IGN_5_CO/wfs (typeName IGN_5_CO:limiteprovincial_5k)",
+      "estilo": {
+        "color": "#4b5563"
+      },
+      "grupo": "Límites y población"
+    },
+    {
+      "id": "cantones",
+      "titulo": "Cantones",
+      "descripcion": "Los 84 cantones (IGN), con su provincia.",
+      "geometria": "Polygon",
+      "archivo": "cantones.geojson",
+      "elementos": 84,
+      "tamano_kb": 362,
+      "fuente": "Instituto Geográfico Nacional (IGN)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Instituto Geográfico Nacional (IGN)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.cantones",
+      "servicio_origen": "https://geos.snitcr.go.cr/be/IGN_5_CO/wfs (typeName IGN_5_CO:limitecantonal_5k)",
+      "estilo": {
+        "color": "#6b7280"
+      },
+      "grupo": "Límites y población"
+    },
+    {
+      "id": "distritos",
+      "titulo": "Distritos y población",
+      "descripcion": "Los distritos del marco geoestadístico del INEC con la población estimada.",
+      "geometria": "Polygon",
+      "archivo": "distritos.geojson",
+      "elementos": 492,
+      "tamano_kb": 1445,
+      "fuente": "Instituto Nacional de Estadística y Censos (INEC)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Instituto Nacional de Estadística y Censos (INEC)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.distritos",
+      "servicio_origen": "https://gestorgeo.inec.go.cr/geoserver/SNIT_INEC_MGN/wfs (typeName SNIT_INEC_MGN:unidad_geoestadistica_distrital_uged_snit)",
+      "estilo": {
+        "color": "#9ca3af"
+      },
+      "grupo": "Límites y población"
+    },
+    {
+      "id": "territorios_indigenas",
+      "titulo": "Territorios indígenas",
+      "descripcion": "Los 24 territorios indígenas, con su pueblo (MEP).",
+      "geometria": "Polygon",
+      "archivo": "territorios_indigenas.geojson",
+      "elementos": 24,
+      "tamano_kb": 52,
+      "fuente": "Ministerio de Educación Pública (MEP)",
+      "licencia": "No declarada (servicio público de ArcGIS Online)",
+      "atribucion": "Ministerio de Educación Pública (MEP)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.territorios_indigenas",
+      "servicio_origen": "https://services1.arcgis.com/aWQmxJWy7lM2Qqmo/arcgis/rest/services/CE_Publicos_CR/FeatureServer/3",
+      "estilo": {
+        "color": "#a16207"
+      },
+      "grupo": "Límites y población"
+    },
+    {
+      "id": "rios_principales",
+      "titulo": "Ríos principales",
+      "descripcion": "Tramos de HydroRIVERS de orden de Strahler ≥ 4 con su caudal medio (m³/s).",
+      "geometria": "LineString",
+      "archivo": "rios_principales.geojson",
+      "elementos": 1012,
+      "tamano_kb": 214,
+      "fuente": "WWF / HydroSHEDS (Lehner & Grill)",
+      "licencia": "Licencia HydroSHEDS (uso libre, también comercial, con atribución)",
+      "atribucion": "Lehner, B., Grill G. (2013) Global river hydrography and network routing. Hydrological Processes 27(15): 2171–2186.",
+      "fecha_datos": "v1.0 (2019)",
+      "tabla_origen": "nacional.rios_principales",
+      "servicio_origen": "https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_na_shp.zip",
+      "estilo": {
+        "color": "#2563eb"
+      },
+      "grupo": "Hidrografía"
+    },
+    {
+      "id": "cuencas",
+      "titulo": "Cuencas hidrográficas",
+      "descripcion": "Las 34 cuencas hidrográficas (CENIGA, MINAE).",
+      "geometria": "Polygon",
+      "archivo": "cuencas.geojson",
+      "elementos": 34,
+      "tamano_kb": 193,
+      "fuente": "CENIGA – MINAE",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "CENIGA – MINAE",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.cuencas",
+      "servicio_origen": "https://geodatos.sinia.go.cr/geoserver/CENIGA/wfs (typeName CENIGA:cuencas_hidrograficas)",
+      "estilo": {
+        "color": "#0ea5e9"
+      },
+      "grupo": "Hidrografía"
+    },
+    {
+      "id": "red_vial_nacional",
+      "titulo": "Red vial nacional",
+      "descripcion": "Rutas nacionales del MOPT por sección de control, con su clase y superficie.",
+      "geometria": "LineString",
+      "archivo": "red_vial_nacional.geojson",
+      "elementos": 1214,
+      "tamano_kb": 847,
+      "fuente": "Ministerio de Obras Públicas y Transportes (MOPT)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Ministerio de Obras Públicas y Transportes (MOPT)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.red_vial_nacional",
+      "servicio_origen": "https://dservices8.arcgis.com/ZqXGDrsqPTc7VmWp/arcgis/services/Mapa/WFSServer (typeName Mapa:Red_Vial_Nacional_MOPT)",
+      "estilo": {
+        "color": "#dc2626"
+      },
+      "grupo": "Transporte y servicios"
+    },
+    {
+      "id": "aeropuertos",
+      "titulo": "Aeropuertos y aeródromos",
+      "descripcion": "Aeropuertos internacionales, aeródromos y helipuertos (OurAirports).",
+      "geometria": "Point",
+      "archivo": "aeropuertos.geojson",
+      "elementos": 140,
+      "tamano_kb": 29,
+      "fuente": "OurAirports",
+      "licencia": "Dominio público",
+      "atribucion": "OurAirports (ourairports.com)",
+      "fecha_datos": "Actualización continua",
+      "tabla_origen": "nacional.aeropuertos",
+      "servicio_origen": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+      "estilo": {
+        "color": "#7c3aed"
+      },
+      "grupo": "Transporte y servicios"
+    },
+    {
+      "id": "ebais",
+      "titulo": "EBAIS",
+      "descripcion": "Equipos Básicos de Atención Integral en Salud (CCSS), del marco de referencia del INEC.",
+      "geometria": "Point",
+      "archivo": "ebais.geojson",
+      "elementos": 924,
+      "tamano_kb": 162,
+      "fuente": "Publicador de ArcGIS Online no identificado (usuario UCINEC1)",
+      "licencia": "No declarada (servicio público de ArcGIS Online)",
+      "atribucion": "Publicador de ArcGIS Online no identificado (usuario UCINEC1)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.ebais",
+      "servicio_origen": "https://services8.arcgis.com/ODelaeFcU0U2CwoG/arcgis/rest/services/EBAIS/FeatureServer/2",
+      "estilo": {
+        "color": "#e11d48"
+      },
+      "grupo": "Transporte y servicios"
+    },
+    {
+      "id": "centros_salud",
+      "titulo": "Establecimientos de salud",
+      "descripcion": "Hospitales, clínicas, farmacias y consultorios (Healthsites.io / OSM).",
+      "geometria": "Point",
+      "archivo": "centros_salud.geojson",
+      "elementos": 2863,
+      "tamano_kb": 555,
+      "fuente": "Global Healthsites Mapping Project (a partir de OpenStreetMap)",
+      "licencia": "ODbL 1.0",
+      "atribucion": "© OpenStreetMap contributors, Healthsites.io",
+      "fecha_datos": "Septiembre de 2026",
+      "tabla_origen": "nacional.centros_salud",
+      "servicio_origen": "https://data.humdata.org/dataset/costa-rica-healthsites",
+      "estilo": {
+        "color": "#be185d"
+      },
+      "grupo": "Transporte y servicios"
+    },
+    {
+      "id": "centros_educativos",
+      "titulo": "Centros educativos públicos",
+      "descripcion": "Escuelas y colegios públicos del MEP.",
+      "geometria": "Point",
+      "archivo": "centros_educativos.geojson",
+      "elementos": 4646,
+      "tamano_kb": 1292,
+      "fuente": "Ministerio de Educación Pública (MEP)",
+      "licencia": "No declarada (servicio público de ArcGIS Online)",
+      "atribucion": "Ministerio de Educación Pública (MEP)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.centros_educativos",
+      "servicio_origen": "https://services1.arcgis.com/aWQmxJWy7lM2Qqmo/arcgis/rest/services/CE_Publicos_CR/FeatureServer/0",
+      "estilo": {
+        "color": "#f59e0b"
+      },
+      "grupo": "Transporte y servicios"
+    },
+    {
+      "id": "lineas_transmision",
+      "titulo": "Líneas de transmisión",
+      "descripcion": "Líneas de transmisión eléctrica de 138 y 230 kV (ICE).",
+      "geometria": "LineString",
+      "archivo": "lineas_transmision.geojson",
+      "elementos": 48,
+      "tamano_kb": 39,
+      "fuente": "Instituto Costarricense de Electricidad (ICE)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Instituto Costarricense de Electricidad (ICE)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.lineas_transmision",
+      "servicio_origen": "https://geoportal.ice.go.cr/servercorp/services/Hosted/TransmisionICE/MapServer/WFSServer (typeName TransmisionICE:LineasTransmision)",
+      "estilo": {
+        "color": "#ca8a04"
+      },
+      "grupo": "Transporte y servicios"
+    },
+    {
+      "id": "areas_silvestres_protegidas",
+      "titulo": "Áreas silvestres protegidas",
+      "descripcion": "Parques nacionales, reservas y refugios del SINAC, con su categoría de manejo.",
+      "geometria": "Polygon",
+      "archivo": "areas_silvestres_protegidas.geojson",
+      "elementos": 174,
+      "tamano_kb": 348,
+      "fuente": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.areas_silvestres_protegidas",
+      "servicio_origen": "https://geos1pne.sirefor.go.cr/wfs (typeName PNE:areas_silvestres_protegidas)",
+      "estilo": {
+        "color": "#16a34a"
+      },
+      "grupo": "Ambiente"
+    },
+    {
+      "id": "corredores_biologicos",
+      "titulo": "Corredores biológicos",
+      "descripcion": "Corredores biológicos oficializados por el SINAC.",
+      "geometria": "Polygon",
+      "archivo": "corredores_biologicos.geojson",
+      "elementos": 151,
+      "tamano_kb": 414,
+      "fuente": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.corredores_biologicos",
+      "servicio_origen": "https://geos1pne.sirefor.go.cr/wfs (typeName PNE:corredoresbiologicos)",
+      "estilo": {
+        "color": "#65a30d"
+      },
+      "grupo": "Ambiente"
+    },
+    {
+      "id": "areas_conservacion",
+      "titulo": "Áreas de conservación",
+      "descripcion": "Las 11 áreas de conservación del SINAC.",
+      "geometria": "Polygon",
+      "archivo": "areas_conservacion.geojson",
+      "elementos": 10,
+      "tamano_kb": 147,
+      "fuente": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.areas_conservacion",
+      "servicio_origen": "https://geos1pne.sirefor.go.cr/wfs (typeName PNE:areas_conservacion)",
+      "estilo": {
+        "color": "#047857"
+      },
+      "grupo": "Ambiente"
+    },
+    {
+      "id": "humedales",
+      "titulo": "Humedales",
+      "descripcion": "Inventario nacional de humedales del SINAC: palustres, lacustres, estuarinos y otros.",
+      "geometria": "Polygon",
+      "archivo": "humedales.geojson",
+      "elementos": 2777,
+      "tamano_kb": 3088,
+      "fuente": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Sistema Nacional de Áreas de Conservación (SINAC)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.humedales",
+      "servicio_origen": "https://geos1pne.sirefor.go.cr/wfs (typeName PNE:registro_nacional_humedales)",
+      "estilo": {
+        "color": "#0891b2"
+      },
+      "grupo": "Ambiente"
+    },
+    {
+      "id": "zonas_vida",
+      "titulo": "Zonas de vida de Holdridge",
+      "descripcion": "Zonas de vida (CENIGA, MINAE), con piso altitudinal y biotemperatura.",
+      "geometria": "Polygon",
+      "archivo": "zonas_vida.geojson",
+      "elementos": 675,
+      "tamano_kb": 749,
+      "fuente": "CENIGA – MINAE",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "CENIGA – MINAE",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.zonas_vida",
+      "servicio_origen": "https://geodatos.sinia.go.cr/geoserver/CENIGA/wfs (typeName CENIGA:zonasdevida)",
+      "estilo": {
+        "color": "#84cc16"
+      },
+      "grupo": "Ambiente"
+    },
+    {
+      "id": "fallas_cuaternario",
+      "titulo": "Fallas del Cuaternario",
+      "descripcion": "Fallas geológicas con actividad en el Cuaternario (CNE).",
+      "geometria": "LineString",
+      "archivo": "fallas_cuaternario.geojson",
+      "elementos": 255,
+      "tamano_kb": 60,
+      "fuente": "Comisión Nacional de Prevención de Riesgos y Atención de Emergencias (CNE)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Comisión Nacional de Prevención de Riesgos y Atención de Emergencias (CNE)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.fallas_cuaternario",
+      "servicio_origen": "http://mapas.cne.go.cr/servicios/cne/wfs (typeName cne:fallas_del_cuaternario)",
+      "estilo": {
+        "color": "#b91c1c"
+      },
+      "grupo": "Amenazas"
+    },
+    {
+      "id": "inundaciones",
+      "titulo": "Áreas de inundación",
+      "descripcion": "Zonas de inundación y anegamiento de los mapas de amenaza de la CNE.",
+      "geometria": "Polygon",
+      "archivo": "inundaciones.geojson",
+      "elementos": 994,
+      "tamano_kb": 973,
+      "fuente": "Comisión Nacional de Prevención de Riesgos y Atención de Emergencias (CNE)",
+      "licencia": "No declarada (servicio WFS público, nodo del SNIT); citar a la institución",
+      "atribucion": "Comisión Nacional de Prevención de Riesgos y Atención de Emergencias (CNE)",
+      "fecha_datos": "Según el servicio",
+      "tabla_origen": "nacional.inundaciones",
+      "servicio_origen": "http://mapas.cne.go.cr/servicios/cne/wfs (typeName cne:inundaciones)",
+      "estilo": {
+        "color": "#1d4ed8"
+      },
+      "grupo": "Amenazas"
+    },
+    {
+      "id": "sismos_m5",
+      "titulo": "Sismos M ≥ 5",
+      "descripcion": "Sismos de magnitud ≥ 5 desde 1900 en Costa Rica y alrededores (USGS).",
+      "geometria": "Point",
+      "archivo": "sismos_m5.geojson",
+      "elementos": 811,
+      "tamano_kb": 168,
+      "fuente": "U.S. Geological Survey, Earthquake Hazards Program",
+      "licencia": "Dominio público (gobierno de EE. UU.)",
+      "atribucion": "U.S. Geological Survey",
+      "fecha_datos": "1900 – fecha de descarga",
+      "tabla_origen": "nacional.sismos_m5",
+      "servicio_origen": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=1900-01-01&minlatitude=5.0&maxlatitude=11.8&minlongitude=-87.5&maxlongitude=-82.0&minmagnitude=2.5&orderby=time-asc",
+      "estilo": {
+        "color": "#78350f"
+      },
+      "grupo": "Amenazas"
+    },
+    {
+      "id": "corredores_distritos",
+      "titulo": "Límite distrital · Corredores",
+      "descripcion": "Los cuatro distritos del cantón: Corredor, La Cuesta, Canoas y Laurel.",
+      "geometria": "Polygon",
+      "archivo": "corredores_distritos.geojson",
+      "elementos": 4,
+      "tamano_kb": 70,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.distritos",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_limite_distrital",
+      "estilo": {
+        "color": "#374151"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_barrios",
+      "titulo": "Barrios · Corredores",
+      "descripcion": "Barrios del cantón, con su distrito.",
+      "geometria": "Polygon",
+      "archivo": "corredores_barrios.geojson",
+      "elementos": 202,
+      "tamano_kb": 582,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.barrios",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_barrios",
+      "estilo": {
+        "color": "#6b7280"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_catastro",
+      "titulo": "Mapa catastral · Corredores",
+      "descripcion": "Predios del cantón: identificador predial, plano catastrado, número de finca y área registrada.",
+      "geometria": "Polygon",
+      "archivo": "corredores_catastro.geojson",
+      "elementos": 18708,
+      "tamano_kb": 7104,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.catastro",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_mapa_catastral",
+      "estilo": {
+        "color": "#92400e"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_zonas_homogeneas",
+      "titulo": "Zonas homogéneas · Corredores",
+      "descripcion": "Zonas homogéneas de valoración de terrenos (ONT, Ministerio de Hacienda), con su valor por m².",
+      "geometria": "Polygon",
+      "archivo": "corredores_zonas_homogeneas.geojson",
+      "elementos": 91,
+      "tamano_kb": 761,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.zonas_homogeneas",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_zonas_homogeneas",
+      "estilo": {
+        "color": "#d97706"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_zona_agropecuaria",
+      "titulo": "Zonas agropecuarias · Corredores",
+      "descripcion": "Zonas agropecuarias de valoración, con su valor por hectárea.",
+      "geometria": "Polygon",
+      "archivo": "corredores_zona_agropecuaria.geojson",
+      "elementos": 5,
+      "tamano_kb": 69,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.zona_agropecuaria",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_zona_agropecuaria",
+      "estilo": {
+        "color": "#a3e635"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_red_vial",
+      "titulo": "Red vial cantonal · Corredores",
+      "descripcion": "Caminos cantonales con su código, tipo de vía y ancho actual y previsto.",
+      "geometria": "LineString",
+      "archivo": "corredores_red_vial.geojson",
+      "elementos": 311,
+      "tamano_kb": 609,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.red_vial",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_red_vial",
+      "estilo": {
+        "color": "#dc2626"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_cauces",
+      "titulo": "Cauces y drenajes · Corredores",
+      "descripcion": "Ríos, quebradas y drenajes del cantón, con su longitud.",
+      "geometria": "LineString",
+      "archivo": "corredores_cauces.geojson",
+      "elementos": 1198,
+      "tamano_kb": 1290,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.cauces",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_cauces_drenajes",
+      "estilo": {
+        "color": "#2563eb"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_humedales",
+      "titulo": "Humedales · Corredores",
+      "descripcion": "Humedales del cantón.",
+      "geometria": "Polygon",
+      "archivo": "corredores_humedales.geojson",
+      "elementos": 4,
+      "tamano_kb": 152,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.humedales",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_humedal",
+      "estilo": {
+        "color": "#0891b2"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_corredor_biologico",
+      "titulo": "Corredor biológico Amistosa · Corredores",
+      "descripcion": "El corredor biológico que cruza el cantón.",
+      "geometria": "Polygon",
+      "archivo": "corredores_corredor_biologico.geojson",
+      "elementos": 1,
+      "tamano_kb": 14,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.corredor_biologico",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_corredor_biologico",
+      "estilo": {
+        "color": "#65a30d"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_areas_publicas",
+      "titulo": "Áreas públicas · Corredores",
+      "descripcion": "Parques, plazas y otras áreas públicas, con su plano y área.",
+      "geometria": "Polygon",
+      "archivo": "corredores_areas_publicas.geojson",
+      "elementos": 91,
+      "tamano_kb": 45,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.areas_publicas",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_area_publica",
+      "estilo": {
+        "color": "#15803d"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_puntos_referencia",
+      "titulo": "Puntos de referencia · Corredores",
+      "descripcion": "Puntos de referencia sobre los caminos (estacionamiento y lado).",
+      "geometria": "Point",
+      "archivo": "corredores_puntos_referencia.geojson",
+      "elementos": 855,
+      "tamano_kb": 139,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.puntos_referencia",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_puntos_referencia",
+      "estilo": {
+        "color": "#7c3aed"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_rutas_recoleccion",
+      "titulo": "Rutas de recolección · Corredores",
+      "descripcion": "Rutas de recolección de residuos con el día de servicio.",
+      "geometria": "LineString",
+      "archivo": "corredores_rutas_recoleccion.geojson",
+      "elementos": 448,
+      "tamano_kb": 198,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.rutas_recoleccion",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_rutas_recoleccion",
+      "estilo": {
+        "color": "#0f766e"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_aseo_vias",
+      "titulo": "Aseo de vías · Corredores",
+      "descripcion": "Sectores del servicio de aseo de vías.",
+      "geometria": "LineString",
+      "archivo": "corredores_aseo_vias.geojson",
+      "elementos": 47,
+      "tamano_kb": 20,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.aseo_vias",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "vpublico_aseos_y_vias",
+      "estilo": {
+        "color": "#c2410c"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "corredores_decreto_retiros",
+      "titulo": "Retiros (Decreto 22407-MOPT) · Corredores",
+      "descripcion": "Franjas de retiro fijadas por decreto, con su artículo.",
+      "geometria": "Polygon",
+      "archivo": "corredores_decreto_retiros.geojson",
+      "elementos": 9,
+      "tamano_kb": 100,
+      "fuente": "Municipalidad de Corredores",
+      "licencia": "No declarada (servicio WMS/WFS público)",
+      "atribucion": "Municipalidad de Corredores, GeoServer público (corredores.go.cr)",
+      "fecha_datos": "Copia del servicio WFS del 29/10/2026",
+      "tabla_origen": "corredores.decreto_retiros",
+      "servicio_wms": "https://corredores.go.cr/mapas/publico/wms",
+      "servicio_wfs": "https://corredores.go.cr/mapas/publico/ows",
+      "capa_servicio": "decreto",
+      "estilo": {
+        "color": "#9333ea"
+      },
+      "grupo": "Municipalidad de Corredores"
+    },
+    {
+      "id": "snit_ortofoto_5000",
+      "titulo": "Ortofotos 1:5000 (2005-2007)",
+      "descripcion": "Mosaico de ortofotos del IGN a escala 1:5000. Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Geográfico Nacional (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Geográfico Nacional (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://geos0.snitcr.go.cr/cgi-bin/web?map=ortofoto.map",
+      "capa_servicio": "Mosaico5000",
+      "wms": {
+        "url": "https://geos0.snitcr.go.cr/cgi-bin/web?map=ortofoto.map",
+        "capa": "Mosaico5000"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    },
+    {
+      "id": "snit_curvas_25k",
+      "titulo": "Curvas de nivel 1:25 000",
+      "descripcion": "Curvas de nivel de la cartografía básica 1:25 000 del IGN (se ven de cerca). Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Geográfico Nacional (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Geográfico Nacional (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+      "capa_servicio": "Curvas_de_Nivel_25k",
+      "wms": {
+        "url": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+        "capa": "Curvas_de_Nivel_25k"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    },
+    {
+      "id": "snit_transporte_25k",
+      "titulo": "Transporte terrestre 1:25 000",
+      "descripcion": "Vías de la cartografía básica 1:25 000 del IGN. Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Geográfico Nacional (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Geográfico Nacional (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+      "capa_servicio": "transporteterrestre_25k",
+      "wms": {
+        "url": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+        "capa": "transporteterrestre_25k"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    },
+    {
+      "id": "snit_cauces_25k",
+      "titulo": "Cauces y drenajes 1:25 000",
+      "descripcion": "Hidrografía de la cartografía básica 1:25 000 del IGN. Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Geográfico Nacional (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Geográfico Nacional (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+      "capa_servicio": "caucedrenaje_25k",
+      "wms": {
+        "url": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+        "capa": "caucedrenaje_25k"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    },
+    {
+      "id": "snit_edificaciones_25k",
+      "titulo": "Edificaciones 1:25 000",
+      "descripcion": "Edificaciones de la cartografía básica 1:25 000 del IGN. Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Geográfico Nacional (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Geográfico Nacional (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+      "capa_servicio": "ec140101_25k",
+      "wms": {
+        "url": "https://geos.snitcr.go.cr/be/IGN_25/wms",
+        "capa": "ec140101_25k"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    },
+    {
+      "id": "snit_edificaciones_5k",
+      "titulo": "Edificaciones 2017 1:5000",
+      "descripcion": "Huellas de edificaciones de la cartografía 1:5000 del IGN (2017). Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Geográfico Nacional (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Geográfico Nacional (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://geos.snitcr.go.cr/be/IGN_5/wms",
+      "capa_servicio": "edificaciones2017_5k",
+      "wms": {
+        "url": "https://geos.snitcr.go.cr/be/IGN_5/wms",
+        "capa": "edificaciones2017_5k"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    },
+    {
+      "id": "snit_nombres_25k",
+      "titulo": "Nombres geográficos",
+      "descripcion": "Topónimos oficiales 1:25 000 del IGN. Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Geográfico Nacional (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Geográfico Nacional (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://geos.snitcr.go.cr/be/IGN_NG/wms",
+      "capa_servicio": "nombresgeograficos_25k",
+      "wms": {
+        "url": "https://geos.snitcr.go.cr/be/IGN_NG/wms",
+        "capa": "nombresgeograficos_25k"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    },
+    {
+      "id": "snit_inec_ugm",
+      "titulo": "Unidades geoestadísticas mínimas",
+      "descripcion": "Unidades geoestadísticas mínimas (UGM) del marco del INEC. Imagen pedida en vivo al servicio WMS.",
+      "geometria": "Ráster",
+      "fuente": "Instituto Nacional de Estadística y Censos (SNIT)",
+      "licencia": "No declarada (servicio WMS público del SNIT)",
+      "atribucion": "Instituto Nacional de Estadística y Censos (SNIT)",
+      "fecha_datos": "Según el servicio",
+      "servicio_wms": "https://gestorgeo.inec.go.cr/geoserver/SNIT_INEC_MGN/wms",
+      "capa_servicio": "unidad_geoestadistica_minima_ugm_snit",
+      "wms": {
+        "url": "https://gestorgeo.inec.go.cr/geoserver/SNIT_INEC_MGN/wms",
+        "capa": "unidad_geoestadistica_minima_ugm_snit"
+      },
+      "grupo": "Servicios WMS del SNIT (en vivo)"
+    }
+  ]
+}

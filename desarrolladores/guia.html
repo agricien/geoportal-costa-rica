@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guía de extensiones</title>
+<style>
+:root{color-scheme:light dark;--t:#1f2328;--m:#59636e;--b:#d0d7de;--bg:#fff;--c:#f6f8fa;--a:#0b7285}
+@media (prefers-color-scheme:dark){:root{--t:#e6edf3;--m:#9198a1;--b:#3d444d;--bg:#0d1117;--c:#161b22;--a:#3bc9db}}
+body{margin:0;background:var(--bg);color:var(--t);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:28px;line-height:1.2;margin:8px 0 12px}h2{font-size:20px;margin:36px 0 8px;padding-top:12px;border-top:1px solid var(--b)}
+a{color:var(--a)}code{font:13px ui-monospace,Consolas,monospace;background:var(--c);padding:1px 4px;border-radius:4px}
+pre{background:var(--c);border:1px solid var(--b);border-radius:8px;padding:12px;overflow:auto}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;display:block;overflow-x:auto;font-size:14px}th,td{border:1px solid var(--b);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--c)}
+blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--a);background:var(--c);border-radius:0 8px 8px 0}
+.sdk{display:inline-block;margin:4px 0 8px;padding:8px 14px;border-radius:8px;background:var(--a);color:#fff;text-decoration:none;font-weight:600}
+</style></head><body><main>
+<a class="sdk" href="ipde-sdk-extensiones.zip" download>Descargar el SDK (ipdeplug.py 1.1.0)</a>
+<h1 id="guia-para-desarrolladores-de-extensiones">Guía para desarrolladores de extensiones</h1>
+<p>Cómo crear una extensión para el geoportal, firmarla con su propio certificado de editor y elegir cómo
+distribuirla. Una extensión es suya: usted la escribe, decide su licencia y su precio, y la publica donde
+quiera. La plataforma aporta la interfaz donde se abre, la verificación de la firma y, si usted lo pide, un
+lugar en su catálogo de extensiones con el enlace donde se adquiere.</p>
+<blockquote>
+<p>El equipo del geoportal no desarrolla las extensiones de terceros. Tampoco las aloja ni las cobra, salvo
+que usted elija el catálogo y su extensión sea gratuita.</p>
+</blockquote>
+<h2 id="contenido">Contenido</h2>
+<ol>
+<li><a href="#1-que-es-una-extension">Qué es una extensión</a></li>
+<li><a href="#2-quien-hace-que">Quién hace qué</a></li>
+<li><a href="#3-requisitos">Requisitos</a></li>
+<li><a href="#4-paso-1-crear-la-extension">Paso 1: crear la extensión</a></li>
+<li><a href="#5-paso-2-el-manifiesto-extensiontoml">Paso 2: el manifiesto <code>extension.toml</code></a></li>
+<li><a href="#6-paso-3-programar-la-pagina">Paso 3: programar la página</a></li>
+<li><a href="#7-paso-4-probarla-sin-firmar">Paso 4: probarla sin firmar</a></li>
+<li><a href="#8-paso-5-su-certificado-de-editor">Paso 5: su certificado de editor</a></li>
+<li><a href="#9-paso-6-firmar-y-empaquetar">Paso 6: firmar y empaquetar</a></li>
+<li><a href="#10-paso-7-elegir-como-distribuirla">Paso 7: elegir cómo distribuirla</a></li>
+<li><a href="#11-instalacion-por-el-administrador">Instalación por el administrador</a></li>
+<li><a href="#12-versiones-y-actualizaciones">Versiones y actualizaciones</a></li>
+<li><a href="#13-seguridad-que-garantiza-la-firma">Seguridad: qué garantiza la firma</a></li>
+<li><a href="#14-para-la-autoridad-de-la-plataforma">Para la autoridad de la plataforma</a></li>
+<li><a href="#15-mensajes-de-verificacion">Mensajes de verificación</a></li>
+<li><a href="#16-referencia-del-formato-ipdeplug">Referencia del formato <code>.ipdeplug</code></a></li>
+<li><a href="#17-entorno-de-desarrollo-recomendado">Entorno de desarrollo recomendado</a></li>
+<li><a href="#18-desarrollar-con-ayuda-de-inteligencia-artificial">Desarrollar con ayuda de inteligencia artificial</a></li>
+<li><a href="#19-licencia-del-sdk">Licencia del SDK</a></li>
+</ol>
+<h2 id="1-que-es-una-extension">1. Qué es una extensión</h2>
+<p>Una extensión es un paquete firmado <code>.ipdeplug</code>: un ZIP con su código, un manifiesto (<code>extension.toml</code>) y
+una carpeta <code>META/</code> con la firma. El geoportal la abre en un marco aislado del panel <strong>Extensiones</strong>. Desde
+ese marco sólo puede pedir a la interfaz lo que declara su manifiesto:</p>
+<table>
+<thead>
+<tr>
+<th>Permiso</th>
+<th>Qué puede hacer la extensión</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mapa.ir</code></td>
+<td>centrar el mapa en un punto (todas lo tienen)</td>
+</tr>
+<tr>
+<td><code>capas.leer</code></td>
+<td>ver la lista de capas del catálogo y del mapa, y leer sus datos en GeoJSON (WGS 84)</td>
+</tr>
+<tr>
+<td><code>capas.agregar</code></td>
+<td>añadir una capa propia al mapa; queda en el Historial como cualquier capa subida</td>
+</tr>
+<tr>
+<td><code>descargas</code></td>
+<td>guardar en el equipo del usuario un archivo que la extensión genera</td>
+</tr>
+</tbody>
+</table>
+<p>Una extensión no ve la sesión, las cookies ni el resto de la página. Tampoco ve los datos de capas que no
+pidió.</p>
+<h2 id="2-quien-hace-que">2. Quién hace qué</h2>
+<table>
+<thead>
+<tr>
+<th>Quién</th>
+<th>Qué hace</th>
+<th>Qué guarda</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Editor</strong> (usted, su empresa o su equipo)</td>
+<td>escribe la extensión, la firma y la distribuye</td>
+<td>su clave privada de editor; <strong>no la entrega a nadie</strong></td>
+</tr>
+<tr>
+<td><strong>Autoridad de la plataforma</strong></td>
+<td>comprueba quién es el editor y firma su certificado con la clave raíz</td>
+<td>la clave raíz, fuera de línea</td>
+</tr>
+<tr>
+<td><strong>Administrador</strong> de cada instalación</td>
+<td>instala, habilita o quita extensiones; verifica la firma al instalar</td>
+<td>nada secreto</td>
+</tr>
+<tr>
+<td><strong>Usuarios</strong> del geoportal</td>
+<td>usan las extensiones habilitadas</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-requisitos">3. Requisitos</h2>
+<ul>
+<li><strong>Python 3.11</strong> o posterior. Con 3.9 o 3.10 hace falta también <code>pip install tomli</code>.</li>
+<li>El paquete <code>cryptography</code>: <code>pip install cryptography</code>.</li>
+<li>El SDK: <code>ipdeplug.py</code> y <code>raiz_publica.txt</code>, en la misma carpeta. Se descargan desde el panel <strong>Extensiones</strong>
+  del geoportal (<em>Desarrollar su propia extensión → Descargar el SDK</em>).</li>
+<li>Un navegador para el banco de pruebas.</li>
+<li>Un editor de código: recomendamos <strong>Visual Studio Code</strong> (sección <a href="#17-entorno-de-desarrollo-recomendado">17</a>).</li>
+</ul>
+<p>Todas las órdenes tienen ayuda: <code>python ipdeplug.py --help</code> o <code>python ipdeplug.py ORDEN --help</code>.</p>
+<h2 id="4-paso-1-crear-la-extension">4. Paso 1: crear la extensión</h2>
+<pre><code>python ipdeplug.py crear mi_extension --nombre &quot;Mi extensión&quot; --plantilla capas
+</code></pre>
+<p>Hay dos plantillas:</p>
+<ul>
+<li><code>pagina</code>: una página que centra el mapa en unas coordenadas. Es el mínimo.</li>
+<li><code>capas</code>: lee una capa, calcula sus centroides, los añade al mapa y los descarga en CSV. Usa los cuatro
+  permisos.</li>
+</ul>
+<p>Resultado: un proyecto listo para abrir en su editor.</p>
+<pre><code>mi_extension/              abra esta carpeta en VS Code (code mi_extension)
+  AGENTS.md                reglas del puente para asistentes de IA; CLAUDE.md la importa
+  CLAUDE.md
+  .vscode/extensions.json  extensiones recomendadas del editor
+  .gitignore               deja fuera la clave del editor y los paquetes generados
+  LEEME.md
+  paquete/                 lo único que se firma y se distribuye
+    extension.toml         el manifiesto
+    web/index.html         la página que se abre en el geoportal
+</code></pre>
+<p>Las órdenes aceptan el proyecto (<code>mi_extension</code>) o la carpeta <code>paquete</code>. En <code>paquete/</code> va <strong>sólo lo que irá
+en el paquete</strong>: la firma cubre cada archivo y la verificación rechaza cualquier archivo añadido después.
+<code>empaquetar</code> se niega a firmar si encuentra ahí <code>.git</code>, <code>__pycache__</code>, <code>node_modules</code> o archivos del sistema.
+El control de versiones (git) va en la carpeta del proyecto. Para el editor y la IA, vea las secciones
+<a href="#17-entorno-de-desarrollo-recomendado">17</a> y <a href="#18-desarrollar-con-ayuda-de-inteligencia-artificial">18</a>.</p>
+<h2 id="5-paso-2-el-manifiesto-extensiontoml">5. Paso 2: el manifiesto <code>extension.toml</code></h2>
+<pre><code class="language-toml">id = &quot;mi_extension&quot;          # letras, números, - y _; no se puede cambiar después
+nombre = &quot;Mi extensión&quot;
+version = &quot;1.0.0&quot;            # X.Y.Z; súbala en cada entrega
+descripcion = &quot;Qué hace, en una frase.&quot;
+editor = &quot;su_id_de_editor&quot;   # opcional; si lo pone, debe ser el de su certificado
+nivel = &quot;opcional&quot;           # las de terceros, siempre &quot;opcional&quot;
+requiere = []                # ids de otras extensiones que deben estar habilitadas
+permisos = [&quot;mapa.ir&quot;, &quot;capas.leer&quot;]
+
+[distribucion]
+modo = &quot;catalogo&quot;            # catalogo | independiente | privada
+licencia = &quot;MIT&quot;             # la que usted elija: MIT, Apache-2.0, GPL-3.0-or-later, EUPL-1.2, Propietaria…
+precio = &quot;gratuita&quot;          # gratuita | pago | suscripcion | consultar
+url = &quot;https://su-sitio.com/mi_extension&quot;   # dónde los usuarios la adquieren o descargan
+soporte = &quot;soporte@su-sitio.com&quot;            # opcional: correo o https://
+
+[[instalar]]
+accion = &quot;mensaje&quot;
+texto = &quot;Instalando Mi extensión&quot;
+
+[[habilitar]]
+accion = &quot;copiar&quot;
+desde = &quot;web&quot;
+hacia = &quot;{interfaz}/extensiones/mi_extension&quot;
+
+[[deshabilitar]]
+accion = &quot;borrar&quot;
+ruta = &quot;{interfaz}/extensiones/mi_extension&quot;
+
+[[desinstalar]]
+accion = &quot;mensaje&quot;
+texto = &quot;Mi extensión retirada&quot;
+</code></pre>
+<p><strong><code>[distribucion]</code> es obligatoria.</strong> La sección <a href="#10-paso-7-elegir-como-distribuirla">10</a> explica cada modo.
+<code>url</code> es obligatoria salvo en el modo <code>privada</code> y debe empezar por <code>https://</code>.</p>
+<p><strong>Acciones.</strong> Al instalar se ejecuta <code>[[instalar]]</code> y luego <code>[[habilitar]]</code>. Pasos posibles:</p>
+<table>
+<thead>
+<tr>
+<th>Paso</th>
+<th>Campos</th>
+<th>Uso</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>copiar</code></td>
+<td><code>desde</code>, <code>hacia</code></td>
+<td>publicar la página: copiar <code>web</code> a <code>{interfaz}/extensiones/&lt;id&gt;</code></td>
+</tr>
+<tr>
+<td><code>borrar</code></td>
+<td><code>ruta</code></td>
+<td>retirarla al deshabilitar</td>
+</tr>
+<tr>
+<td><code>mensaje</code></td>
+<td><code>texto</code></td>
+<td>dejar constancia en el resultado</td>
+</tr>
+<tr>
+<td><code>sql</code></td>
+<td><code>archivo</code></td>
+<td>ejecutar un <code>.sql</code> en la base de la plataforma (sólo en la edición con servidor)</td>
+</tr>
+<tr>
+<td><code>orden</code></td>
+<td><code>linea</code></td>
+<td><strong>desactivado</strong> en la plataforma; no lo use</td>
+</tr>
+</tbody>
+</table>
+<p>No se admiten rutas absolutas ni <code>..</code>. Un paso <code>sql</code> tiene todos los permisos sobre la base: el administrador
+lo revisará antes de instalar, y es razonable que lo rechace si no lo necesita.</p>
+<p><code>python ipdeplug.py validar mi_extension</code> revisa el manifiesto sin firmar.</p>
+<h2 id="6-paso-3-programar-la-pagina">6. Paso 3: programar la página</h2>
+<p>La página es <strong>un solo <code>web/index.html</code> autocontenido</strong>. En el geoportal se abre en un marco
+<code>sandbox="allow-scripts"</code>, así que:</p>
+<ul>
+<li>no ve los demás archivos del paquete: el CSS y el JavaScript van en línea, y las imágenes como <code>data:</code>;</li>
+<li>puede cargar bibliotecas desde un CDN con CORS (<code>cdnjs.cloudflare.com</code>, <code>cdn.jsdelivr.net</code>, <code>unpkg.com</code>);</li>
+<li>no tiene <code>localStorage</code>, cookies ni ventanas emergentes, y no puede descargar archivos por sí misma (para
+  eso está el permiso <code>descargas</code>);</li>
+<li>se adapta al tema claro u oscuro con <code>prefers-color-scheme</code>.</li>
+</ul>
+<p>Las plantillas traen el cliente del puente (<code>pedir</code> y el objeto <code>ipde</code>). Cada pedido lleva un número, y la
+interfaz contesta con el mismo número o con <code>ipde.error</code>:</p>
+<pre><code class="language-js">const capas = await ipde.capas();                 // [{id, titulo, grupo, geometria, enMapa, elementos}]
+const fc = await ipde.datos(capas[0].id);         // FeatureCollection en WGS 84
+await ipde.agregarCapa('Resultado', fc);          // {id, elementos}
+await ipde.descargar('resultado.csv', texto, 'text/csv');
+ipde.ir(-79.52, 8.98, 14);                        // lon, lat, zoom (sin respuesta)
+</code></pre>
+<p>Los mensajes son estos:</p>
+<table>
+<thead>
+<tr>
+<th>Envía la extensión</th>
+<th>Permiso</th>
+<th>Responde la interfaz</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{tipo:'ipde.ir', lon, lat, zoom}</code></td>
+<td><code>mapa.ir</code></td>
+<td>— (centra el mapa y pone un marcador)</td>
+</tr>
+<tr>
+<td><code>{tipo:'ipde.capas?', pedido}</code></td>
+<td><code>capas.leer</code></td>
+<td><code>{tipo:'ipde.capas', pedido, capas:[…]}</code></td>
+</tr>
+<tr>
+<td><code>{tipo:'ipde.datos?', pedido, id}</code></td>
+<td><code>capas.leer</code></td>
+<td><code>{tipo:'ipde.datos', pedido, id, fc}</code></td>
+</tr>
+<tr>
+<td><code>{tipo:'ipde.capa', pedido, titulo, fc}</code></td>
+<td><code>capas.agregar</code></td>
+<td><code>{tipo:'ipde.capa.ok', pedido, id, elementos}</code></td>
+</tr>
+<tr>
+<td><code>{tipo:'ipde.descargar', pedido, nombre, texto, tipoMime}</code></td>
+<td><code>descargas</code></td>
+<td><code>{tipo:'ipde.descargar.ok', pedido}</code></td>
+</tr>
+<tr>
+<td><code>{tipo:'ipde.tamano', grande}</code></td>
+<td>—</td>
+<td>— (amplía o reduce el marco)</td>
+</tr>
+</tbody>
+</table>
+<p>Si falta el permiso, o algo sale mal, la respuesta es <code>{tipo:'ipde.error', pedido, error}</code>.</p>
+<p>Límites:</p>
+<ul>
+<li>una capa añadida tiene hasta 100 000 elementos, con geometrías en grados;</li>
+<li>un archivo descargado pesa hasta 50 MB;</li>
+<li>el paquete descomprimido pesa hasta 50 MB.</li>
+</ul>
+<p>Las capas que sólo se sirven como imagen (WMS) no tienen datos: <code>ipde.datos?</code> responde con un error.</p>
+<h2 id="7-paso-4-probarla-sin-firmar">7. Paso 4: probarla sin firmar</h2>
+<pre><code>python ipdeplug.py probar mi_extension
+</code></pre>
+<p>Abre un <strong>banco de pruebas</strong> en el navegador. Su página corre en el mismo marco aislado que en el geoportal.
+El banco responde a los mensajes con dos capas de ejemplo, aplica los permisos del manifiesto y anota cada
+mensaje: así se ve enseguida un permiso que falta. No hace falta certificado para probar.</p>
+<h2 id="8-paso-5-su-certificado-de-editor">8. Paso 5: su certificado de editor</h2>
+<p>Para que la plataforma instale su extensión, el paquete debe estar firmado con una clave cuyo certificado haya
+firmado la autoridad de la plataforma. Se pide una sola vez por editor, no por extensión.</p>
+<p><strong>1. Cree su clave y la solicitud</strong> (en su equipo):</p>
+<pre><code>python ipdeplug.py editor-solicitar --id su_empresa --nombre &quot;Su Empresa S.A.&quot; --correo dev@su-empresa.com --sitio https://su-empresa.com
+</code></pre>
+<p>Se crea la carpeta <code>editor_su_empresa/</code> con dos archivos:</p>
+<ul>
+<li><code>publisher_private.pem</code>: <strong>su clave privada</strong>. No la envíe, no la suba a un repositorio y haga una copia de
+  seguridad cifrada. Quien la tenga puede firmar en su nombre.</li>
+<li><code>solicitud.json</code>: lleva su identificador, su nombre, su clave pública y una prueba de que posee la clave
+  privada. No contiene nada secreto.</li>
+</ul>
+<p><strong>2. Envíe <code>solicitud.json</code> al administrador de la plataforma.</strong> Puede acompañarla de una propuesta desde el
+formulario <strong>Sugerencias</strong>: elija <em>Función nueva → Extensión propia (plugin)</em> e indique la dirección donde se
+adquirirá.</p>
+<p><strong>3. Reciba <code>publisher.cert.json</code></strong> y guárdelo en la misma carpeta, junto a la clave privada. El certificado
+dura lo que decida la autoridad: dos años por omisión.</p>
+<ul>
+<li><strong>Si vence:</strong> sus paquetes dejan de instalarse. Pida otro certificado antes de esa fecha (puede usar la misma
+  clave: envíe de nuevo su <code>solicitud.json</code>) y vuelva a firmar.</li>
+<li><strong>Si pierde la clave o se la roban:</strong> avise de inmediato a la plataforma, cree una clave nueva en otra
+  carpeta y pida un certificado nuevo.</li>
+</ul>
+<h2 id="9-paso-6-firmar-y-empaquetar">9. Paso 6: firmar y empaquetar</h2>
+<pre><code>python ipdeplug.py empaquetar mi_extension --editor editor_su_empresa -o mi_extension-1.0.0.ipdeplug
+</code></pre>
+<p><code>empaquetar</code> hace cuatro cosas:</p>
+<ol>
+<li>revisa el manifiesto;</li>
+<li>calcula el SHA-256 de cada archivo;</li>
+<li>firma la lista con su clave y escribe <code>META/</code>;</li>
+<li>crea el ZIP.</li>
+</ol>
+<p>Al final muestra el SHA-256 del paquete. Publíquelo junto a la descarga para que se pueda comprobar.</p>
+<p>Compruebe el resultado como lo hará la plataforma:</p>
+<pre><code>python ipdeplug.py verificar mi_extension-1.0.0.ipdeplug
+</code></pre>
+<p>Después de firmar, <strong>no toque la carpeta</strong>: cualquier cambio, aunque sea un espacio, invalida la firma. Para
+corregir algo, edite, suba la versión y vuelva a empaquetar.</p>
+<h2 id="10-paso-7-elegir-como-distribuirla">10. Paso 7: elegir cómo distribuirla</h2>
+<p>La distribución se declara en <code>[distribucion]</code> y queda firmada dentro del paquete. El panel Extensiones la
+muestra con la licencia, el precio y un botón <strong>Adquirir</strong> o <strong>Sitio</strong> que lleva a su <code>url</code>.</p>
+<table>
+<thead>
+<tr>
+<th><code>modo</code></th>
+<th>Para qué</th>
+<th>Qué hace la plataforma</th>
+<th><code>url</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>catalogo</code></td>
+<td>que cualquier institución que use la plataforma la encuentre</td>
+<td>la anuncia en el catálogo con su nombre, licencia, precio y enlace. Si es <strong>gratuita</strong> y usted lo pide, puede alojar el <code>.ipdeplug</code> para instalarla con un clic</td>
+<td>obligatoria</td>
+</tr>
+<tr>
+<td><code>independiente</code></td>
+<td>venderla o entregarla usted, en su sitio, su tienda o por contrato</td>
+<td>nada más que verificar la firma cuando un administrador la instale</td>
+<td>obligatoria</td>
+</tr>
+<tr>
+<td><code>privada</code></td>
+<td>uso interno de su organización o de un cliente concreto</td>
+<td>nada más que verificar la firma</td>
+<td>opcional</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Licencia.</strong> Usted la elige y es suya:</p>
+<ul>
+<li>una libre: MIT, Apache-2.0, GPL-3.0-or-later o EUPL-1.2;</li>
+<li>o <code>Propietaria</code>, con sus propias condiciones en su sitio.</li>
+</ul>
+<p>Si el paquete lleva bibliotecas de terceros, respete sus licencias e incluya sus avisos.</p>
+<p><strong>Precio.</strong> Puede ser <code>gratuita</code>, <code>pago</code>, <code>suscripcion</code> o <code>consultar</code>. La plataforma no cobra ni procesa pagos:
+la venta y las licencias de uso ocurren en su sitio. Si quiere limitar el uso a quien pagó, hágalo en su propio
+servicio (por ejemplo, con una clave de licencia que la extensión compruebe contra su servidor).</p>
+<p><strong>Para entrar en el catálogo</strong>, genere la ficha y envíela al administrador con el paquete:</p>
+<pre><code>python ipdeplug.py ficha mi_extension-1.0.0.ipdeplug -o ficha.json
+</code></pre>
+<p>La ficha resume el paquete verificado: id, versión, editor, licencia, precio, permisos, <code>url</code> y SHA-256. El
+administrador la añade al archivo <code>extensiones/indice.json</code> del sitio. Si la plataforma no aloja el paquete,
+la ficha va sin <code>archivo</code> y el catálogo sólo muestra el enlace a su sitio.</p>
+<h2 id="11-instalacion-por-el-administrador">11. Instalación por el administrador</h2>
+<p>El administrador descarga el <code>.ipdeplug</code> desde donde usted lo distribuya y lo instala:</p>
+<ul>
+<li><strong>en el geoportal</strong>: <em>Administrar → Extensiones → Instalar .ipdeplug</em>. El navegador verifica la firma, el
+  certificado y cada archivo antes de guardarla;</li>
+<li><strong>en la edición con servidor</strong>: <code>consola extension instalar mi_extension-1.0.0.ipdeplug</code>, o desde la consola
+  web.</li>
+</ul>
+<p>Si algo no cuadra, el paquete se rechaza con uno de los <a href="#15-mensajes-de-verificacion">mensajes de la sección 15</a>,
+y el intento queda en la auditoría.</p>
+<h2 id="12-versiones-y-actualizaciones">12. Versiones y actualizaciones</h2>
+<ul>
+<li>Suba <code>version</code> en cada entrega: <code>1.0.1</code> para correcciones, <code>1.1.0</code> para funciones nuevas y <code>2.0.0</code> para
+  cambios que rompen.</li>
+<li>Instalar una versión nueva reemplaza la anterior. La auditoría guarda de qué versión a cuál se pasó.</li>
+<li>Si cambia los <code>permisos</code>, avíselo en sus notas de versión: el administrador verá los permisos nuevos en el
+  panel.</li>
+<li>El <code>id</code> no cambia nunca. Con otro <code>id</code> sería otra extensión.</li>
+</ul>
+<h2 id="13-seguridad-que-garantiza-la-firma">13. Seguridad: qué garantiza la firma</h2>
+<p>La firma garantiza <strong>quién</strong> hizo el paquete y que <strong>nadie lo cambió</strong> después. No garantiza que la extensión
+sea correcta ni inocua. Por eso la plataforma añade varias barreras:</p>
+<ul>
+<li>la página corre aislada y sólo recibe lo que declaran sus permisos;</li>
+<li>los pasos <code>orden</code> están desactivados, y los <code>sql</code> los revisa el administrador;</li>
+<li>un certificado vencido, o no firmado por la raíz de la plataforma, se rechaza.</li>
+</ul>
+<p>Buenas prácticas:</p>
+<ul>
+<li>pida sólo los permisos que use;</li>
+<li>no envíe datos de capas a servidores externos sin decirlo en su descripción y en su sitio;</li>
+<li>escape todo texto que venga de las capas antes de insertarlo como HTML;</li>
+<li>custodie su clave privada.</li>
+</ul>
+<h2 id="14-para-la-autoridad-de-la-plataforma">14. Para la autoridad de la plataforma</h2>
+<p><strong>Emitir un certificado.</strong> Primero compruebe la identidad del solicitante por un canal propio: correo de su
+dominio, contrato o llamada. Después:</p>
+<pre><code>python ipdeplug.py editor-emitir solicitud.json --raiz CARPETA_DE_LA_RAIZ --anios 2 --registro consola/firma/editores -o salida
+</code></pre>
+<p>La orden hace cuatro comprobaciones antes de firmar:</p>
+<ol>
+<li>que la solicitud esté firmada con la clave que trae, es decir, que el solicitante posee la privada;</li>
+<li>que la clave raíz sea la de esta plataforma;</li>
+<li>que el <code>id</code> no lo use ya otro editor con otra clave (<code>--reemplazar</code> sólo si es la misma organización que
+   perdió su clave);</li>
+<li>que el nombre no tenga saltos de línea.</li>
+</ol>
+<p>Devuelva <code>salida/publisher.cert.json</code> al editor. La copia en <code>--registro</code> es el inventario de editores.</p>
+<p><strong>La clave raíz</strong> (<code>root_private.pem</code>) se guarda fuera de línea y fuera de todo repositorio, y se usa sólo para
+emitir certificados. Si se compromete, hay que generar otra raíz y recompilar la consola y el geoportal con la
+nueva clave pública. Todos los certificados y paquetes anteriores dejan de valer.</p>
+<p><strong>Retirar a un editor.</strong> No hay lista de revocación: un certificado vale hasta su fecha de vencimiento. Por eso
+conviene emitirlos por uno o dos años. Ante un caso grave:</p>
+<ul>
+<li>quite sus paquetes del catálogo;</li>
+<li>avise a los administradores para que los desinstalen;</li>
+<li>no le renueve el certificado.</li>
+</ul>
+<p><strong>El catálogo</strong> es el archivo <code>extensiones/indice.json</code> del sitio:</p>
+<pre><code class="language-json">{&quot;paquetes&quot;: [
+  {&quot;archivo&quot;: &quot;conversor.ipdeplug&quot;, &quot;id&quot;: &quot;conversor&quot;, &quot;nombre&quot;: &quot;Conversor de coordenadas&quot;, &quot;descripcion&quot;: &quot;…&quot;},
+  {&quot;id&quot;: &quot;mi_extension&quot;, &quot;nombre&quot;: &quot;Mi extensión&quot;, &quot;version&quot;: &quot;1.0.0&quot;, &quot;descripcion&quot;: &quot;…&quot;, &quot;editor&quot;: &quot;Su Empresa S.A.&quot;,
+   &quot;licencia&quot;: &quot;Propietaria&quot;, &quot;precio&quot;: &quot;pago&quot;, &quot;url&quot;: &quot;https://su-empresa.com/mi_extension&quot;, &quot;sha256&quot;: &quot;…&quot;}
+]}
+</code></pre>
+<ul>
+<li>Con <code>archivo</code> (sólo extensiones gratuitas alojadas por la plataforma), el administrador la instala con un clic.</li>
+<li>Sin <code>archivo</code>, el catálogo enlaza a la <code>url</code> del editor.</li>
+</ul>
+<h2 id="15-mensajes-de-verificacion">15. Mensajes de verificación</h2>
+<table>
+<thead>
+<tr>
+<th>Mensaje</th>
+<th>Qué significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SIN FIRMAR: falta META/…</code></td>
+<td>el paquete no se firmó o se le quitó <code>META/</code></td>
+</tr>
+<tr>
+<td><code>el certificado del editor no está firmado por la raíz de esta plataforma</code></td>
+<td>certificado de otra plataforma, de prueba o falsificado</td>
+</tr>
+<tr>
+<td><code>el certificado del editor venció el …</code></td>
+<td>pida un certificado nuevo y vuelva a firmar</td>
+</tr>
+<tr>
+<td><code>la firma del paquete no valida con la clave del editor</code></td>
+<td>se alteró <code>META/hashes.json</code> o se firmó con otra clave</td>
+</tr>
+<tr>
+<td><code>«archivo» fue modificado después de firmar</code></td>
+<td>se cambió un archivo tras empaquetar</td>
+</tr>
+<tr>
+<td><code>archivo no declarado en la firma</code> / <code>falta un archivo declarado</code></td>
+<td>se añadió o se quitó un archivo</td>
+</tr>
+<tr>
+<td><code>id del manifiesto ≠ firma</code> / <code>versión del manifiesto ≠ firma</code></td>
+<td>se editó <code>extension.toml</code> después de firmar</td>
+</tr>
+<tr>
+<td><code>el manifiesto declara otro editor</code></td>
+<td><code>editor</code> en <code>extension.toml</code> no es el del certificado</td>
+</tr>
+<tr>
+<td><code>entrada de ZIP inválida</code></td>
+<td>rutas absolutas o con <code>..</code> (se rechazan para no escribir fuera de la carpeta)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="16-referencia-del-formato-ipdeplug">16. Referencia del formato <code>.ipdeplug</code></h2>
+<pre><code>clave raíz        --firma--&gt;  META/publisher.cert.json   (certificado del editor)
+clave del editor  --firma--&gt;  META/hashes.json           (bytes crudos del archivo)
+META/hashes.json  --cubre--&gt;  SHA-256 de cada archivo fuera de META/
+</code></pre>
+<ul>
+<li>ECDSA P-256 con SHA-256. Las firmas van en DER y las claves públicas en SPKI DER, ambas en base64.</li>
+<li>Lo que firma el certificado son los bytes UTF-8 de <code>publisher_id\nname\npubkey\nissued\nexpires</code>, no el JSON.</li>
+<li><code>META/hashes.json</code> es <code>json.dumps({"alg":"SHA-256","files":{…}}, indent=2, sort_keys=True,
+  ensure_ascii=False)</code>, sin salto de línea final. <code>META/signature.json</code> lleva <code>alg</code>, <code>publisher_id</code>,
+  <code>plugin_id</code>, <code>version</code>, <code>signed_at</code> y <code>sig</code>.</li>
+<li>El ZIP lleva una carpeta raíz <code>&lt;id&gt;/</code>. <code>extension.toml</code> es TOML: <code>id</code> y <code>version</code> deben coincidir con
+  <code>plugin_id</code> y <code>version</code> de la firma.</li>
+<li><code>ipdeplug.py</code>, <code>consola firmar</code> y el panel Extensiones producen y verifican exactamente lo mismo.</li>
+</ul>
+<h2 id="17-entorno-de-desarrollo-recomendado">17. Entorno de desarrollo recomendado</h2>
+<p>Recomendamos <strong>Visual Studio Code</strong> (VS Code). Es gratuito y funciona en Windows, macOS y Linux, y edita HTML,
+JavaScript, Python y TOML en un mismo sitio. Al abrir el proyecto (<code>code mi_extension</code>) propone instalar las
+extensiones que trae <code>.vscode/extensions.json</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Extensión de VS Code</th>
+<th>Para qué</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python (<code>ms-python.python</code>)</td>
+<td>ejecutar <code>ipdeplug.py</code> y depurarlo</td>
+</tr>
+<tr>
+<td>Even Better TOML (<code>tamasfe.even-better-toml</code>)</td>
+<td>colores y errores al editar <code>extension.toml</code></td>
+</tr>
+<tr>
+<td>ESLint (<code>dbaeumer.vscode-eslint</code>)</td>
+<td>errores de JavaScript mientras escribe</td>
+</tr>
+<tr>
+<td>Prettier (<code>esbenp.prettier-vscode</code>)</td>
+<td>formato uniforme del código</td>
+</tr>
+<tr>
+<td>Claude Code (<code>anthropic.claude-code</code>)</td>
+<td>asistente de IA dentro del editor (sección 18)</td>
+</tr>
+</tbody>
+</table>
+<p>Alternativas válidas:</p>
+<ul>
+<li><strong>VSCodium</strong>: el mismo editor, compilado sin telemetría y 100 % libre.</li>
+<li><strong>WebStorm</strong> o <strong>PyCharm</strong>, de JetBrains, si ya los usa.</li>
+<li>Cualquier editor de texto: el SDK sólo necesita Python y un navegador.</li>
+</ul>
+<p>El ciclo de trabajo, desde la terminal integrada de VS Code (<kbd>Ctrl</kbd>+<kbd>ñ</kbd>):</p>
+<ol>
+<li>Edite <code>paquete/web/index.html</code>.</li>
+<li>Corra <code>python ipdeplug.py probar .</code> y recargue el banco de pruebas en el navegador.</li>
+<li>Mire el registro de mensajes del banco y la consola del navegador (<kbd>F12</kbd>).</li>
+<li>Cuando funcione, haga un commit con git y, para entregar, <code>empaquetar</code>.</li>
+</ol>
+<h2 id="18-desarrollar-con-ayuda-de-inteligencia-artificial">18. Desarrollar con ayuda de inteligencia artificial</h2>
+<p>Un asistente de IA acelera mucho una extensión: escribe la página, conecta el puente, propone pruebas y explica
+errores. El proyecto ya viene preparado para eso. <code>AGENTS.md</code> describe al asistente:</p>
+<ul>
+<li>la estructura del proyecto y el marco aislado;</li>
+<li>los mensajes y permisos del puente;</li>
+<li>las reglas de seguridad y las órdenes del SDK.</li>
+</ul>
+<p><code>CLAUDE.md</code> importa ese archivo para Claude Code. GitHub Copilot, Cursor y otros asistentes leen <code>AGENTS.md</code>
+directamente.</p>
+<p><strong>Con Claude Code</strong> (en la terminal o con la extensión de VS Code), abra el proyecto y pida lo que necesita en
+lenguaje natural. Por ejemplo:</p>
+<pre><code>Quiero que la extensión calcule el área de cada polígono de la capa elegida en hectáreas,
+la muestre en una tabla ordenable y permita descargarla en CSV. Usa sólo los permisos necesarios
+y pruébala con «python ipdeplug.py probar .».
+</code></pre>
+<pre><code>El banco de pruebas dice «NEGADO: falta el permiso capas.agregar». Explica por qué y corrígelo.
+</code></pre>
+<pre><code>Revisa paquete/web/index.html buscando textos de las capas que se inserten como HTML sin escapar.
+</code></pre>
+<p>Buenas prácticas:</p>
+<ul>
+<li><strong>Pida cambios pequeños y pruébelos</strong> en el banco después de cada uno, antes de pedir el siguiente.</li>
+<li><strong>Revise lo que propone.</strong> Usted firma el paquete y responde por él; la IA no.</li>
+<li><strong>Nunca le dé su clave privada</strong> (<code>publisher_private.pem</code>). <code>.gitignore</code> la deja fuera del repositorio y
+  <code>AGENTS.md</code> le prohíbe leerla. Firme usted mismo con <code>empaquetar</code>.</li>
+<li><strong>Pida que declare lo que envía fuera.</strong> Si la extensión llama a un servicio externo, que lo diga en la
+  descripción y en su sitio.</li>
+<li><strong>Tenga en cuenta las licencias</strong> del código que la IA reutilice: si copia una biblioteca, incluya su aviso
+  de licencia.</li>
+<li><strong>Actualice <code>AGENTS.md</code></strong> cuando su extensión crezca (reglas propias, servicios que usa): es la memoria del
+  proyecto para el asistente.</li>
+</ul>
+<h2 id="19-licencia-del-sdk">19. Licencia del SDK</h2>
+<p>El SDK (<code>ipdeplug.py</code>, las plantillas, el código del puente que se copia en <code>web/index.html</code> y <code>AGENTS.md</code>) se
+distribuye con la <strong>licencia MIT</strong>. Puede usarlo, modificarlo e incluirlo en extensiones de cualquier licencia,
+también privativas y comerciales, sin tener que publicar su código.</p>
+<p>El núcleo de la plataforma tiene otra licencia, con copyleft: quien lo modifique debe compartir sus cambios.
+Pero las extensiones que sólo usan la interfaz de extensiones (el manifiesto y los mensajes del puente) quedan
+expresamente fuera de esa obligación.</p>
+</main></body></html>
