@@ -37,7 +37,7 @@ entra: no protege datos. Las cuentas nuevas y la bitácora quedan en el navegado
 
 ## Instalar en otro equipo o servidor
 
-Descargue `GeoportalCostaRica-Instalador.exe` desde la página de *Releases* del repositorio y ábralo:
+Abra `GeoportalCostaRica-Instalador.exe` (lleva dentro el sitio, el servidor y la base; no necesita Internet para instalar):
 
 1. **Carpeta y puerto.** Elija dónde instalar (por omisión `C:\GeoportalCostaRica`) y el puerto (8080).
    - *Servidor incluido:* el instalador deja `GeoportalCostaRica.exe`, un servidor web pequeño que
@@ -50,13 +50,23 @@ Descargue `GeoportalCostaRica-Instalador.exe` desde la página de *Releases* del
    usuario de sólo lectura para QGIS. El instalador busca `pg_restore.exe` en `C:\Program Files\PostgreSQL`.
 3. **Instalar.** Al terminar abre el geoportal en el navegador.
 
-Para quitarlo: `GeoportalCostaRica.exe --desinstalar` en la carpeta de instalación.
+Para quitarlo: Configuración → Aplicaciones → Geoportal Costa Rica, o `GeoportalCostaRica.exe --desinstalar`.
+
+Por script (servidores), sin ventanas:
+
+```
+GeoportalCostaRica-Instalador.exe --silencioso --carpeta C:\GeoportalCostaRica --puerto 8080 --base-clave <clave de postgres>
+```
+
+Otras opciones: `--solo-archivos`, `--sin-red`, `--sin-inicio`, `--base-servidor`, `--base-puerto`, `--base-usuario`,
+`--base-nombre`, `--pg-bin`, `--lector`, `--lector-clave`, `--sin-lector` y `--registro <archivo>`. Devuelve 0 si
+todo salió bien; el detalle queda en `instalacion.log`.
 
 ## Base de datos del proyecto
 
 `geoportal_costa_rica` (PostGIS) tiene las tablas completas, sin simplificar:
 
-- `nacional.*`: 21 capas del país;
+- `nacional.*`: 20 capas del país;
 - `corredores.*`: las 14 capas de la Municipalidad de Corredores;
 - `public.capas`: el índice del visor, con fuente, licencia y servicio de cada capa.
 
