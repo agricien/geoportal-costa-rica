@@ -3,7 +3,7 @@
 Geoportal web de datos abiertos de Costa Rica, con la **Municipalidad de Corredores** como entidad
 publicadora de ejemplo. Corre sin servidor (sitio estático) sobre la interfaz libre Isocarta.
 
-**Sitio publicado:** https://agricien.github.io/geoportal-costa-rica/
+**Sitio publicado:** https://www.geociencias.net/ (antes https://agricien.github.io/geoportal-costa-rica/, que redirige)
 
 > Demostración. No es un sitio oficial del Gobierno de Costa Rica ni de la Municipalidad de Corredores.
 > Los datos vienen de servicios públicos y están simplificados para verlos en el navegador.
@@ -25,7 +25,7 @@ así que sus capas van copiadas como GeoJSON (copia del 29/10/2026). Cada ficha 
 del servicio y el nombre de la capa de origen. Las capas del SNIT sí permiten CORS y se piden en vivo.
 
 También se puede consultar como **OGC API – Features** estática en `ogc/` (QGIS: Capa → Añadir capa WFS /
-OGC API – Features, con la dirección `https://agricien.github.io/geoportal-costa-rica/ogc`).
+OGC API – Features, con la dirección `https://www.geociencias.net/ogc`).
 
 ## Cuentas de demostración
 
@@ -78,7 +78,7 @@ Las fuentes (`construir.py`, `sitio.py`, el instalador) están fuera de este rep
 ```
 "C:\Program Files\QGIS 4.2.2\bin\python-qgis.bat" construir.py base capas volcado
 python sitio.py
-python generar_ogc.py ..\geoportal-costa-rica https://agricien.github.io/geoportal-costa-rica
+python generar_ogc.py ..\geoportal-costa-rica https://www.geociencias.net
 instalador\compilar.bat
 ```
 

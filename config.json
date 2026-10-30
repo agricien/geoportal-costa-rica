@@ -20,7 +20,7 @@
       "pais": "CR",
       "correo": "edgarmendezduran@gmail.com",
       "telefono": "",
-      "sitio": "https://agricien.github.io/geoportal-costa-rica/"
+      "sitio": "https://www.geociencias.net/"
     },
     "privacidad": {
       "responsable": "",
@@ -46,5 +46,5 @@
     },
     "fecha": "2026-10-29"
   },
-  "api": "https://201.191.96.178:18443/api/"
+  "api": "https://api.geociencias.net:18443/api/"
 }
