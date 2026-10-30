@@ -239,6 +239,17 @@ code,.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
 .capas-activas .card{padding:8px}
 .capas-activas .row{flex-wrap:nowrap;gap:4px}
 .capas-activas input[type=range]{min-width:40px}
+.ca-sel{width:16px;height:16px;flex:none;margin:0 2px;accent-color:var(--accent);cursor:pointer}
+.ca-barra{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);padding:8px;margin-bottom:4px}
+.ca-barra .row{gap:6px;flex-wrap:wrap;align-items:center}
+.ca-barra input[type=range]{min-width:60px}
+.ca-todas{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;cursor:pointer;margin-right:auto}
+.ca-acciones{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.ca-acciones>span{margin-right:4px}
+.ca-grupo{display:flex;flex-direction:column;gap:6px}
+.ca-grupo-cab{border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
+.ca-miembros{margin-left:12px;padding-left:10px;border-left:2px solid var(--accent-soft)}
+.capas-activas .ca-marcada,.ca-grupo.ca-marcada>.ca-grupo-cab{border-color:var(--accent);background:var(--accent-soft)}
 .cat-item{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;padding:9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);transition:border-color .15s,background .15s}
 [data-estilo="flotante"] .cat-item{background:var(--surface-solid)}
 .cat-item.on{border-color:color-mix(in srgb,var(--accent) 60%,var(--border));background:var(--accent-soft)}
@@ -2278,35 +2289,194 @@ function enlazarAccesoOgc(el) {
 
 /* ---------- Paneles de mapa ---------- */
 // Capas activas: encabezan el Catálogo de datos. Arriba = se dibuja encima.
-function htmlCapasActivas() {
-  const tit = `<div class="cat-grupo cat-seccion">${I('layers', 'sm')}Capas activas <span class="badge">${estado.capas.length}</span></div>`;
-  if (!estado.capas.length) return tit + `<div class="empty small" style="padding:10px">No hay capas en el mapa. Actívelas en la lista de abajo.</div>`;
-  const lista = estado.capas.slice().reverse(), enCat = id => estado.catalogo && estado.catalogo.capas && estado.catalogo.capas.some(k => k.id === id);
-  return tit + `<p class="small muted" style="margin:0 0 6px">Arriba = se dibuja encima.</p><ul class="list capas-activas">${lista.map((c, i) => `<li class="card" data-capa-item="${esc(c.id)}">
-    <div class="row"><span class="cat-sym" style="width:30px;height:30px">${simbolo(c, 18)}</span><div class="grow" style="min-width:0"><div class="cat-title" style="font-size:13px">${esc(c.titulo)}</div><div class="cat-meta">${c.raster ? 'Ráster · ' + c.raster.ancho + '×' + c.raster.alto + ' px' : c.modo === 'wms' ? 'Imagen WMS · ' + (c.simbologia ? 'estilo propio (SLD)' : 'estilo del servidor') : (GEOM[c.geometria] || 'Mixta') + ' · ' + (n => n + (n === 1 ? ' entidad' : ' entidades'))(((c.datos || {}).features || []).length)}</div></div>
+// Grupos del mapa (Hidrografía, Áreas de protección…): c.gm es el grupo de la capa; sus capas van siempre juntas en
+// estado.capas, así que un grupo sube, baja, se oculta o cambia de opacidad como un bloque. La selección (casillas)
+// permite hacer lo mismo con varias capas a la vez. Grupos y selección viven en esta sesión del visor.
+ICONS.folder = '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>';
+estado.gruposMapa = {};      // id → {nombre, abierto}
+estado.selCapas = new Set(); // ids de capas marcadas
+const TEMAS_GRUPO = ['Hidrografía', 'Áreas de protección', 'Límites administrativos', 'Transporte', 'Servicios', 'Amenazas', 'Catastro', 'Imágenes y relieve'];
+// bloques de abajo hacia arriba: una capa suelta o un grupo con sus capas; un grupo partido se junta donde empieza
+function unidadesMapa() {
+  const us = [], porGrupo = new Map();
+  estado.capas.forEach(c => {
+    if (c.gm && !estado.gruposMapa[c.gm]) delete c.gm;
+    if (!c.gm) { us.push({capas: [c]}); return; }
+    if (porGrupo.has(c.gm)) porGrupo.get(c.gm).capas.push(c);
+    else { const u = {gm: c.gm, capas: [c]}; porGrupo.set(c.gm, u); us.push(u); }
+  });
+  Object.keys(estado.gruposMapa).forEach(g => { if (!porGrupo.has(g)) delete estado.gruposMapa[g]; });
+  return us;
+}
+function aplicarUnidades(us) { estado.capas = us.flatMap(u => u.capas); reordenarCapasMapa(); emitirCapas(); }
+// mueve un paso (dir +1 = arriba) los elementos marcados de una lista; un marcado que choca con otro bloqueado no se mueve
+function moverMarcados(lista, marcado, dir) {
+  const orden = lista.map((_, i) => i); if (dir > 0) orden.reverse();
+  orden.forEach(i => { const j = i + dir; if (marcado(lista[i]) && j >= 0 && j < lista.length && !marcado(lista[j])) [lista[i], lista[j]] = [lista[j], lista[i]]; });
+}
+function moverCapas(ids, dir) {
+  const sel = new Set(ids), us = unidadesMapa();
+  const entera = u => u.capas.every(c => sel.has(c.id));
+  moverMarcados(us, entera, dir);
+  us.filter(u => u.gm && !entera(u)).forEach(u => moverMarcados(u.capas, c => sel.has(c.id), dir));
+  aplicarUnidades(us);
+}
+function quitarCapa(c) {
+  const i = estado.capas.indexOf(c); if (i < 0) return;
+  desmontarCapa(c); estado.capas.splice(i, 1); estado.selCapas.delete(c.id);
+  if (c.local || c.id === 'borrador') repoFueraDelMapa(c.id);
+  if (c.rasterLocal) { if (c.dem || c.derivada) marcarEnMapa(c, false); else idbOp('rasters', 'readwrite', s => s.delete(c.id)).catch(() => {}); }
+}
+function verCapas(cs, v) { cs.forEach(c => { c.visible = v; idsCapasMapa(c.id).forEach(l => mapa.getLayer(l) && mapa.setLayoutProperty(l, 'visibility', v ? 'visible' : 'none')); }); emitirCapas(); }
+function opacidadCapas(cs, v) {
+  cs.forEach(c => { opacidadCapa(c, v); const r = document.getElementById('op-' + c.id); if (r) r.value = v; });
+}
+const nombreGrupoLibre = n => !Object.values(estado.gruposMapa).some(g => g.nombre.toLowerCase() === n.toLowerCase());
+// pone las capas en el grupo de ese nombre (lo crea si no existe); las nuevas quedan juntas donde estaba la más alta
+function agrupar(ids, nombre) {
+  nombre = nombre.trim(); if (!nombre || !ids.length) return;
+  let gid = Object.keys(estado.gruposMapa).find(g => estado.gruposMapa[g].nombre.toLowerCase() === nombre.toLowerCase());
+  const sel = new Set(ids), marcadas = estado.capas.filter(c => sel.has(c.id));
+  if (!gid) {
+    gid = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); estado.gruposMapa[gid] = {nombre, abierto: true};
+    const resto = estado.capas.filter(c => !sel.has(c.id)), alta = estado.capas.indexOf(marcadas[marcadas.length - 1]);
+    const pos = estado.capas.slice(0, alta).filter(c => !sel.has(c.id)).length;
+    estado.capas = [...resto.slice(0, pos), ...marcadas, ...resto.slice(pos)];
+  }
+  marcadas.forEach(c => { c.gm = gid; });
+  estado.selCapas.clear(); aplicarUnidades(unidadesMapa());
+  toast(marcadas.length + (marcadas.length === 1 ? ' capa' : ' capas') + ' en «' + nombre + '»', 'layers');
+}
+function desagrupar(cs) { cs.forEach(c => delete c.gm); aplicarUnidades(unidadesMapa()); }
+function pedirNombreGrupo(titulo, inicial, alAceptar) {
+  const sugeridos = [...new Set([...Object.values(estado.gruposMapa).map(g => g.nombre), ...TEMAS_GRUPO, ...estado.capas.map(c => c.grupo).filter(Boolean)])];
+  dialogo(titulo, `<form id="fGrupo" class="field"><label for="nomGrupo">Nombre del grupo</label>
+    <input id="nomGrupo" class="input" type="text" maxlength="60" required value="${esc(inicial)}" list="sugGrupo" autocomplete="off">
+    <datalist id="sugGrupo">${sugeridos.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+    <div class="small muted" style="margin-top:6px">Ejemplos: Hidrografía, Áreas de protección, Catastro. Si el nombre ya es de un grupo, las capas se suman a ese grupo.</div></form>`,
+    [{t: 'Aceptar', p: true, f: () => alAceptar($('#nomGrupo').value)}]);
+  const f = $('#fGrupo'), i = $('#nomGrupo'); i.focus(); i.select();
+  f.onsubmit = e => { e.preventDefault(); if (i.value.trim()) { alAceptar(i.value); $('#dlg').close(); } };
+}
+function agruparPorTema() {
+  const temas = new Map();
+  estado.capas.filter(c => !c.gm && c.grupo).forEach(c => { if (!temas.has(c.grupo)) temas.set(c.grupo, []); temas.get(c.grupo).push(c.id); });
+  const hechos = [...temas].filter(([, ids]) => ids.length > 1);
+  if (!hechos.length) { toast('No hay dos capas sueltas del mismo tema para agrupar', 'info'); return; }
+  hechos.forEach(([t, ids]) => agrupar(ids, t));
+  toast(hechos.length + (hechos.length === 1 ? ' grupo creado' : ' grupos creados') + ' por tema', 'layers');
+}
+const promedioOpacidad = cs => cs.length ? Math.round(cs.reduce((a, c) => a + c.opacidad, 0) / cs.length * 20) / 20 : 1;
+function htmlCapaActiva(c, puedeSubir, puedeBajar, enGrupo) {
+  const marcada = estado.selCapas.has(c.id), enCat = estado.catalogo && estado.catalogo.capas && estado.catalogo.capas.some(k => k.id === c.id);
+  return `<li class="card${enGrupo ? ' ca-engrupo' : ''}${marcada ? ' ca-marcada' : ''}" data-capa-item="${esc(c.id)}">
+    <div class="row"><input type="checkbox" class="ca-sel" data-ca="sel" ${marcada ? 'checked' : ''} aria-label="Seleccionar ${esc(c.titulo)}"><span class="cat-sym" style="width:30px;height:30px">${simbolo(c, 18)}</span><div class="grow" style="min-width:0"><div class="cat-title" style="font-size:13px">${esc(c.titulo)}</div><div class="cat-meta">${c.raster ? 'Ráster · ' + c.raster.ancho + '×' + c.raster.alto + ' px' : c.modo === 'wms' ? 'Imagen WMS · ' + (c.simbologia ? 'estilo propio (SLD)' : 'estilo del servidor') : (GEOM[c.geometria] || 'Mixta') + ' · ' + (n => n + (n === 1 ? ' entidad' : ' entidades'))(((c.datos || {}).features || []).length)}</div></div>
       ${c.wms && c.archivo ? `<button class="btn sm ghost" type="button" data-ca="modo" title="${c.modo === 'wms' ? 'Dibujar en el navegador con los datos (OGC API Features / WFS): tabla, etiquetas y 3D' : 'Pedir la imagen al servidor (WMS) con su estilo publicado'}">${c.modo === 'wms' ? 'Vector' : 'WMS'}</button>` : ''}
-      ${enCat(c.id) ? `<button class="iconbtn" type="button" data-ficha="${esc(c.id)}" aria-label="Ficha de metadatos de ${esc(c.titulo)}" title="Ficha de metadatos">${I('info', 'sm')}</button>` : ''}
+      ${enCat ? `<button class="iconbtn" type="button" data-ficha="${esc(c.id)}" aria-label="Ficha de metadatos de ${esc(c.titulo)}" title="Ficha de metadatos">${I('info', 'sm')}</button>` : ''}
       ${esDem(c) ? `<button class="iconbtn" type="button" data-derivadas="${esc(c.id)}" aria-label="Derivadas de ${esc(c.titulo)}" title="Derivadas: curvas de nivel, sombreado, pendiente, orientación">${I('mountain', 'sm')}</button>` : ''}
       <button class="iconbtn" type="button" data-ca="estilo" aria-label="Simbología de ${esc(c.titulo)}" title="Simbología">${I('palette', 'sm')}</button>
       <button class="iconbtn" type="button" data-ca="vis" aria-pressed="${!c.visible}" aria-label="${c.visible ? 'Ocultar' : 'Mostrar'} ${esc(c.titulo)}" title="${c.visible ? 'Ocultar' : 'Mostrar'}">${I(c.visible ? 'eye' : 'eyeOff', 'sm')}</button></div>
     <div class="row" style="margin-top:6px"><label class="lbl-s" for="op-${esc(c.id)}">Opacidad</label><input class="grow" id="op-${esc(c.id)}" type="range" min="0" max="1" step=".05" value="${c.opacidad}" data-ca="op">
-      <button class="iconbtn" type="button" data-ca="up" aria-label="Subir ${esc(c.titulo)}" title="Subir" ${i === 0 ? 'disabled' : ''}>${I('up', 'sm')}</button>
-      <button class="iconbtn" type="button" data-ca="down" aria-label="Bajar ${esc(c.titulo)}" title="Bajar" ${i === lista.length - 1 ? 'disabled' : ''}>${I('down', 'sm')}</button>
+      <button class="iconbtn" type="button" data-ca="up" aria-label="Subir ${esc(c.titulo)}" title="${enGrupo ? 'Subir dentro del grupo' : 'Subir'}" ${puedeSubir ? '' : 'disabled'}>${I('up', 'sm')}</button>
+      <button class="iconbtn" type="button" data-ca="down" aria-label="Bajar ${esc(c.titulo)}" title="${enGrupo ? 'Bajar dentro del grupo' : 'Bajar'}" ${puedeBajar ? '' : 'disabled'}>${I('down', 'sm')}</button>
       <button class="iconbtn" type="button" data-ca="zoom" aria-label="Acercar a ${esc(c.titulo)}" title="Acercar">${I('focus', 'sm')}</button>
-      <button class="iconbtn" type="button" data-ca="quitar" aria-label="Quitar ${esc(c.titulo)}" title="Quitar del mapa">${I('trash', 'sm')}</button></div></li>`).join('')}</ul>`;
+      <button class="iconbtn" type="button" data-ca="quitar" aria-label="Quitar ${esc(c.titulo)}" title="Quitar del mapa">${I('trash', 'sm')}</button></div></li>`;
+}
+function htmlGrupoMapa(u, puedeSubir, puedeBajar) {
+  const g = estado.gruposMapa[u.gm], n = u.capas.length, vis = u.capas.some(c => c.visible), todas = u.capas.every(c => estado.selCapas.has(c.id));
+  const algunas = !todas && u.capas.some(c => estado.selCapas.has(c.id)), id = esc(u.gm), nom = esc(g.nombre);
+  const miembros = g.abierto ? u.capas.slice().reverse().map((c, j) => htmlCapaActiva(c, j > 0, j < n - 1, true)).join('') : '';
+  return `<li class="ca-grupo${todas ? ' ca-marcada' : ''}" data-grupo-item="${id}"><div class="card ca-grupo-cab">
+    <div class="row"><input type="checkbox" class="ca-sel" id="gm-sel-${id}" data-cg="sel" ${todas ? 'checked' : ''} ${algunas ? 'data-mixto' : ''} aria-label="Seleccionar el grupo ${nom}">
+      <button class="iconbtn" type="button" id="gm-abrir-${id}" data-cg="abrir" aria-expanded="${g.abierto}" aria-label="${g.abierto ? 'Contraer' : 'Expandir'} el grupo ${nom}" title="${g.abierto ? 'Contraer' : 'Expandir'}"><span style="display:inline-flex;transform:rotate(${g.abierto ? 0 : -90}deg)">${I('chev', 'sm')}</span></button>
+      <span class="cat-sym" style="width:30px;height:30px">${I('folder', 'sm')}</span>
+      <div class="grow" style="min-width:0"><div class="cat-title" style="font-size:13px">${nom}</div><div class="cat-meta">Grupo · ${n} ${n === 1 ? 'capa' : 'capas'}${vis ? '' : ' · oculto'}</div></div>
+      <button class="iconbtn" type="button" id="gm-nombre-${id}" data-cg="nombre" aria-label="Cambiar el nombre del grupo ${nom}" title="Cambiar el nombre">${I('edit', 'sm')}</button>
+      <button class="iconbtn" type="button" id="gm-vis-${id}" data-cg="vis" aria-pressed="${!vis}" aria-label="${vis ? 'Ocultar' : 'Mostrar'} el grupo ${nom}" title="${vis ? 'Ocultar el grupo' : 'Mostrar el grupo'}">${I(vis ? 'eye' : 'eyeOff', 'sm')}</button></div>
+    <div class="row" style="margin-top:6px"><label class="lbl-s" for="gm-op-${id}">Opacidad</label><input class="grow" id="gm-op-${id}" type="range" min="0" max="1" step=".05" value="${promedioOpacidad(u.capas)}" data-cg="op">
+      <button class="iconbtn" type="button" id="gm-up-${id}" data-cg="up" aria-label="Subir el grupo ${nom}" title="Subir el grupo" ${puedeSubir ? '' : 'disabled'}>${I('up', 'sm')}</button>
+      <button class="iconbtn" type="button" id="gm-down-${id}" data-cg="down" aria-label="Bajar el grupo ${nom}" title="Bajar el grupo" ${puedeBajar ? '' : 'disabled'}>${I('down', 'sm')}</button>
+      <button class="iconbtn" type="button" id="gm-desagrupar-${id}" data-cg="desagrupar" aria-label="Desagrupar ${nom}" title="Desagrupar (las capas siguen en el mapa)">${I('x', 'sm')}</button>
+      <button class="iconbtn" type="button" id="gm-quitar-${id}" data-cg="quitar" aria-label="Quitar del mapa las capas del grupo ${nom}" title="Quitar del mapa el grupo y sus capas">${I('trash', 'sm')}</button></div></div>
+    ${miembros ? `<ul class="list capas-activas ca-miembros">${miembros}</ul>` : ''}</li>`;
+}
+function htmlCapasActivas() {
+  const tit = `<div class="cat-grupo cat-seccion">${I('layers', 'sm')}Capas activas <span class="badge">${estado.capas.length}</span></div>`;
+  if (!estado.capas.length) return tit + `<div class="empty small" style="padding:10px">No hay capas en el mapa. Actívelas en la lista de abajo.</div>`;
+  const us = unidadesMapa(), ids = new Set(estado.capas.map(c => c.id));
+  [...estado.selCapas].forEach(id => { if (!ids.has(id)) estado.selCapas.delete(id); });
+  const nSel = estado.selCapas.size, todas = nSel === estado.capas.length, alguna = estado.capas.some(c => c.visible);
+  const selGm = [...new Set(estado.capas.filter(c => estado.selCapas.has(c.id) && c.gm).map(c => c.gm))];
+  const barra = `<div class="ca-barra">
+    <div class="row"><label class="ca-todas"><input type="checkbox" class="ca-sel" id="cx-todas" data-cx="todas" ${todas ? 'checked' : ''} ${nSel && !todas ? 'data-mixto' : ''}> Todas</label>
+      <button class="btn sm ghost" type="button" id="cx-vis" data-cx="vis" title="${alguna ? 'Ocultar todas las capas del mapa' : 'Mostrar todas las capas del mapa'}">${I(alguna ? 'eyeOff' : 'eye', 'sm')}${alguna ? 'Ocultar todas' : 'Mostrar todas'}</button>
+      <button class="btn sm ghost" type="button" id="cx-temas" data-cx="temas" title="Agrupa las capas sueltas según su tema del catálogo (Hidrografía, Ambiente…)">${I('folder', 'sm')}Agrupar por tema</button></div>
+    <div class="row" style="margin-top:6px"><label class="lbl-s" for="cx-op">Opacidad general</label><input class="grow" id="cx-op" type="range" min="0" max="1" step=".05" value="${promedioOpacidad(estado.capas)}" data-cx="op"><output class="small mono" id="cx-op-val" for="cx-op">${Math.round(promedioOpacidad(estado.capas) * 100)} %</output></div>
+    ${nSel ? `<div class="ca-acciones" role="group" aria-label="Acciones sobre las capas seleccionadas"><span class="small"><b>${nSel}</b> ${nSel === 1 ? 'seleccionada' : 'seleccionadas'}</span>
+      <button class="btn sm ghost" type="button" id="cs-mostrar" data-cs="mostrar">${I('eye', 'sm')}Mostrar</button>
+      <button class="btn sm ghost" type="button" id="cs-ocultar" data-cs="ocultar">${I('eyeOff', 'sm')}Ocultar</button>
+      <button class="btn sm ghost" type="button" id="cs-up" data-cs="up" title="Subir en bloque">${I('up', 'sm')}Subir</button>
+      <button class="btn sm ghost" type="button" id="cs-down" data-cs="down" title="Bajar en bloque">${I('down', 'sm')}Bajar</button>
+      <button class="btn sm ghost" type="button" id="cs-agrupar" data-cs="agrupar">${I('folder', 'sm')}Agrupar</button>
+      ${selGm.length ? `<button class="btn sm ghost" type="button" id="cs-desagrupar" data-cs="desagrupar" title="Saca las capas seleccionadas de su grupo">Sacar del grupo</button>` : ''}
+      <button class="btn sm ghost" type="button" id="cs-quitar" data-cs="quitar">${I('trash', 'sm')}Quitar</button>
+      <button class="btn sm ghost" type="button" id="cs-limpiar" data-cs="limpiar" title="Quitar la selección">${I('x', 'sm')}</button></div>` : ''}</div>`;
+  const filas = us.slice().reverse().map((u, k) => u.gm ? htmlGrupoMapa(u, k > 0, k < us.length - 1) : htmlCapaActiva(u.capas[0], k > 0, k < us.length - 1, false)).join('');
+  queueMicrotask(() => $$('input[data-mixto]').forEach(i => { i.indeterminate = true; }));   // casillas a medias, ya en la página
+  return tit + barra + `<p class="small muted" style="margin:6px 0">Arriba = se dibuja encima. Marque varias capas para moverlas, ocultarlas, agruparlas o quitarlas juntas.</p><ul class="list capas-activas">${filas}</ul>`;
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-ca]'); if (!b || b.type === 'range') return;
-  const id = b.closest('[data-capa-item]').dataset.capaItem, c = estado.capas.find(k => k.id === id), i = estado.capas.indexOf(c);
+  const b = e.target.closest('[data-ca]'); if (!b || b.type === 'range' || b.type === 'checkbox') return;
+  const id = b.closest('[data-capa-item]').dataset.capaItem, c = estado.capas.find(k => k.id === id);
   if (b.dataset.ca === 'vis') visibilidadCapa(c, !c.visible);
   if (b.dataset.ca === 'zoom') acercarA(c.datos || {bbox: c.bbox});
   if (b.dataset.ca === 'modo') cambiarModo(c, c.modo === 'wms' ? 'vector' : 'wms');
   if (b.dataset.ca === 'estilo') abrirSimbologia(c.id);
-  if (b.dataset.ca === 'quitar') { desmontarCapa(c); estado.capas.splice(i, 1); emitirCapas(); if (c.local || c.id === 'borrador') repoFueraDelMapa(c.id); if (c.rasterLocal) { if (c.dem || c.derivada) marcarEnMapa(c, false); else idbOp('rasters', 'readwrite', s => s.delete(c.id)).catch(() => {}); } }
-  if (b.dataset.ca === 'up' && i < estado.capas.length - 1) { estado.capas.splice(i, 1); estado.capas.splice(i + 1, 0, c); reordenarCapasMapa(); emitirCapas(); }
-  if (b.dataset.ca === 'down' && i > 0) { estado.capas.splice(i, 1); estado.capas.splice(i - 1, 0, c); reordenarCapasMapa(); emitirCapas(); }
+  if (b.dataset.ca === 'quitar') { quitarCapa(c); emitirCapas(); }
+  if (b.dataset.ca === 'up' || b.dataset.ca === 'down') moverCapas([c.id], b.dataset.ca === 'up' ? 1 : -1);
 });
-document.addEventListener('input', e => { const r = e.target.closest('[data-ca="op"]'); if (r) { const c = estado.capas.find(k => k.id === r.closest('[data-capa-item]').dataset.capaItem); opacidadCapa(c, +r.value); } });
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-cg]'); if (!b || b.type === 'range' || b.type === 'checkbox') return;
+  const gm = b.closest('[data-grupo-item]').dataset.grupoItem, g = estado.gruposMapa[gm], cs = estado.capas.filter(c => c.gm === gm);
+  if (!g) return;
+  if (b.dataset.cg === 'abrir') { g.abierto = !g.abierto; emitirCapas(); }
+  if (b.dataset.cg === 'vis') verCapas(cs, !cs.some(c => c.visible));
+  if (b.dataset.cg === 'up' || b.dataset.cg === 'down') moverCapas(cs.map(c => c.id), b.dataset.cg === 'up' ? 1 : -1);
+  if (b.dataset.cg === 'desagrupar') { desagrupar(cs); toast('Grupo «' + g.nombre + '» deshecho; sus capas siguen en el mapa', 'layers'); }
+  if (b.dataset.cg === 'quitar') dialogo('Quitar el grupo «' + g.nombre + '»', `<p>Se quitan del mapa ${cs.length} ${cs.length === 1 ? 'capa' : 'capas'}: ${cs.map(c => esc(c.titulo)).join(', ')}. Puede volver a activarlas desde el catálogo.</p>`,
+    [{t: 'Quitar', p: true, f: () => { cs.forEach(quitarCapa); emitirCapas(); }}]);
+  if (b.dataset.cg === 'nombre') pedirNombreGrupo('Nombre del grupo', g.nombre, n => {
+    n = n.trim(); if (!n || n === g.nombre) return;
+    if (!nombreGrupoLibre(n)) { toast('Ya hay un grupo «' + n + '»', 'info'); return; }
+    g.nombre = n; emitirCapas();
+  });
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-cx], [data-cs]'); if (!b || b.type === 'range' || b.type === 'checkbox') return;
+  const sel = estado.capas.filter(c => estado.selCapas.has(c.id)), a = b.dataset.cx || b.dataset.cs;
+  if (b.dataset.cx === 'vis') verCapas(estado.capas, !estado.capas.some(c => c.visible));
+  if (b.dataset.cx === 'temas') agruparPorTema();
+  if (!b.dataset.cs) return;
+  if (a === 'mostrar' || a === 'ocultar') verCapas(sel, a === 'mostrar');
+  if (a === 'up' || a === 'down') moverCapas(sel.map(c => c.id), a === 'up' ? 1 : -1);
+  if (a === 'agrupar') { const ids = sel.map(c => c.id); pedirNombreGrupo('Agrupar ' + ids.length + (ids.length === 1 ? ' capa' : ' capas'), '', n => agrupar(ids, n)); }
+  if (a === 'desagrupar') desagrupar(sel);
+  if (a === 'limpiar') { estado.selCapas.clear(); emitirCapas(); }
+  if (a === 'quitar') dialogo('Quitar ' + sel.length + (sel.length === 1 ? ' capa' : ' capas') + ' del mapa', `<p>${sel.map(c => esc(c.titulo)).join(', ')}.</p><p class="small muted">Puede volver a activarlas desde el catálogo.</p>`,
+    [{t: 'Quitar', p: true, f: () => { sel.forEach(quitarCapa); emitirCapas(); }}]);
+});
+document.addEventListener('change', e => {
+  const i = e.target; if (i.type !== 'checkbox') return;
+  if (i.dataset.ca === 'sel') { const id = i.closest('[data-capa-item]').dataset.capaItem; i.checked ? estado.selCapas.add(id) : estado.selCapas.delete(id); emitirCapas(); }
+  else if (i.dataset.cg === 'sel') { const gm = i.closest('[data-grupo-item]').dataset.grupoItem; estado.capas.filter(c => c.gm === gm).forEach(c => i.checked ? estado.selCapas.add(c.id) : estado.selCapas.delete(c.id)); emitirCapas(); }
+  else if (i.dataset.cx === 'todas') { if (i.checked) estado.capas.forEach(c => estado.selCapas.add(c.id)); else estado.selCapas.clear(); emitirCapas(); }
+});
+document.addEventListener('input', e => {
+  const r = e.target; if (r.type !== 'range') return;
+  if (r.dataset.ca === 'op') { const c = estado.capas.find(k => k.id === r.closest('[data-capa-item]').dataset.capaItem); opacidadCapa(c, +r.value); }
+  if (r.dataset.cg === 'op') { const gm = r.closest('[data-grupo-item]').dataset.grupoItem; opacidadCapas(estado.capas.filter(c => c.gm === gm), +r.value); }
+  if (r.dataset.cx === 'op') { opacidadCapas(estado.capas, +r.value); $$('[data-cg="op"]').forEach(x => { x.value = r.value; }); const o = $('#cx-op-val'); if (o) o.textContent = Math.round(r.value * 100) + ' %'; }
+});
 function pLeyenda(el) {
   const vis = estado.capas.filter(c => c.visible).slice().reverse();
   el.innerHTML = (vis.length ? vis.map(c => `<div class="leg-item">${c.modo === 'wms' && !c.simbologia ? `<img src="${esc(urlLeyenda(c.wms))}" alt="Leyenda de ${esc(c.titulo)} (WMS GetLegendGraphic)" style="max-width:120px;background:#fff;border-radius:4px;padding:2px" onerror="this.style.display='none'">` : simbolo(c, 22)}<div><div style="font-weight:600;font-size:13px">${esc(c.titulo)}${c.provisional ? ' <span class="badge warn">Provisional</span>' : ''}</div><div class="small muted">${esc(c.atribucion || c.fuente)} · ${esc(c.licencia)}</div>${c.modo === 'wms' && !c.simbologia ? '' : clasesLeyenda(c)}</div></div>`).join('')
