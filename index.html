@@ -2512,11 +2512,16 @@ window.cfgUsuario = (() => {
       return j;
     } finally { clearTimeout(t); }
   }
+  // primero la del mismo servidor (instalación local); si no hay (GitHub Pages), la de config.json
   async function hayApi() {
     const cf = (typeof FUENTE !== 'undefined' && FUENTE.config) || {};
-    const base = cf.api ? new URL(cf.api, location.href).href.replace(/\/?$/, '/') : new URL('api/', location.href).href;
-    st.base = base;
-    try { const j = await api('estado', {espera: 3000}); return !!(j && j.ok); } catch (e) { return false; }
+    const bases = [new URL('api/', location.href).href];
+    if (cf.api) bases.push(new URL(cf.api, location.href).href.replace(/\/?$/, '/'));
+    for (const [i, base] of bases.entries()) {
+      st.base = base;
+      try { const j = await api('estado', {espera: i ? 6000 : 2500}); if (j && j.ok) return true; } catch (e) {}
+    }
+    return false;
   }
   // al entrar (antes de dibujar el visor): sesión en el servidor y preferencias guardadas en su lugar
   async function alEntrar(u, clave) {
