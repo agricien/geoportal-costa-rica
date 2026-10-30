@@ -239,6 +239,11 @@ code,.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
 .capas-activas .card{padding:8px}
 .capas-activas .row{flex-wrap:nowrap;gap:4px}
 .capas-activas input[type=range]{min-width:40px}
+.ca-cfg{display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--muted)}
+@media (max-width:420px){.topbar{padding:0 10px;gap:4px}.brand{flex:1 1 auto;min-width:0;gap:8px}.brand-text strong{font-size:14px;overflow:hidden;text-overflow:ellipsis}.tb-spacer{flex:0 0 0}}
+@media (max-width:360px){.brand-mark{display:none}}
+@media (max-width:480px){.capas-activas .card>.row:first-child{flex-wrap:wrap;row-gap:2px}.capas-activas .card>.row:first-child>.grow{flex:1 1 calc(100% - 80px)}.capas-activas .card>.row:first-child>.grow+*{margin-left:auto}.capas-activas .iconbtn{min-width:36px;height:36px;padding:0 6px}}
+.acceso-card [hidden]{display:none!important}
 .ca-sel{width:16px;height:16px;flex:none;margin:0 2px;accent-color:var(--accent);cursor:pointer}
 .ca-barra{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);padding:8px;margin-bottom:4px}
 .ca-barra .row{gap:6px;flex-wrap:wrap;align-items:center}
@@ -489,7 +494,7 @@ iframe.ext-grande{position:fixed!important;inset:64px 3vw 20px 3vw;width:auto!im
   <form class="searchbox" id="formBuscar" role="search" autocomplete="off">
     <span id="icoBuscar"></span>
     <label for="qBuscar" class="sr-only">Buscar un lugar en Costa Rica</label>
-    <input id="qBuscar" type="search" placeholder="Buscar lugar, provincia o corregimiento…">
+    <input id="qBuscar" type="search" placeholder="Buscar lugar, cantón o distrito…">
   </form>
   <ul class="bar bar-top" id="bar-superior" data-kind="bar" data-bar="superior" aria-label="Barra de herramientas superior"></ul>
   <span class="tb-spacer"></span>
@@ -539,7 +544,7 @@ const isMobile = () => matchMedia('(max-width: 980px)').matches;
 const mem = {};
 const store = {
   get(k, d) { try { const v = localStorage.getItem('ipde.' + k); return v == null ? (k in mem ? mem[k] : d) : JSON.parse(v); } catch (e) { return k in mem ? mem[k] : d; } },
-  set(k, v) { mem[k] = v; try { localStorage.setItem('ipde.' + k, JSON.stringify(v)); } catch (e) { /* almacenamiento no disponible: queda en memoria */ } }
+  set(k, v) { mem[k] = v; if (window.cfgUsuario) cfgUsuario.cambioStore(k); try { localStorage.setItem('ipde.' + k, JSON.stringify(v)); } catch (e) { /* almacenamiento no disponible: queda en memoria */ } }
 };
 function toast(msg, ico = 'check') {
   const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = I(ico, 'sm') + '<span>' + esc(msg) + '</span>';
@@ -1634,6 +1639,7 @@ const wmsConEstilo = c => c.simbologia ? Object.assign({}, c.wms, {sld: sldDe(c)
 function desmontarCapa(c) { idsCapasMapa(c.id).forEach(l => mapa.getLayer(l) && mapa.removeLayer(l)); if (mapa.getSource('ov-' + c.id)) mapa.removeSource('ov-' + c.id); }
 function reordenarCapasMapa() { estado.capas.forEach(c => idsCapasMapa(c.id).forEach(l => { if (mapa.getLayer(l)) mapa.moveLayer(l, mapa.getLayer('herr-fill') ? 'herr-fill' : undefined); })); }
 function opacidadCapa(c, v) {
+  cfgUsuario.programar();
   c.opacidad = v; const s = 'ov-' + c.id;
   const set = (l, p, val) => mapa.getLayer(l) && mapa.setPaintProperty(l, p, val);
   set(s + '-fill', 'fill-opacity', (c.factorRelleno || .22) * v); set(s + '-line', 'line-opacity', v); set(s + '-circle', 'circle-opacity', v); set(s + '-circle', 'circle-stroke-opacity', v);
@@ -1656,6 +1662,7 @@ function emitirCapas() {
   registrarAgregadas();
   ['capas', 'leyenda', 'catalogo', 'atributos', 'servicioogc', 'dem', 'derivadas'].forEach(refrescarPanel);
   $('#navCuenta').textContent = estado.capas.length;
+  cfgUsuario.programar();
 }
 function prepararDatos(fc) {
   // Etiqueta corta para sismos sueltos (p. ej. «M7.7») cuando no hay nombre
@@ -2000,7 +2007,7 @@ async function cargarCatalogo() {
   const deNombre = id => estado.catalogo.capas.find(c => c.id === id || c.nombre === id);
   let ini = pref.map(deNombre).filter(Boolean);
   if (!ini.length) ini = estado.catalogo.capas.slice(0, 2);
-  const arrancar = async () => { for (const c of ini) await activarCapaCatalogo(c, true, true); if (pg.url && new URLSearchParams(location.search).has('pg')) { await pgConectar(); abrirPanel('postgis', {enfocar: false}); } };
+  const arrancar = async () => { if (!(sesion && await cfgUsuario.restaurar())) for (const c of ini) await activarCapaCatalogo(c, true, true); if (pg.url && new URLSearchParams(location.search).has('pg')) { await pgConectar(); abrirPanel('postgis', {enfocar: false}); } };
   if (estiloListo) arrancar(); else mapa.once('style.load', () => setTimeout(arrancar, 0));
 }
 function simbolo(c, tam = 22) {
@@ -2289,6 +2296,7 @@ function enlazarAccesoOgc(el) {
 
 /* ---------- Paneles de mapa ---------- */
 // Capas activas: encabezan el Catálogo de datos. Arriba = se dibuja encima.
+// Los grupos, la selección y el resto de la configuración se guardan con cfgUsuario (más abajo).
 // Grupos del mapa (Hidrografía, Áreas de protección…): c.gm es el grupo de la capa; sus capas van siempre juntas en
 // estado.capas, así que un grupo sube, baja, se oculta o cambia de opacidad como un bloque. La selección (casillas)
 // permite hacer lo mismo con varias capas a la vez. Grupos y selección viven en esta sesión del visor.
@@ -2420,7 +2428,8 @@ function htmlCapasActivas() {
       <button class="btn sm ghost" type="button" id="cs-agrupar" data-cs="agrupar">${I('folder', 'sm')}Agrupar</button>
       ${selGm.length ? `<button class="btn sm ghost" type="button" id="cs-desagrupar" data-cs="desagrupar" title="Saca las capas seleccionadas de su grupo">Sacar del grupo</button>` : ''}
       <button class="btn sm ghost" type="button" id="cs-quitar" data-cs="quitar">${I('trash', 'sm')}Quitar</button>
-      <button class="btn sm ghost" type="button" id="cs-limpiar" data-cs="limpiar" title="Quitar la selección">${I('x', 'sm')}</button></div>` : ''}</div>`;
+      <button class="btn sm ghost" type="button" id="cs-limpiar" data-cs="limpiar" title="Quitar la selección">${I('x', 'sm')}</button></div>` : ''}
+    ${sesion ? cfgUsuario.htmlEstado() : ''}</div>`;
   const filas = us.slice().reverse().map((u, k) => u.gm ? htmlGrupoMapa(u, k > 0, k < us.length - 1) : htmlCapaActiva(u.capas[0], k > 0, k < us.length - 1, false)).join('');
   queueMicrotask(() => $$('input[data-mixto]').forEach(i => { i.indeterminate = true; }));   // casillas a medias, ya en la página
   return tit + barra + `<p class="small muted" style="margin:6px 0">Arriba = se dibuja encima. Marque varias capas para moverlas, ocultarlas, agruparlas o quitarlas juntas.</p><ul class="list capas-activas">${filas}</ul>`;
@@ -2477,6 +2486,164 @@ document.addEventListener('input', e => {
   if (r.dataset.cg === 'op') { const gm = r.closest('[data-grupo-item]').dataset.grupoItem; opacidadCapas(estado.capas.filter(c => c.gm === gm), +r.value); }
   if (r.dataset.cx === 'op') { opacidadCapas(estado.capas, +r.value); $$('[data-cg="op"]').forEach(x => { x.value = r.value; }); const o = $('#cx-op-val'); if (o) o.textContent = Math.round(r.value * 100) + ' %'; }
 });
+
+/* ---------- Configuración de cada usuario: se guarda en la base y sigue al usuario entre dispositivos ----------
+   Lo que se guarda: capas activas (orden, visibilidad, opacidad y grupo), grupos, selección, vista del mapa y las
+   preferencias de este visor (tema, mapa base, simbologías, disposiciones guardadas, servicios OGC y capas agregadas).
+   La disposición de los paneles NO viaja: la del teléfono y la del escritorio son distintas.
+   Dónde: si el servidor del geoportal tiene API (instalador → PostgreSQL, esquema app) se guarda en la base con el
+   token de la sesión; si no (GitHub Pages, sin conexión), en este navegador. config.json puede dar {"api": "<url>/"}
+   cuando la API está en otro origen; si no, se prueba la del mismo servidor (api/). */
+window.cfgUsuario = (() => {
+  const CLAVES = ['tema', 'temasPropios', 'simbologias', 'mapaBase', 'disposiciones', 'ogcServicios', 'catalogoAgregadas', 'extFuentes'];
+  const st = {base: null, token: null, usuario: null, servidor: false, listo: false, cargado: null, pendiente: false, t: null,
+              estado: 'local', guardado: null, error: '', aplicando: false, recibida: null};
+  const kTok = u => 'cr.cfg.token.' + u, kLocal = u => 'cr.cfg.datos.' + u;
+  const leer = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  const poner = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  async function api(ruta, opc = {}) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), opc.espera || 8000);
+    try {
+      const r = await fetch(st.base + ruta, {method: opc.metodo || 'GET', cache: 'no-store', signal: ctl.signal,
+        headers: Object.assign({'Content-Type': 'application/json'}, st.token ? {Authorization: 'Bearer ' + st.token} : {}),
+        body: opc.cuerpo == null ? undefined : JSON.stringify(opc.cuerpo)});
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { const e = new Error(j.error || 'HTTP ' + r.status); e.codigo = r.status; throw e; }
+      return j;
+    } finally { clearTimeout(t); }
+  }
+  async function hayApi() {
+    const cf = (typeof FUENTE !== 'undefined' && FUENTE.config) || {};
+    const base = cf.api ? new URL(cf.api, location.href).href.replace(/\/?$/, '/') : new URL('api/', location.href).href;
+    st.base = base;
+    try { const j = await api('estado', {espera: 3000}); return !!(j && j.ok); } catch (e) { return false; }
+  }
+  // al entrar (antes de dibujar el visor): sesión en el servidor y preferencias guardadas en su lugar
+  async function alEntrar(u, clave) {
+    st.usuario = u.usuario; st.token = leer(kTok(u.usuario)); st.servidor = false; st.error = '';
+    const datosLocales = leer(kLocal(u.usuario));
+    try {
+      if (await hayApi()) {
+        if (clave) {
+          try { const j = await api('entrar', {metodo: 'POST', cuerpo: {usuario: u.usuario, clave}}); st.token = j.token; poner(kTok(u.usuario), j.token); }
+          catch (e) { st.token = null; poner(kTok(u.usuario), null); st.error = e.codigo === 401 ? 'La cuenta no está en el servidor: se guarda en este navegador' : e.message; }
+        }
+        if (st.token) {
+          try { const j = await api('config'); st.servidor = true; st.recibida = j.datos || null; st.cargado = j.actualizado || null; }
+          catch (e) { if (e.codigo === 401) { st.token = null; poner(kTok(u.usuario), null); st.error = 'La sesión del servidor venció: vuelva a entrar con su contraseña para sincronizar'; } else st.error = e.message; }
+        }
+      }
+    } catch (e) { st.error = String(e.message || e); }
+    if (!st.servidor) st.recibida = datosLocales;
+    // las preferencias van al almacenamiento antes de que el visor las lea (tema, mapa base, capas agregadas…)
+    if (st.recibida && st.recibida.store) CLAVES.forEach(k => { if (k in st.recibida.store) store.set(k, st.recibida.store[k]); });
+    st.estado = st.servidor ? 'servidor' : 'local';
+  }
+  function datos() {
+    const capas = estado.capas.filter(c => !c.local && c.id !== 'borrador' && !c.rasterLocal)
+      .map(c => Object.assign({id: c.id, vis: !!c.visible, op: c.opacidad}, c.gm ? {gm: c.gm} : {}));
+    const usados = new Set(capas.map(c => c.gm).filter(Boolean)), grupos = {};
+    Object.entries(estado.gruposMapa || {}).forEach(([g, v]) => { if (usados.has(g)) grupos[g] = {nombre: v.nombre, abierto: v.abierto !== false}; });
+    const c = mapa.getCenter(), s = {};
+    CLAVES.forEach(k => { const v = store.get(k, undefined); if (v !== undefined) s[k] = v; });
+    return {v: 1, capas, grupos, sel: [...(estado.selCapas || [])].filter(id => capas.some(k => k.id === id)),
+            vista: {c: [+c.lng.toFixed(6), +c.lat.toFixed(6)], z: +mapa.getZoom().toFixed(2), b: +mapa.getBearing().toFixed(1), p: +mapa.getPitch().toFixed(1)}, store: s};
+  }
+  // deja el mapa como dice la configuración: enciende lo que falta, apaga lo que sobra, orden, grupos y vista
+  async function aplicar(d, {vista = true} = {}) {
+    if (!d || !Array.isArray(d.capas)) return false;
+    st.aplicando = true;
+    try {
+      const quiere = new Map(d.capas.map((k, i) => [k.id, Object.assign({i}, k)]));
+      estado.capas.filter(c => !c.local && c.id !== 'borrador' && !c.rasterLocal && !quiere.has(c.id)).forEach(c => activarCapaCatalogo(c, false));
+      for (const k of d.capas) {
+        if (estado.capas.some(c => c.id === k.id)) continue;
+        const m = estado.catalogo.capas.find(c => c.id === k.id);
+        if (m && (m.local || veCapa(m.id))) await activarCapaCatalogo(m, true, true);
+      }
+      estado.gruposMapa = {}; Object.entries(d.grupos || {}).forEach(([g, v]) => { estado.gruposMapa[g] = {nombre: String(v.nombre || 'Grupo'), abierto: v.abierto !== false}; });
+      const fin = estado.capas.length;
+      estado.capas.sort((a, b) => (quiere.has(a.id) ? quiere.get(a.id).i : fin) - (quiere.has(b.id) ? quiere.get(b.id).i : fin));
+      estado.capas.forEach(c => {
+        const k = quiere.get(c.id); if (!k) return;
+        if (k.gm && estado.gruposMapa[k.gm]) c.gm = k.gm; else delete c.gm;
+        if (typeof k.op === 'number') opacidadCapa(c, Math.min(1, Math.max(0, k.op)));
+        if (c.visible !== !!k.vis) { c.visible = !!k.vis; idsCapasMapa(c.id).forEach(l => mapa.getLayer(l) && mapa.setLayoutProperty(l, 'visibility', c.visible ? 'visible' : 'none')); }
+      });
+      estado.selCapas = new Set((d.sel || []).filter(id => estado.capas.some(c => c.id === id)));
+      reordenarCapasMapa(); emitirCapas();
+      if (vista && d.vista && Array.isArray(d.vista.c)) mapa.jumpTo({center: d.vista.c, zoom: d.vista.z, bearing: d.vista.b || 0, pitch: d.vista.p || 0});
+      return true;
+    } finally { st.aplicando = false; }
+  }
+  // al cargar el catálogo: restaura lo guardado (true) o deja que el visor ponga sus capas iniciales (false)
+  async function restaurar() {
+    let ok = false;
+    try { ok = st.recibida && st.recibida.capas && st.recibida.capas.length ? await aplicar(st.recibida) : false; }
+    catch (e) { console.warn('configuración:', e); }
+    if (ok) toast(st.servidor ? 'Configuración recuperada del servidor' : 'Configuración recuperada de este navegador', 'layers');
+    else if (st.error) toast(st.error, 'info');
+    mapa.on('moveend', programar);
+    window.addEventListener('online', () => { if (st.pendiente) programar(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') revisar(); });
+    window.addEventListener('focus', revisar);
+    setTimeout(() => { st.listo = true; }, 0);
+    return ok;
+  }
+  function programar() {
+    if (!st.listo || st.aplicando || !st.usuario || !mapa) return;
+    st.pendiente = true; clearTimeout(st.t); st.t = setTimeout(guardar, 1200);
+    if (st.estado !== 'guardando') { st.estado = 'pendiente'; pintar(); }
+  }
+  async function guardar() {
+    if (!st.pendiente) return;
+    const d = datos(); poner(kLocal(st.usuario), d);
+    if (!st.token || !st.base || !st.servidor) { st.pendiente = false; st.estado = 'local'; st.guardado = new Date(); pintar(); return; }
+    st.estado = 'guardando'; pintar();
+    try {
+      const j = await api('config', {metodo: 'PUT', cuerpo: d});
+      st.pendiente = false; st.cargado = j.actualizado; st.guardado = new Date(); st.estado = 'servidor'; st.error = '';
+    } catch (e) {
+      st.estado = 'sinconexion'; st.error = e.message;
+      if (e.codigo === 401) { st.token = null; poner(kTok(st.usuario), null); st.servidor = false; st.pendiente = false; toast('La sesión del servidor venció: entre de nuevo para seguir sincronizando', 'info'); }
+    }
+    pintar();
+  }
+  // al volver a la pestaña: si otro dispositivo guardó algo más nuevo, se trae
+  let revisando = false;
+  async function revisar() {
+    if (revisando || !st.listo || !st.servidor || !st.token || st.pendiente) return;
+    revisando = true;
+    try {
+      const j = await api('config');
+      if (j.datos && j.actualizado && j.actualizado !== st.cargado) {
+        const antes = {tema: store.get('tema'), mapaBase: store.get('mapaBase')};
+        CLAVES.forEach(k => { if (j.datos.store && k in j.datos.store) store.set(k, j.datos.store[k]); });
+        st.cargado = j.actualizado;
+        if (store.get('tema') !== antes.tema) aplicarTema(store.get('tema'), {silencioso: true});
+        if (store.get('mapaBase') !== antes.mapaBase) cambiarMapaBase(store.get('mapaBase'));
+        await aplicar(j.datos, {vista: false});
+        toast('Configuración actualizada desde ' + (j.dispositivo ? 'otro dispositivo' : 'el servidor'), 'layers');
+      }
+    } catch (e) {} finally { revisando = false; }
+  }
+  async function salir() {
+    clearTimeout(st.t); if (st.pendiente) await guardar().catch(() => {});
+    if (st.token && st.base) await api('salir', {metodo: 'POST', espera: 2500}).catch(() => {});
+    if (st.usuario) poner(kTok(st.usuario), null);
+  }
+  function htmlEstado() {
+    const h = st.guardado ? ' · ' + st.guardado.toLocaleTimeString('es-CR', {hour: '2-digit', minute: '2-digit'}) : '';
+    const t = {servidor: ['ok', 'Guardado en el servidor' + h, 'Su configuración está en la base de datos: la verá igual en otro dispositivo al entrar con su cuenta.'],
+      pendiente: ['', 'Cambios sin guardar…', ''], guardando: ['', 'Guardando…', ''],
+      sinconexion: ['warn', 'Sin conexión con el servidor: guardado en este navegador', st.error],
+      local: ['', 'Guardado en este navegador' + h, st.error || 'Este sitio no tiene servidor con base de datos: la configuración sólo queda en este navegador.']}[st.estado] || ['', '', ''];
+    return `<div class="ca-cfg small" id="cfgEstado" title="${esc(t[2])}">${I(st.estado === 'servidor' ? 'check' : st.estado === 'sinconexion' ? 'info' : 'save', 'sm')}<span>${esc(t[1])}</span></div>`;
+  }
+  function pintar() { const e = document.getElementById('cfgEstado'); if (e) e.outerHTML = htmlEstado(); }
+  return {alEntrar, restaurar, programar, salir, htmlEstado, get listo() { return st.listo; }, get servidor() { return st.servidor; },
+          cambioStore: k => { if (CLAVES.includes(k)) programar(); }, _st: st};
+})();
 function pLeyenda(el) {
   const vis = estado.capas.filter(c => c.visible).slice().reverse();
   el.innerHTML = (vis.length ? vis.map(c => `<div class="leg-item">${c.modo === 'wms' && !c.simbologia ? `<img src="${esc(urlLeyenda(c.wms))}" alt="Leyenda de ${esc(c.titulo)} (WMS GetLegendGraphic)" style="max-width:120px;background:#fff;border-radius:4px;padding:2px" onerror="this.style.display='none'">` : simbolo(c, 22)}<div><div style="font-weight:600;font-size:13px">${esc(c.titulo)}${c.provisional ? ' <span class="badge warn">Provisional</span>' : ''}</div><div class="small muted">${esc(c.atribucion || c.fuente)} · ${esc(c.licencia)}</div>${c.modo === 'wms' && !c.simbologia ? '' : clasesLeyenda(c)}</div></div>`).join('')
@@ -3581,6 +3748,7 @@ function vigilarInactividad() {
   setInterval(() => { if (sesion && Date.now() - ultimaActividad > POLITICA.inactividadMin * 60000) salirDemo('sesión caducada', `La sesión se cerró tras ${POLITICA.inactividadMin} min sin actividad.`); }, 20000);
 }
 async function salirDemo(tipo = 'salió', aviso = '') {
+  await cfgUsuario.salir().catch(() => {});
   if (sesion) { await auditar('sesion', tipo, 'Geoportal'); await sellarBitacora(); }
   try { sessionStorage.removeItem('ipde.sesion'); sessionStorage.removeItem('ipde.actividad'); if (aviso) sessionStorage.setItem('ipde.aviso', aviso); } catch (e) {}
   location.reload();
@@ -5074,7 +5242,7 @@ function generarDocLegal(doc, L, marcar) {
       <h4>Para qué y con qué base legal</h4><ul>
         ${h.srv ? '<li><strong>Prestar el servicio y mantener su cuenta</strong> (ejecución del servicio que usted solicita).</li><li><strong>Seguridad del sitio</strong>: registros de acceso y bloqueo de abusos (interés legítimo y obligación de proteger los datos).</li>' : ''}
         <li><strong>Atender sus sugerencias y reportes</strong> (su consentimiento, que da al enviarlos y puede retirar).</li>
-        <li><strong>Recordar sus preferencias</strong> en su propio navegador (necesario para la función que usted usa).</li>
+        <li><strong>Recordar sus preferencias</strong> en su propio navegador y, si el geoportal tiene base de datos y usted inicia sesión, en esa base, para que la configuración del visor lo acompañe en otros dispositivos (necesario para la función que usted usa).</li>
         ${L.analitica.length ? '<li><strong>Medir el uso del sitio</strong> con los servicios de analítica indicados abajo (sólo con su consentimiento previo).</li>' : '<li>No hay <strong>mercadeo</strong>, ni publicidad, ni analítica de terceros.</li>'}</ul>
       <h4>Con quién se comparten</h4><p>Los datos no se venden ni se ceden. ${h.srv ? 'El proveedor de alojamiento los trata por encargo del responsable. ' : ''}Al usar el mapa, su navegador pide recursos directamente a estos servicios, que reciben su dirección IP y datos técnicos del navegador según sus propias políticas:</p>
       ${tabla(['Servicio', 'Para qué'], h.terceros)}
@@ -5082,7 +5250,7 @@ function generarDocLegal(doc, L, marcar) {
       <h4>Cuánto tiempo</h4><p>${h.srv ? `Los registros de seguridad se conservan ${esc(String(p.conservacionMeses || 24))} meses; la cuenta, mientras esté activa; las sugerencias, mientras se estudian y, si se aprueban, como parte del registro de autoría.` : 'Lo que se guarda en su navegador permanece hasta que usted borre los datos del sitio.'}</p>
       <h4>Sus derechos</h4><p>Según ${esc(ley.ley)}, usted puede ejercer los derechos de ${esc(ley.derechos)}, escribiendo a ${enl(correoP) || falta('correo para privacidad')} con una copia de su identificación. Si no queda conforme, puede acudir a ${esc(ley.autoridad)}.${h.srv ? ' También puede pedir que se elimine su cuenta.' : ' Lo guardado en su navegador lo borra usted mismo desde la configuración del navegador.'}</p>
       <h4>Seguridad</h4><p>Conexión cifrada (HTTPS), contraseñas guardadas sólo como huella con sal (${h.srv ? 'argon2id' : 'PBKDF2'}), doble factor para administradores y bitácora de auditoría encadenada.</p>`,
-    cookies: () => `<p>${h.gn ? 'Este sitio usa sólo las cookies técnicas imprescindibles para iniciar sesión.' : 'Este sitio no instala cookies propias.'} ${L.analitica.length ? 'Las cookies o identificadores de analítica indicados abajo sólo se activan si usted los acepta, y puede cambiar su elección en cualquier momento.' : 'No usa cookies de publicidad ni de analítica.'} Guarda en su navegador estos datos técnicos y de preferencias, que nunca salen de él:</p>
+    cookies: () => `<p>${h.gn ? 'Este sitio usa sólo las cookies técnicas imprescindibles para iniciar sesión.' : 'Este sitio no instala cookies propias.'} ${L.analitica.length ? 'Las cookies o identificadores de analítica indicados abajo sólo se activan si usted los acepta, y puede cambiar su elección en cualquier momento.' : 'No usa cookies de publicidad ni de analítica.'} Guarda en su navegador estos datos técnicos y de preferencias. Si el geoportal tiene base de datos y usted inicia sesión, la configuración del visor (capas, grupos, vista, tema y simbologías) se guarda también en ella, asociada a su cuenta, para usarla en otros dispositivos; se borra con la cuenta:</p>
       ${tabla(['Nombre', 'Tipo', 'Finalidad', 'Duración'], h.almacen)}
       ${L.analitica.length ? '<h4>Opcionales (requieren su consentimiento)</h4>' + tabla(['Servicio', 'Tipo', 'Finalidad', 'Duración'], L.analitica.map(a => [String(a.nombre || a.proveedor || ''), String(a.tipo || 'Analítica'), String(a.finalidad || ''), String(a.duracion || '')])) : ''}
       <p>Los servicios de mapas de terceros listados en <em>Privacidad</em> pueden registrar su IP al entregar las teselas, pero no instalan cookies desde esta página.</p>
@@ -5210,7 +5378,7 @@ function avisoAlmacenamiento(forzar = false) {
     ? `<p class="small" style="margin:0 0 8px"><strong>Cookies.</strong> Usamos almacenamiento técnico imprescindible y, sólo si usted lo acepta, ${esc(opc.map(a => a.nombre || a.proveedor).join(', '))} para medir el uso del sitio. <a href="#" data-legal-ver="cookies">Más información</a></p>
        <label class="row small" style="gap:6px;margin-bottom:8px"><input type="checkbox" id="almAn" ${c && c.analitica ? 'checked' : ''}> Analítica (opcional)</label>
        <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn sm" type="button" data-alm="rechazar">Rechazar</button><button class="btn sm" type="button" data-alm="guardar">Guardar selección</button><button class="btn sm" type="button" data-alm="aceptar">Aceptar todas</button></div>`
-    : `<p class="small" style="margin:0 0 8px">Este sitio no usa cookies de publicidad ni de analítica. Guarda en su navegador sólo datos técnicos y sus preferencias, que no salen de él. <a href="#" data-legal-ver="cookies">Más información</a> · <a href="#" data-legal-ver="privacidad">Privacidad</a></p>
+    : `<p class="small" style="margin:0 0 8px">Este sitio no usa cookies de publicidad ni de analítica. Guarda en su navegador datos técnicos y sus preferencias; si inicia sesión en un servidor del geoportal con base de datos, la configuración de su visor se guarda también allí para usarla en otros dispositivos. <a href="#" data-legal-ver="cookies">Más información</a> · <a href="#" data-legal-ver="privacidad">Privacidad</a></p>
        <div class="row" style="gap:6px"><button class="btn sm primary" type="button" data-alm="entendido">Entendido</button></div>`;
   document.body.appendChild(d);
   $$('[data-alm]', d).forEach(b => b.onclick = () => guardar({aceptar: true, rechazar: false, entendido: false, guardar: $('#almAn', d) && $('#almAn', d).checked}[b.dataset.alm]));
@@ -7379,7 +7547,7 @@ function entrar(u) {
   av.setAttribute('aria-label', 'Usuario: ' + u.nombre + '. Cerrar sesión');
   $('#acceso').hidden = true;
   vigilarInactividad();
-  iniciar();
+  cfgUsuario.alEntrar(u, $('#accClave').value).catch(e => console.warn('configuración:', e)).finally(() => { $('#accClave').value = ''; iniciar(); });
 }
 // en la edición Lite o en el servidor no hay acceso de demostración: la Lite sólo escucha en 127.0.0.1 y en el
 // servidor la sesión es la del directorio institucional (Keycloak a través de GeoNode)
