@@ -467,9 +467,79 @@ iframe.ext-grande{position:fixed!important;inset:64px 3vw 20px 3vw;width:auto!im
 .leyenda-pend i{width:14px;height:10px;border-radius:3px;display:inline-block}
 .leyenda-pend .d{background:var(--pend-div);outline:1.5px dashed var(--pend-div-borde)}
 .leyenda-pend .b{background:var(--pend-btn);outline:1.5px solid var(--pend-btn-borde)}
+.portada{position:fixed;inset:0;z-index:1001;display:flex;flex-direction:column;background:var(--surface-2)}
+.portada[hidden]{display:none}
+.pt-barra{display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--surface-solid);border-bottom:1px solid var(--border);flex:none}
+.pt-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:0}
+.pt-brand .brand-text{display:flex;flex-direction:column;line-height:1.2;min-width:0}.pt-brand .brand-text strong{font-size:15px}.pt-brand .brand-text span{font-size:12px;color:var(--muted)}
+.pt-nav{margin-left:auto;display:flex;align-items:center;gap:4px;flex:none}
+.pt-nav button:not(.btn){border:0;background:none;color:var(--text);font:inherit;font-size:14px;font-weight:600;padding:8px 12px;border-radius:var(--radius-sm);cursor:pointer}
+.pt-nav button:not(.btn):hover{background:color-mix(in srgb,var(--text) 7%,transparent)}
+.pt-nav button[aria-current="page"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent)}
+.pt-main{flex:1;min-height:0;position:relative}
+.pt-inicio,.pt-acerca{position:absolute;inset:0}
+.pt-inicio iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+.pt-acerca{overflow:auto;padding:24px 16px}
+.pt-hoja{max-width:860px;margin:0 auto;background:var(--surface-solid);border:1px solid var(--border);border-radius:var(--radius);padding:28px 28px 32px;line-height:1.6;font-size:14.5px}
+.pt-hoja h1{margin:0 0 8px;font-size:28px}.pt-hoja h2{margin:26px 0 8px;font-size:17px}.pt-hoja ul{padding-left:20px;margin:0}.pt-hoja li{margin-bottom:4px}
+.pt-lead{font-size:16px;margin:0}
+.pt-insts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.pt-inst{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;min-width:0}
+.pt-inst img{width:76px;height:50px;object-fit:contain;flex:none;background:#fff;border-radius:6px}
+.pt-sigla{width:76px;height:50px;display:grid;place-items:center;border-radius:6px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-weight:800;font-size:13px;flex:none}
+.pt-inst div{min-width:0}.pt-inst h3{margin:0 0 4px;font-size:14px;line-height:1.3}.pt-inst p{margin:0 0 4px;font-size:12.5px;line-height:1.45;color:var(--muted)}.pt-inst a{font-size:12.5px;overflow-wrap:anywhere}
+.acceso-portada{display:block;margin:12px auto 0;font-size:13px}
+@media (max-width:640px){.pt-barra{padding:8px 12px}.pt-brand .brand-text span,.pt-largo{display:none}.pt-nav button:not(.btn){padding:8px}.pt-hoja{padding:18px 16px}.pt-acerca{padding:12px}}
+@media (max-width:400px){.pt-brand .brand-text{display:none}}
+.pi-logo{display:grid;place-items:center;min-height:90px;padding:10px;background:#fff}.pi-logo img{max-width:100%;max-height:110px;object-fit:contain}
+.mw-pub{padding:8px 10px;margin-bottom:10px;display:block}.mw-pub summary{cursor:pointer;font-size:13px}.mw-pub[open] summary{margin-bottom:10px}
+.mw-logos{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px}
+.mw-logo{position:relative;display:inline-grid;place-items:center;width:84px;height:52px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff}
+.mw-logo img{max-width:76px;max-height:44px;object-fit:contain}
+.mw-logo .iconbtn{position:absolute;top:-9px;right:-9px;width:22px;height:22px;min-width:0;padding:0;background:var(--surface-solid);border:1px solid var(--border);border-radius:50%}
+.mw-logo-min{max-height:22px;max-width:60px;object-fit:contain;background:#fff;border-radius:3px}
+.mw-notas{margin:0 0 6px;padding-left:20px;display:flex;flex-direction:column;gap:8px}.mw-notas li .input{margin-bottom:4px}
 </style>
 </head>
 <body>
+<div class="portada" id="portada" hidden>
+  <header class="pt-barra">
+    <a class="pt-brand" href="#" data-portada="inicio" aria-label="Geoportal Costa Rica, inicio">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5c3.2 3 3.2 16 0 19M12 2.5c-3.2 3-3.2 16 0 19"/></svg></span>
+      <span class="brand-text"><strong>Geoportal Costa Rica</strong><span>Software libre · datos abiertos</span></span>
+    </a>
+    <nav class="pt-nav" aria-label="Portada">
+      <button type="button" data-portada="inicio" aria-current="page">Inicio</button>
+      <button type="button" data-portada="acerca">Acerca<span class="pt-largo"> del proyecto</span></button>
+      <button type="button" class="btn primary sm" data-portada="entrar">Entrar</button>
+    </nav>
+  </header>
+  <main class="pt-main">
+    <section class="pt-inicio" id="ptInicio" aria-label="Infografía de la ciudad de Limón"><iframe id="ptMarco" title="Infografía: Limón, la ciudad puerto del Caribe"></iframe></section>
+    <section class="pt-acerca" id="ptAcerca" hidden>
+      <div class="pt-hoja">
+        <h1>Geoportal Costa Rica</h1>
+        <p class="pt-lead">Un geoportal de software libre para consultar, organizar y publicar información geográfica de Costa Rica. Reúne en un mismo visor las capas de varias instituciones (límites, población, áreas protegidas, red vial, salud, educación, amenazas naturales) y las de sus proyectos, cada una con su fuente.</p>
+        <h2>Qué permite</h2>
+        <ul>
+          <li><strong>Catálogo de datos</strong> por tema o por institución, con la ficha, la fuente y la licencia de cada capa.</li>
+          <li><strong>Proyectos</strong> de cada institución: conjuntos de capas con su orden, simbología y vista, y hasta qué rol se ven.</li>
+          <li><strong>Publicar</strong> mapas web, láminas formales para PDF e <strong>infografías</strong> como la de la portada, con los logos y la autoría de quien publica, por enlace corto o incrustadas en otra página.</li>
+          <li><strong>Columnas publicadas</strong>: en las capas del servidor, la institución dueña decide qué columnas ve el público.</li>
+          <li>Servicios OGC (WMS, WFS, OGC API) y una API para conectar otros programas.</li>
+        </ul>
+        <h2>Cuentas y roles</h2>
+        <p>Cada cuenta pertenece a una institución y tiene un rol: lector, editor, publicador o administrador. El administrador gestiona las cuentas y el perfil de su institución; el superadministrador administra todo el portal. Sin cuenta se ven la infografía de la portada y los mapas que las instituciones publican.</p>
+        <h2>Instituciones participantes</h2>
+        <div class="pt-insts" id="ptInstituciones"></div>
+        <h2>Datos, software y licencias</h2>
+        <p>Los datos vienen de fuentes abiertas y cada capa cita la suya; los datos personales no se publican. El visor usa MapLibre GL; el servidor, PostgreSQL con PostGIS. Desarrollo: GeoSolutions Consulting. No es un sitio oficial del Gobierno de Costa Rica.</p>
+        <p class="small"><a href="#" data-legal-ver="aviso">Aviso legal</a> · <a href="#" data-legal-ver="privacidad">Privacidad</a></p>
+        <p><button class="btn primary" type="button" data-portada="entrar">Entrar con su cuenta</button></p>
+      </div>
+    </section>
+  </main>
+</div>
 <div class="acceso" id="acceso" role="dialog" aria-modal="true" aria-labelledby="accesoTitulo">
   <form class="acceso-card" id="accesoForm" autocomplete="on">
     <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19"/><path d="M12 2.5c3.2 3 3.2 16 0 19M12 2.5c-3.2 3-3.2 16 0 19"/></svg></span>
@@ -496,6 +566,7 @@ iframe.ext-grande{position:fixed!important;inset:64px 3vw 20px 3vw;width:auto!im
     <button class="btn primary" type="submit" id="accBoton">Entrar</button>
     <button class="btn ghost" type="button" id="accVolver" hidden style="margin-top:6px">Volver</button>
     <div class="acceso-error" id="accError" role="alert"></div>
+    <button type="button" class="linklike acceso-portada" data-portada="inicio">← Volver a la portada</button>
     <p class="acceso-aviso">Demostración de un geoportal libre. No es un sitio oficial del Gobierno de Costa Rica ni de la Municipalidad de Corredores. Los datos son abiertos y simplificados; los paneles marcados «Maqueta» usan datos de ejemplo. Las cuentas, la auditoría y las extensiones de esta demo se guardan en su navegador.</p>
   </form>
 </div>
@@ -755,6 +826,9 @@ const COMANDOS = {
   'usuarios':        {etiqueta:'Usuarios y roles', icono:'users', menu:'administrar', panel:'usuarios',
     descripcion:'Gestiona cuentas por institución y sus roles: lector, editor, publicador y administrador.',
     requiere:['seguridad'], habilita:['dibujar','postgis','auditoria'], alternativas:[]},
+  'institucion':     {etiqueta:'Mi institución', icono:'library', menu:'administrar', panel:'institucion',
+    descripcion:'Logo, nombre, descripción y sitio web de la institución: salen en la portada pública («Acerca del proyecto») y el logo se puede poner en las publicaciones. Lo cambian su administrador y el superadministrador.',
+    requiere:['usuarios'], habilita:['mapa-web'], alternativas:[]},
   'mi-cuenta':       {etiqueta:'Mi cuenta', icono:'users', menu:'administrar', panel:'usuarios',
     descripcion:'Su contraseña (y cuándo vence) y el doble factor. Está en todos los roles: quien no gestiona cuentas ve sólo la suya.',
     requiere:['usuarios'], habilita:[], alternativas:['usuarios']},
@@ -808,7 +882,7 @@ const DISPOSICION_ORIGINAL = {
   version: 1, nombre: 'Original',
   menus: Object.keys(MENUS).map(m => ({id: m, abierto: ['datos', 'mapa', 'vista', 'metricas'].includes(m), items: Object.keys(COMANDOS).filter(c => COMANDOS[c].menu === m)})),
   barras: {mapa: ['capas', 'vista-3d', 'medir-distancia', 'medir-area', 'coordenadas'], superior: ['catalogo', 'leyenda', 'compartir']},
-  paneles: {izquierda: ['catalogo', 'buscar', 'subir', 'dem', 'postgis', 'ogc'], derecha: ['proyectos', 'derivadas', 'simbologia', 'leyenda', 'basemaps', 'medir', 'coordenadas', 'dibujar', 'vertices', 'mapaweb', 'publicado', 'columnas', 'servicioogc', 'compartir', 'usuarios', 'permisos', 'seguridad', 'extensiones', 'extcatalogo', 'crearplugin', 'temas', 'legaladm', 'disposicion', 'sugerencias', 'legal', 'acerca'], abajo: ['atributos', 'historial', 'auditoria']},
+  paneles: {izquierda: ['catalogo', 'buscar', 'subir', 'dem', 'postgis', 'ogc'], derecha: ['proyectos', 'derivadas', 'simbologia', 'leyenda', 'basemaps', 'medir', 'coordenadas', 'dibujar', 'vertices', 'mapaweb', 'publicado', 'columnas', 'servicioogc', 'compartir', 'usuarios', 'institucion', 'permisos', 'seguridad', 'extensiones', 'extcatalogo', 'crearplugin', 'temas', 'legaladm', 'disposicion', 'sugerencias', 'legal', 'acerca'], abajo: ['atributos', 'historial', 'auditoria']},
   abiertos: ['catalogo', 'proyectos'],
   plegados: [],
   navVisible: true
@@ -1235,6 +1309,7 @@ const PANELES = {
   servicioogc:{titulo:'Publicar servicio OGC', icono:'server', render: pServicioOgc},
   compartir:  {titulo:'Compartir', icono:'share', render: pCompartir},
   usuarios:   {titulo:'Usuarios y roles', icono:'users', render: pUsuarios},
+  institucion: {titulo:'Mi institución', icono:'library', render: el => { perf.borrador = null; perf.msg = ''; pInstitucion(el); }},
   auditoria:  {titulo:'Auditoría', icono:'audit', render: pAuditoria},
   seguridad:  {titulo:'Seguridad', icono:'shield', render: pSeguridad},
   extensiones:{titulo:'Extensiones instaladas', icono:'puzzle', maqueta:true, render: pExtensiones},
@@ -5301,7 +5376,7 @@ function sanearMapaWeb(s) {
   const num = (v, d, a, b) => { const x = Number(v); return Number.isFinite(x) ? Math.min(b, Math.max(a, x)) : d; };
   const http = u => /^https?:\/\/[^\s"'<>]+$/i.test(u || '') ? String(u) : '';
   const c0 = s.colores || {}, v = s.vista || {}, ctr = Array.isArray(v.center) ? v.center : [];
-  return {v: 1, titulo: txt(s.titulo, 200), plantilla: ['visor', 'relato', 'panel', 'formal'].includes(s.plantilla) ? s.plantilla : 'visor', texto: txt(s.texto, 20000), leyenda: !!s.leyenda,
+  return {v: 1, ...sanearPublicacion(s), titulo: txt(s.titulo, 200), plantilla: ['visor', 'relato', 'panel', 'formal', 'infografia'].includes(s.plantilla) ? s.plantilla : 'visor', texto: txt(s.texto, 20000), leyenda: !!s.leyenda,
     colores: {fondo: col(c0.fondo), sup: col(c0.sup), texto: col(c0.texto), acento: col(c0.acento)}, base: MAPAS_BASE[s.base] ? s.base : 'positron',
     vista: {center: [num(ctr[0], -84.15, -180, 180), num(ctr[1], 9.62, -85, 85)], zoom: num(v.zoom, 6, 0, 22), bearing: num(v.bearing, 0, -360, 360), pitch: num(v.pitch, 0, 0, 85)},
     fecha: txt(s.fecha, 10).replace(/[^0-9/]/g, ''), ...(s.plantilla === 'formal' ? {lamina: sanearLamina(s.lamina)} : {}),
@@ -7620,7 +7695,7 @@ function capasMapaWeb(enlace = false) {
 const alOrigenAbsoluto = w => Object.assign({}, w, {url: new URL(w.url, location.href).href});
 function specMapaWeb(enlace = false) {
   const t = temaActual.colores, d0 = new Date();
-  return {v: 1, titulo: mw.titulo, plantilla: mw.plantilla, texto: mw.texto, leyenda: mw.leyenda, ...(mw.plantilla === 'formal' ? {lamina: datosLamina()} : {}),
+  return {v: 1, titulo: mw.titulo, plantilla: mw.plantilla, ...specPublicacion(), texto: mw.texto, leyenda: mw.leyenda, ...(mw.plantilla === 'formal' ? {lamina: datosLamina()} : {}),
     colores: mw.tema ? {fondo: t.fondo, sup: t.superficie, texto: t.texto, acento: t.acento} : {fondo: '#eef1f5', sup: '#ffffff', texto: '#14181f', acento: '#c2410c'},
     base: idMapaBase(), vista: {center: mapa.getCenter().toArray().map(v => +v.toFixed(5)), zoom: +mapa.getZoom().toFixed(2), bearing: +mapa.getBearing().toFixed(1), pitch: +mapa.getPitch().toFixed(0)},
     capas: capasMapaWeb(enlace), fecha: String(d0.getDate()).padStart(2, '0') + '/' + String(d0.getMonth() + 1).padStart(2, '0') + '/' + d0.getFullYear()};
@@ -7629,10 +7704,10 @@ function specMapaWeb(enlace = false) {
 function htmlMapaWeb(sp = specMapaWeb()) {
   const capas = sp.capas, c = sp.colores, vista = sp.vista, hoy = sp.fecha;
   const portal = location.href.split(/[?#]/)[0], legal = `<a href="${portal}?legal=aviso" target="_blank" rel="noopener">Aviso legal</a> · <a href="${portal}?legal=privacidad" target="_blank" rel="noopener">Privacidad</a>`;
-  const datos = JSON.stringify({base: estiloBase(sp.base), vista, capas, leyenda: sp.leyenda, plantilla: sp.plantilla, lamina: sp.plantilla === 'formal' ? datosLaminaPagina(sp) : null}).replace(/</g, '\\u003c');
+  const datos = JSON.stringify({base: estiloBase(sp.base), vista, capas, leyenda: sp.leyenda, plantilla: sp.plantilla, lamina: sp.plantilla === 'formal' ? datosLaminaPagina(sp) : null, ig: sp.plantilla === 'infografia' ? datosIgPagina(sp) : null}).replace(/</g, '\\u003c');
   const e = s => String(s).replace(/[&<>"]/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[ch]));
-  const lateral = sp.plantilla === 'relato' ? `<aside class="lado"><h1>${e(sp.titulo)}</h1>${(sp.texto || '').split(/\n{2,}/).map(p => `<p>${e(p)}</p>`).join('')}<div id="ley"></div><p class="pie">Generado con el ${e(MARCA.nombre)} el ${hoy}. ${legal}</p></aside>`
-    : sp.plantilla === 'panel' ? `<aside class="lado"><h1>${e(sp.titulo)}</h1><div id="ley"></div><p class="pie">Generado con el ${e(MARCA.nombre)} el ${hoy}. ${legal}</p></aside>` : '';
+  const lateral = sp.plantilla === 'relato' ? `<aside class="lado">${logosPub(sp)}<h1>${e(sp.titulo)}${subPub(sp)}</h1>${(sp.texto || '').split(/\n{2,}/).map(p => `<p>${e(p)}</p>`).join('')}<div id="ley"></div>${infoPub(sp, sp.plantilla === 'panel')}<p class="pie">Generado con el ${e(MARCA.nombre)} el ${hoy}. ${legal}</p></aside>`
+    : sp.plantilla === 'panel' ? `<aside class="lado">${logosPub(sp)}<h1>${e(sp.titulo)}${subPub(sp)}</h1><div id="ley"></div>${infoPub(sp, sp.plantilla === 'panel')}<p class="pie">Generado con el ${e(MARCA.nombre)} el ${hoy}. ${legal}</p></aside>` : '';
   return `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${e(sp.titulo)}</title>
@@ -7648,8 +7723,8 @@ function htmlMapaWeb(sp = specMapaWeb()) {
 .legal{position:absolute;left:8px;bottom:6px;font-size:11px;background:var(--sup);padding:2px 8px;border-radius:6px;opacity:.85}.legal a,.pie a{color:inherit}
 .it{display:flex;align-items:center;gap:8px;margin:4px 0}.sw{width:14px;height:14px;border-radius:4px;flex:none}.it input{margin:0}.cl{margin:0 0 6px 22px;font-size:11.5px}.cl .it{margin:2px 0}.cl .sw{width:11px;height:11px}
 @media (max-width:720px){.app{flex-direction:column}.lado{width:auto;max-width:none;max-height:38vh;border-right:0}}
-${sp.plantilla === 'formal' ? cssLamina(sp) : ''}</style></head><body>${sp.plantilla === 'formal' ? marcoLamina(sp) : `<div class="app">${lateral}<div id="mapa"></div></div>`}
-${sp.plantilla === 'visor' ? `<div class="titulo">${e(sp.titulo)}</div>${sp.leyenda ? '<div class="leyenda" id="ley"></div>' : ''}<div class="legal">${legal}</div>` : ''}
+${sp.plantilla === 'formal' ? cssLamina(sp) : ''}${cssPublicacion(sp)}</style></head><body>${sp.plantilla === 'formal' ? marcoLamina(sp) : sp.plantilla === 'infografia' ? marcoInfografia(sp, legal) : `<div class="app">${lateral}<div id="mapa"></div></div>`}
+${sp.plantilla === 'visor' ? `<div class="titulo">${tituloVisorPub(sp)}</div>${sp.leyenda ? '<div class="leyenda" id="ley"></div>' : ''}<div class="legal">${pieVisorPub(sp)}${legal}</div>` : ''}
 <script>
 (() => {
 const D = ${datos};
@@ -7659,9 +7734,9 @@ if (Object.keys(POST).length) maplibregl.addProtocol('wmspost', async (params, a
   const r = await fetch(d.url, {method: 'POST', signal: abort.signal, body: new URLSearchParams({service: 'WMS', version: '1.3.0', request: 'GetMap', sld_body: d.sld, format: 'image/png', transparent: 'true', crs: d.crs || 'EPSG:3857', width: '256', height: '256', bbox: decodeURIComponent(m[2])})});
   if (!r.ok) throw new Error('HTTP ' + r.status); return {data: await r.arrayBuffer()};
 });
-${sp.plantilla === 'formal' ? PAGINA_LAMINA() : ''}const mapa = new maplibregl.Map(Object.assign({container: 'mapa', style: D.base, center: D.vista.center, zoom: D.vista.zoom, bearing: D.vista.bearing, pitch: D.vista.pitch, attributionControl: {compact: true}}, D.lamina ? opcionesLamina(D) : {}));
+${sp.plantilla === 'formal' ? PAGINA_LAMINA() : ''}${sp.plantilla === 'infografia' ? PAGINA_INFOGRAFIA() : ''}const mapa = new maplibregl.Map(Object.assign({container: 'mapa', style: D.base, center: D.vista.center, zoom: D.vista.zoom, bearing: D.vista.bearing, pitch: D.vista.pitch, attributionControl: {compact: true}}, D.lamina ? opcionesLamina(D) : {}));
 window.mapaWeb = mapa;
-if (D.lamina) iniciarLamina(D, mapa); else { mapa.addControl(new maplibregl.NavigationControl(), 'top-right'); mapa.addControl(new maplibregl.ScaleControl({unit: 'metric'}), 'bottom-right'); }
+if (D.lamina) iniciarLamina(D, mapa); else if (D.ig) iniciarInfografia(D, mapa); else { mapa.addControl(new maplibregl.NavigationControl(), 'top-right'); mapa.addControl(new maplibregl.ScaleControl({unit: 'metric'}), 'bottom-right'); }
 const P = ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]], L = ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]], T = ['in', ['geometry-type'], ['literal', ['Point', 'MultiPoint']]];
 const ids = c => c.tipo === 'wms' || c.tipo === 'imagen' ? ['w-' + c.id] : ['f-' + c.id, 'l-' + c.id, 'p-' + c.id, 't-' + c.id];
 mapa.on('load', () => {
@@ -7776,13 +7851,13 @@ function marcoLamina(sp) {
   const fuentes = l.fuente || [...new Set(capas.map(c => String(c.atribucion || '').replace(/<[^>]+>/g, '').trim()).filter(Boolean))].join('; ');
   const ley = sp.leyenda && capas.length ? `<div class="lm-b lm-ley"><h3>Leyenda</h3>${capas.map(c => `<div class="lm-it">${simboloLamina(c)}<span>${e(c.titulo)}</span></div>`
     + (c.clases ? `<div class="lm-cl">${c.clases.map(k => `<div class="lm-it"><span class="lm-sw" style="background:${k.color}"></span><span>${e(k.etiqueta)}</span></div>`).join('')}</div>` : '')).join('')}</div>` : '';
-  const meta = [['Autor', l.autor], ['Institución', l.institucion], ['Fecha', l.fecha], ['Fuente de los datos', fuentes],
+  const meta = [['Autor', l.autor], ['Institución', l.institucion], ['Contacto', (sp.info || {}).contacto], ['Fecha', l.fecha], ['Fuente de los datos', fuentes],
     ['Mapa base', (base.nombre || sp.base) + (base.attrib ? ' · ' + String(base.attrib).replace(/<[^>]+>/g, '') : base.url ? ' · OpenFreeMap, © colaboradores de OpenStreetMap' : '')],
     ['Coordenadas', `bordes norte y oeste: geográficas WGS 84 (EPSG:4326); bordes sur y este: ${nombreProy(l.proyeccion)} (EPSG:${l.proyeccion}), en metros`]]
     .filter(r => r[1]).map(([k, v]) => `<dt>${e(k)}</dt><dd>${e(v)}</dd>`).join('');
   const ancho = d.vertical ? d.panel.w / 3 - 4 : d.panel.w - 6;
   return `<div class="lm-fondo"><div class="hoja" id="hoja" style="width:${d.W}mm;height:${d.H}mm">
-  <div class="lm-titulo" style="${caja(d.titulo)}"><h1>${e(sp.titulo)}</h1><span>${e(MARCA.nombre)} · ${e(location.host || '')}</span></div>
+  <div class="lm-titulo" style="${caja(d.titulo)}"><div class="lm-tt">${logosPub(sp)}<div><h1>${e(sp.titulo)}</h1>${sp.info && sp.info.subtitulo ? `<p class="lm-sub">${e(sp.info.subtitulo)}</p>` : ''}</div></div><span>${e(MARCA.nombre)} · ${e(location.host || '')}</span></div>
   <div class="lm-marco" style="${caja(d.mapa)}"><div id="mapa"></div></div>
   <svg class="lm-svg" id="lmSvg" width="${d.W}mm" height="${d.H}mm" viewBox="0 0 ${d.W} ${d.H}"></svg>
   <div class="lm-panel${d.vertical ? ' lm-vert' : ''}" style="${caja(d.panel)}">
@@ -7933,7 +8008,7 @@ function enlazarLamina(el) {
     auditar('descargas', 'imprimió un mapa formal', mw.titulo, {formato: 'PDF', escala: '1:' + sp.lamina.escala});
   };
 }
-const codigoIframe = u => `<iframe src="${u}" width="100%" height="${mw.plantilla === 'formal' && mw.lamina.orientacion === 'vertical' ? 900 : 620}" style="border:0" loading="lazy" title="${String(mw.titulo).replace(/"/g, '&quot;')}"></iframe>`;
+const codigoIframe = u => `<iframe src="${u}" width="100%" height="${mw.plantilla === 'infografia' ? 1400 : mw.plantilla === 'formal' && mw.lamina.orientacion === 'vertical' ? 900 : 620}" style="border:0" loading="lazy" title="${String(mw.titulo).replace(/"/g, '&quot;')}"></iframe>`;
 /* ---------- Capas del servidor y «Publicar › Columnas publicadas» ----------
    Algunas capas no están en el sitio público porque traen datos que no todos deben ver (los pozos de SENARA, con
    el propietario): las sirve la base del servidor del geoportal por /api/capa/<id> (indice.json: "servidor": true,
@@ -8023,14 +8098,429 @@ async function recargarCapaServidor(id) {
   const c = estado.capas.find(x => x.id === id);
   if (c) { await activarCapaCatalogo(m, false, true); await activarCapaCatalogo(m, true, true); }
 }
+// la infografía de la portada pública (portada.py): Limón con las capas del catálogo, ERA5 y OpenStreetMap
+const PORTADA_LIMON = {"v":1,"titulo":"Limón, la ciudad puerto del Caribe","plantilla":"infografia","leyenda":true,"texto":"","base":"esri","vista":{"center":[-83.055,9.988],"zoom":12.75,"bearing":0,"pitch":0},"fecha":"30/10/2026","colores":{"fondo":"#e9efe9","sup":"#ffffff","texto":"#14231c","acento":"#0b7a55"},"capas":[{"id":"limon_distritos","titulo":"Distritos del cantón de Limón","color":"#ffd43b","opacidad":1,"g":"poligono","atribucion":"Instituto Nacional de Estadística y Censos (INEC)","tipo":"vector","datos":{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"distrito":"Limón","poblacion_2025":53200,"area_km2":59.71},"geometry":{"type":"MultiPolygon","coordinates":[[[[-83.01049,9.99174],[-83.00965,9.99313],[-83.01087,9.99576],[-83.01179,9.99494],[-83.01287,9.99551],[-83.01336,9.99437],[-83.01197,9.99214],[-83.01049,9.99174]]],[[[-83.01776,9.95086],[-83.01673,9.95151],[-83.02648,9.96617],[-83.03081,9.97704],[-83.03088,9.98521],[-83.02931,9.98907],[-83.02774,9.98985],[-83.02686,9.98711],[-83.02751,9.98976],[-83.02511,9.99028],[-83.02303,9.98774],[-83.02504,9.99033],[-83.02355,9.99115],[-83.02015,9.98831],[-83.02014,9.99],[-83.02522,9.99448],[-83.02645,9.99414],[-83.02628,9.99605],[-83.02791,9.99573],[-83.02745,9.99794],[-83.02468,9.99991],[-83.0272,10.00116],[-83.02758,10.00235],[-83.03176,10.0026],[-83.03228,10.00433],[-83.03534,10.00551],[-83.03531,10.0062],[-83.03246,10.00556],[-83.03515,10.00813],[-83.03644,10.00588],[-83.03908,10.00647],[-83.0421,10.0094],[-83.04569,10.00903],[-83.04549,10.0109],[-83.05012,10.01212],[-83.05127,10.01041],[-83.05878,10.00944],[-83.05885,10.00811],[-83.05945,10.00939],[-83.06267,10.00913],[-83.06358,10.01051],[-83.06227,10.0135],[-83.06464,10.01508],[-83.06651,10.01338],[-83.06593,10.01103],[-83.06744,10.01043],[-83.06704,10.01207],[-83.06803,10.01296],[-83.07298,10.01337],[-83.07446,10.01175],[-83.07771,10.01071],[-83.08005,10.01325],[-83.07666,10.00745],[-83.07789,9.99958],[-83.07957,10.00038],[-83.07897,10.0036],[-83.07962,10.00554],[-83.07991,10.00122],[-83.08097,10.00181],[-83.08828,10.00082],[-83.09757,10.00329],[-83.10361,10.00928],[-83.10195,10.01184],[-83.09491,10.0097],[-83.09377,10.01017],[-83.09434,10.01081],[-83.09357,10.01407],[-83.10073,10.01561],[-83.10356,10.01153],[-83.10835,10.01256],[-83.11207,10.01467],[-83.13281,10.03855],[-83.16223,10.07819],[-83.16314,10.07633],[-83.17454,10.07566],[-83.17212,10.07207],[-83.15915,10.06359],[-83.13357,10.03133],[-83.11094,10.00782],[-83.10896,10.00649],[-83.10413,10.00558],[-83.10218,10.00396],[-83.10238,10.00201],[-83.09999,10.0032],[-83.0957,9.99972],[-83.095,9.9981],[-83.09651,9.99558],[-83.09462,9.988],[-83.09742,9.98702],[-83.10032,9.98252],[-83.10239,9.98233],[-83.10479,9.97736],[-83.10688,9.97539],[-83.10454,9.97377],[-83.10354,9.9693],[-83.107,9.9673],[-83.10996,9.96361],[-83.11253,9.96385],[-83.11304,9.96301],[-83.1129,9.96069],[-83.10556,9.95645],[-83.10523,9.95063],[-83.10133,9.95105],[-83.0977,9.94573],[-83.0931,9.94616],[-83.09194,9.94376],[-83.09396,9.94169],[-83.10013,9.93984],[-83.10194,9.94031],[-83.10067,9.93798],[-83.09395,9.94004],[-83.09305,9.93928],[-83.09204,9.94108],[-83.08881,9.94046],[-83.08741,9.94152],[-83.0859,9.93988],[-83.08578,9.94199],[-83.08417,9.94023],[-83.08129,9.94025],[-83.08098,9.93863],[-83.07921,9.93903],[-83.07645,9.93806],[-83.07345,9.94044],[-83.07399,9.94163],[-83.07212,9.9412],[-83.07262,9.94264],[-83.07076,9.94408],[-83.0719,9.94482],[-83.07068,9.94613],[-83.06961,9.94573],[-83.06736,9.94847],[-83.06845,9.94939],[-83.06788,9.95057],[-83.06493,9.95021],[-83.06642,9.95158],[-83.06578,9.95346],[-83.06326,9.95444],[-83.0619,9.95354],[-83.05595,9.95733],[-83.04955,9.95672],[-83.04165,9.9524],[-83.03175,9.95127],[-83.03429,9.95897],[-83.03134,9.96683],[-83.02702,9.9609],[-83.02433,9.96057],[-83.01776,9.95086]]]]}},{"type":"Feature","properties":{"distrito":"Valle La Estrella","poblacion_2025":20129,"area_km2":1227.16},"geometry":{"type":"Polygon","coordinates":[[[-82.86974,9.76062],[-82.86816,9.75913],[-82.88744,9.78803],[-82.88985,9.79069],[-82.89142,9.79088],[-82.89136,9.79306],[-82.89301,9.7959],[-82.9191,9.82608],[-82.95809,9.87507],[-82.95896,9.8746],[-82.96656,9.88447],[-82.96806,9.88555],[-82.96976,9.88542],[-82.96891,9.88712],[-82.97192,9.88831],[-82.97139,9.88985],[-82.97277,9.89202],[-82.97542,9.89275],[-82.97742,9.89527],[-82.97922,9.89576],[-82.98083,9.89453],[-82.98203,9.89509],[-82.98354,9.89148],[-82.98537,9.89369],[-82.98705,9.89415],[-82.99122,9.89279],[-82.99164,9.89037],[-82.99801,9.8865],[-82.99735,9.88499],[-83.00049,9.88488],[-83.00005,9.88198],[-83.00181,9.87823],[-83.0085,9.87632],[-83.00565,9.87386],[-83.00554,9.87269],[-83.00887,9.86951],[-83.01016,9.86982],[-83.00945,9.87197],[-83.01064,9.87223],[-83.01324,9.86445],[-83.02018,9.86286],[-83.02358,9.86378],[-83.02655,9.8609],[-83.03214,9.85876],[-83.03479,9.85288],[-83.03789,9.85012],[-83.03895,9.84614],[-83.04275,9.84761],[-83.04889,9.84707],[-83.05,9.85106],[-83.04871,9.8519],[-83.0464,9.85044],[-83.04621,9.85236],[-83.0486,9.85323],[-83.05143,9.85238],[-83.05347,9.8478],[-83.05612,9.84591],[-83.05466,9.84477],[-83.05461,9.84314],[-83.04951,9.83826],[-83.04825,9.8317],[-83.04679,9.82887],[-83.04791,9.82904],[-83.04918,9.82718],[-83.0527,9.82746],[-83.05361,9.82541],[-83.05531,9.82462],[-83.05731,9.82616],[-83.06383,9.82534],[-83.0669,9.82686],[-83.0701,9.82703],[-83.07518,9.82365],[-83.0769,9.82565],[-83.07857,9.82305],[-83.08046,9.82341],[-83.08085,9.82074],[-83.08226,9.82042],[-83.0833,9.81843],[-83.08462,9.81922],[-83.08872,9.80996],[-83.09108,9.81042],[-83.09467,9.80756],[-83.09496,9.80493],[-83.097,9.80277],[-83.09736,9.79923],[-83.09887,9.79723],[-83.10199,9.79568],[-83.10635,9.79549],[-83.10965,9.79672],[-83.11271,9.79498],[-83.11508,9.79595],[-83.12027,9.79455],[-83.12357,9.7906],[-83.127,9.7885],[-83.12907,9.7845],[-83.13111,9.78531],[-83.13471,9.78501],[-83.13666,9.78695],[-83.14672,9.78726],[-83.15095,9.7915],[-83.15717,9.79317],[-83.16197,9.79659],[-83.16945,9.80587],[-83.17149,9.80537],[-83.17446,9.80219],[-83.1796,9.80197],[-83.18207,9.80349],[-83.18536,9.80757],[-83.1905,9.8086],[-83.19301,9.80833],[-83.19543,9.80674],[-83.20422,9.8066],[-83.21082,9.80535],[-83.22151,9.79876],[-83.22299,9.79657],[-83.22831,9.79794],[-83.23313,9.79731],[-83.23963,9.79297],[-83.23737,9.78753],[-83.23823,9.7829],[-83.24024,9.78266],[-83.24124,9.7843],[-83.24003,9.7863],[-83.23983,9.78931],[-83.24444,9.79184],[-83.24524,9.79538],[-83.25087,9.79554],[-83.25325,9.79789],[-83.25869,9.79858],[-83.2605,9.80118],[-83.26221,9.80189],[-83.26501,9.7991],[-83.26767,9.79959],[-83.26857,9.79831],[-83.27039,9.79826],[-83.27469,9.80214],[-83.27888,9.80183],[-83.28441,9.80309],[-83.28697,9.80129],[-83.29031,9.80058],[-83.29366,9.80238],[-83.29519,9.79946],[-83.29877,9.799],[-83.29989,9.8009],[-83.30084,9.79986],[-83.30239,9.79989],[-83.30294,9.79767],[-83.31244,9.80218],[-83.3146,9.8019],[-83.3199,9.80622],[-83.31931,9.8102],[-83.32283,9.81289],[-83.32281,9.81534],[-83.32589,9.81673],[-83.32891,9.82032],[-83.33251,9.82216],[-83.33153,9.82366],[-83.33138,9.8276],[-83.33421,9.82913],[-83.33685,9.835],[-83.3391,9.83373],[-83.33638,9.82983],[-83.33655,9.82736],[-83.33746,9.82658],[-83.33596,9.82301],[-83.34037,9.82195],[-83.34122,9.81841],[-83.34347,9.81722],[-83.34487,9.81486],[-83.34489,9.81229],[-83.34599,9.81066],[-83.35644,9.80258],[-83.35583,9.79822],[-83.36363,9.79077],[-83.3637,9.78851],[-83.36754,9.78574],[-83.36766,9.78159],[-83.3703,9.77979],[-83.37245,9.77963],[-83.37881,9.77244],[-83.38144,9.77087],[-83.38167,9.76847],[-83.3849,9.7647],[-83.38569,9.76134],[-83.39103,9.75287],[-83.39297,9.7513],[-83.39472,9.74475],[-83.40169,9.7406],[-83.40551,9.73668],[-83.40849,9.73288],[-83.41073,9.72641],[-83.41697,9.72059],[-83.41735,9.7187],[-83.41998,9.71767],[-83.42027,9.71507],[-83.42181,9.71304],[-83.42476,9.7115],[-83.42641,9.70914],[-83.43028,9.70643],[-83.43036,9.703],[-83.42791,9.6954],[-83.42717,9.68463],[-83.42787,9.6813],[-83.42929,9.68012],[-83.42965,9.6768],[-83.4343,9.67284],[-83.43552,9.66986],[-83.44169,9.6646],[-83.44174,9.66124],[-83.44422,9.65914],[-83.4473,9.65293],[-83.44991,9.65211],[-83.45092,9.64847],[-83.4531,9.64888],[-83.45773,9.6478],[-83.45968,9.64473],[-83.46313,9.64354],[-83.46448,9.63818],[-83.46634,9.63606],[-83.46654,9.63437],[-83.46779,9.63413],[-83.46774,9.63274],[-83.47361,9.63223],[-83.47524,9.63019],[-83.48086,9.62828],[-83.48429,9.62379],[-83.48716,9.62175],[-83.48826,9.6188],[-83.48994,9.61828],[-83.49113,9.61377],[-83.49318,9.61327],[-83.49766,9.60926],[-83.50124,9.60404],[-83.50392,9.60215],[-83.50648,9.60192],[-83.50725,9.60022],[-83.51101,9.59769],[-83.51124,9.59429],[-83.50606,9.58958],[-83.50554,9.58672],[-83.50394,9.58447],[-83.50745,9.57504],[-83.50936,9.57453],[-83.51004,9.57237],[-83.5115,9.57152],[-83.51418,9.56357],[-83.5145,9.56142],[-83.51287,9.55718],[-83.51532,9.55586],[-83.51635,9.55311],[-83.5147,9.55157],[-83.51538,9.54544],[-83.51384,9.54169],[-83.51543,9.5355],[-83.51249,9.53357],[-83.51205,9.53234],[-83.50746,9.53001],[-83.50389,9.53037],[-83.49776,9.52419],[-83.49579,9.51943],[-83.49484,9.51044],[-83.49353,9.50788],[-83.49214,9.50772],[-83.49248,9.5068],[-83.48957,9.50359],[-83.48861,9.50093],[-83.48671,9.49936],[-83.48844,9.49389],[-83.48423,9.49224],[-83.48258,9.48983],[-83.48492,9.48637],[-83.48888,9.4844],[-83.48505,9.48532],[-83.48171,9.48468],[-83.4804,9.48583],[-83.47877,9.49016],[-83.48142,9.4919],[-83.48257,9.50153],[-83.47698,9.50627],[-83.47596,9.51454],[-83.46933,9.52126],[-83.47005,9.52564],[-83.4735,9.52696],[-83.47701,9.53642],[-83.47519,9.53956],[-83.47177,9.54228],[-83.47152,9.54755],[-83.46969,9.55261],[-83.46451,9.55456],[-83.46016,9.55757],[-83.45305,9.55962],[-83.43974,9.56189],[-83.43201,9.56216],[-83.42781,9.56345],[-83.42311,9.56699],[-83.42424,9.57095],[-83.42242,9.57386],[-83.4207,9.57536],[-83.4171,9.57567],[-83.41549,9.58045],[-83.4128,9.58267],[-83.41131,9.58972],[-83.40851,9.59155],[-83.40389,9.59854],[-83.39263,9.60339],[-83.38853,9.60144],[-83.37779,9.60059],[-83.37288,9.60684],[-83.36796,9.61125],[-83.367,9.61599],[-83.36503,9.61852],[-83.36559,9.62065],[-83.36356,9.61998],[-83.3541,9.62093],[-83.35046,9.62286],[-83.34682,9.62268],[-83.34235,9.62429],[-83.33969,9.62969],[-83.34264,9.63578],[-83.33771,9.64717],[-83.33266,9.64966],[-83.33151,9.65111],[-83.32946,9.66108],[-83.32756,9.66359],[-83.32146,9.66564],[-83.32111,9.66877],[-83.31514,9.67224],[-83.30418,9.6663],[-83.29226,9.66739],[-83.28669,9.66582],[-83.28164,9.666],[-83.27845,9.66787],[-83.27616,9.66747],[-83.27347,9.66839],[-83.2703,9.67331],[-83.26364,9.66935],[-83.25574,9.6679],[-83.25385,9.66953],[-83.25104,9.66947],[-83.24149,9.66635],[-83.23839,9.66969],[-83.23455,9.66688],[-83.22696,9.66739],[-83.22406,9.6686],[-83.22055,9.6659],[-83.21127,9.66355],[-83.2096,9.65879],[-83.20842,9.65814],[-83.20378,9.65731],[-83.19874,9.65862],[-83.19448,9.65588],[-83.19108,9.65551],[-83.18904,9.65351],[-83.18561,9.65376],[-83.18361,9.65063],[-83.17161,9.64693],[-83.17154,9.64348],[-83.1707,9.64241],[-83.1619,9.64057],[-83.1601,9.63858],[-83.15582,9.63849],[-83.15396,9.63652],[-83.14952,9.63922],[-83.14079,9.63852],[-83.12718,9.6422],[-83.11534,9.63971],[-83.10852,9.63588],[-83.10178,9.63624],[-83.10552,9.63279],[-83.10948,9.63286],[-83.11514,9.62614],[-83.11715,9.62578],[-83.11858,9.62408],[-83.12845,9.62239],[-83.13648,9.61931],[-83.13333,9.61795],[-83.12824,9.61898],[-83.12535,9.61685],[-83.12024,9.61629],[-83.11528,9.61864],[-83.11136,9.6221],[-83.10472,9.62189],[-83.0957,9.62553],[-83.09246,9.62942],[-83.08348,9.62673],[-83.07629,9.62256],[-83.06906,9.62244],[-83.05899,9.61443],[-83.05457,9.61832],[-83.05061,9.61855],[-83.04902,9.62101],[-83.04477,9.62397],[-83.04024,9.62329],[-83.03831,9.62495],[-83.03565,9.62502],[-83.03565,9.62666],[-83.03412,9.62834],[-83.0304,9.62848],[-83.02939,9.62629],[-83.02675,9.62461],[-83.02725,9.62046],[-83.02412,9.61728],[-83.00513,9.61078],[-82.99577,9.61291],[-82.99169,9.61468],[-82.98891,9.61747],[-82.97529,9.62071],[-82.9737,9.62271],[-82.97256,9.62283],[-82.9651,9.62059],[-82.95965,9.61394],[-82.95146,9.61369],[-82.95012,9.61477],[-82.94983,9.61757],[-82.94093,9.62086],[-82.93791,9.62322],[-82.93602,9.62605],[-82.93557,9.63086],[-82.93421,9.63352],[-82.93382,9.64],[-82.93454,9.64181],[-82.93167,9.64266],[-82.93238,9.64357],[-82.92805,9.6472],[-82.9247,9.64816],[-82.92252,9.65071],[-82.92431,9.65693],[-82.9263,9.65892],[-82.92412,9.6603],[-82.92555,9.66334],[-82.9251,9.66668],[-82.92286,9.66505],[-82.91931,9.66625],[-82.9175,9.66498],[-82.91719,9.66656],[-82.91438,9.66853],[-82.91053,9.66431],[-82.91043,9.66272],[-82.90777,9.66116],[-82.90836,9.6597],[-82.90315,9.6579],[-82.90154,9.66887],[-82.89984,9.66942],[-82.90079,9.67107],[-82.90251,9.67112],[-82.90297,9.67216],[-82.90107,9.67193],[-82.90068,9.6733],[-82.90309,9.67739],[-82.9021,9.67861],[-82.90381,9.6804],[-82.90268,9.68349],[-82.90362,9.68456],[-82.90696,9.6842],[-82.90854,9.68656],[-82.90992,9.68711],[-82.91002,9.68636],[-82.91184,9.68778],[-82.91233,9.68698],[-82.91328,9.68789],[-82.91542,9.68735],[-82.91741,9.6883],[-82.9172,9.68988],[-82.92221,9.69219],[-82.92267,9.69478],[-82.9219,9.69536],[-82.925,9.69875],[-82.9239,9.70078],[-82.92486,9.70036],[-82.92674,9.70137],[-82.92743,9.70426],[-82.92947,9.70558],[-82.92941,9.7069],[-82.92632,9.71002],[-82.92859,9.7129],[-82.92697,9.71518],[-82.93363,9.71901],[-82.92484,9.72441],[-82.92438,9.72747],[-82.92172,9.73158],[-82.92163,9.73472],[-82.9198,9.73504],[-82.91869,9.73408],[-82.91662,9.73546],[-82.91136,9.7359],[-82.91122,9.73762],[-82.91022,9.73928],[-82.9093,9.7391],[-82.90937,9.74004],[-82.90809,9.7395],[-82.90703,9.74125],[-82.90574,9.74043],[-82.90593,9.74244],[-82.90477,9.74156],[-82.90228,9.74211],[-82.90389,9.74638],[-82.9039,9.74799],[-82.90288,9.74871],[-82.90344,9.74967],[-82.90108,9.74833],[-82.89943,9.75004],[-82.90129,9.75073],[-82.90202,9.75213],[-82.90446,9.75276],[-82.90291,9.75719],[-82.90461,9.75777],[-82.90586,9.75605],[-82.907,9.75873],[-82.90395,9.75905],[-82.9037,9.75986],[-82.9051,9.76068],[-82.90297,9.76132],[-82.90271,9.76265],[-82.90107,9.76216],[-82.90102,9.76333],[-82.89977,9.76406],[-82.89985,9.7631],[-82.89906,9.76333],[-82.89877,9.76519],[-82.89678,9.76349],[-82.89634,9.76726],[-82.89215,9.76713],[-82.89213,9.76605],[-82.88989,9.76544],[-82.88936,9.7642],[-82.88455,9.76144],[-82.88128,9.76137],[-82.87883,9.75913],[-82.87592,9.76191],[-82.87504,9.76093],[-82.873,9.76141],[-82.87324,9.76264],[-82.87185,9.76253],[-82.87168,9.76165],[-82.87056,9.76208],[-82.86974,9.76062]]]}},{"type":"Feature","properties":{"distrito":"Río Blanco","poblacion_2025":10394,"area_km2":131.07},"geometry":{"type":"Polygon","coordinates":[[[-83.09491,9.94119],[-83.09194,9.94376],[-83.0934,9.94653],[-83.09777,9.94578],[-83.10136,9.95107],[-83.10523,9.95063],[-83.10559,9.9565],[-83.11231,9.96026],[-83.11302,9.96147],[-83.11279,9.96372],[-83.10996,9.96361],[-83.107,9.9673],[-83.10354,9.9693],[-83.10454,9.97377],[-83.10688,9.97539],[-83.10479,9.97736],[-83.10239,9.98233],[-83.10032,9.98252],[-83.09742,9.98702],[-83.09462,9.988],[-83.09651,9.99558],[-83.095,9.9981],[-83.0957,9.99972],[-83.09999,10.0032],[-83.10238,10.00201],[-83.10218,10.00396],[-83.10413,10.00558],[-83.10896,10.00649],[-83.11094,10.00782],[-83.13357,10.03133],[-83.15905,10.06347],[-83.16007,10.06202],[-83.15729,10.05586],[-83.15086,10.04716],[-83.15075,10.03979],[-83.15718,10.03739],[-83.16711,10.03638],[-83.17276,10.0342],[-83.17678,10.02948],[-83.18596,10.02527],[-83.19327,10.0191],[-83.20115,10.02113],[-83.20255,10.01932],[-83.2072,10.01968],[-83.20901,10.01713],[-83.21123,10.01601],[-83.21139,10.01479],[-83.20956,10.01481],[-83.21061,10.01372],[-83.21067,10.0104],[-83.21185,10.00919],[-83.21056,10.00618],[-83.21185,10.00612],[-83.21194,10.00532],[-83.21021,10.00435],[-83.21149,10.00367],[-83.21083,10.00182],[-83.20471,9.99736],[-83.20344,9.99415],[-83.20213,9.99337],[-83.20158,9.99078],[-83.20031,9.99167],[-83.19675,9.99004],[-83.19763,9.98804],[-83.19547,9.9874],[-83.19655,9.98647],[-83.1962,9.98558],[-83.19218,9.98474],[-83.18981,9.98598],[-83.18799,9.98224],[-83.19088,9.97849],[-83.19307,9.9792],[-83.19311,9.97825],[-83.19402,9.97897],[-83.1942,9.97802],[-83.19668,9.97885],[-83.19671,9.97672],[-83.19931,9.97693],[-83.19969,9.97441],[-83.20114,9.97456],[-83.20153,9.97063],[-83.20431,9.96736],[-83.20406,9.95941],[-83.20569,9.95879],[-83.20932,9.95253],[-83.20326,9.95225],[-83.20642,9.94822],[-83.20587,9.94283],[-83.20246,9.94272],[-83.20226,9.94065],[-83.19872,9.93724],[-83.19911,9.93592],[-83.1979,9.93561],[-83.19652,9.93346],[-83.19737,9.92731],[-83.20332,9.9197],[-83.20126,9.91863],[-83.20135,9.91787],[-83.20291,9.91703],[-83.20477,9.91359],[-83.20715,9.91344],[-83.20715,9.90964],[-83.20517,9.90863],[-83.20502,9.90705],[-83.20161,9.90588],[-83.19979,9.8986],[-83.19842,9.89764],[-83.19249,9.89785],[-83.19143,9.89947],[-83.18709,9.90181],[-83.18631,9.90614],[-83.18423,9.9075],[-83.18362,9.91033],[-83.18064,9.91239],[-83.18032,9.91378],[-83.17134,9.91742],[-83.17013,9.91888],[-83.16502,9.91903],[-83.16211,9.92036],[-83.15936,9.91978],[-83.15626,9.92144],[-83.15199,9.91963],[-83.14713,9.92275],[-83.14649,9.92411],[-83.14423,9.92365],[-83.14172,9.92525],[-83.13952,9.92535],[-83.13782,9.92794],[-83.13612,9.92796],[-83.13513,9.92902],[-83.13417,9.92794],[-83.13127,9.92876],[-83.12981,9.93182],[-83.12447,9.93521],[-83.12346,9.93435],[-83.1228,9.93539],[-83.1209,9.93493],[-83.11892,9.93661],[-83.11698,9.93498],[-83.11494,9.93635],[-83.11228,9.93483],[-83.10853,9.93543],[-83.10524,9.93732],[-83.10426,9.93907],[-83.10195,9.9395],[-83.10194,9.94031],[-83.10025,9.93983],[-83.09491,9.94119]]]}},{"type":"Feature","properties":{"distrito":"Matama","poblacion_2025":8342,"area_km2":342.79},"geometry":{"type":"Polygon","coordinates":[[[-82.99965,9.93017],[-83.01673,9.95151],[-83.01797,9.95111],[-83.02433,9.96057],[-83.02702,9.9609],[-83.03134,9.96683],[-83.03429,9.95897],[-83.03175,9.95127],[-83.04165,9.9524],[-83.05078,9.95714],[-83.05606,9.9573],[-83.0619,9.95354],[-83.06326,9.95444],[-83.06578,9.95346],[-83.06642,9.95158],[-83.06493,9.95021],[-83.06788,9.95057],[-83.06845,9.94939],[-83.06736,9.94847],[-83.06961,9.94573],[-83.07068,9.94613],[-83.0719,9.94482],[-83.07076,9.94408],[-83.07262,9.94264],[-83.07212,9.9412],[-83.07399,9.94163],[-83.07345,9.94044],[-83.07645,9.93806],[-83.07921,9.93903],[-83.08098,9.93863],[-83.08129,9.94025],[-83.08417,9.94023],[-83.08585,9.94199],[-83.0859,9.93988],[-83.08792,9.94155],[-83.08874,9.94047],[-83.09204,9.94108],[-83.09305,9.93928],[-83.09395,9.94004],[-83.10048,9.93791],[-83.10138,9.93963],[-83.1041,9.93912],[-83.10713,9.93595],[-83.11147,9.93486],[-83.11471,9.93635],[-83.11698,9.93498],[-83.11892,9.93661],[-83.1209,9.93493],[-83.1228,9.93539],[-83.12346,9.93435],[-83.12447,9.93521],[-83.12981,9.93182],[-83.13127,9.92876],[-83.13417,9.92794],[-83.13513,9.92902],[-83.13612,9.92796],[-83.13782,9.92794],[-83.13952,9.92535],[-83.14172,9.92525],[-83.14423,9.92365],[-83.14649,9.92411],[-83.14713,9.92275],[-83.15178,9.91971],[-83.15626,9.92144],[-83.15936,9.91978],[-83.16211,9.92036],[-83.16502,9.91903],[-83.17013,9.91888],[-83.17134,9.91742],[-83.18032,9.91378],[-83.18064,9.91239],[-83.18362,9.91033],[-83.18423,9.9075],[-83.18631,9.90614],[-83.18709,9.90181],[-83.19143,9.89947],[-83.19281,9.89775],[-83.198,9.89745],[-83.19979,9.8986],[-83.20076,9.89493],[-83.20399,9.89118],[-83.21183,9.88615],[-83.21749,9.88628],[-83.22854,9.88923],[-83.22962,9.88821],[-83.23022,9.88456],[-83.23305,9.88275],[-83.23402,9.88089],[-83.24037,9.87914],[-83.24108,9.87796],[-83.24129,9.87564],[-83.23932,9.87227],[-83.24054,9.86787],[-83.24285,9.86532],[-83.24363,9.86289],[-83.24238,9.85737],[-83.24307,9.85459],[-83.23671,9.84365],[-83.23996,9.83871],[-83.23975,9.8359],[-83.24261,9.83233],[-83.24306,9.82754],[-83.24692,9.8253],[-83.25149,9.82655],[-83.25195,9.82497],[-83.25552,9.82266],[-83.25906,9.82108],[-83.26163,9.82118],[-83.26517,9.81535],[-83.26843,9.8152],[-83.27065,9.81229],[-83.26986,9.81004],[-83.27126,9.80877],[-83.27122,9.80752],[-83.27563,9.80537],[-83.277,9.80192],[-83.27448,9.80207],[-83.27039,9.79826],[-83.26857,9.79831],[-83.26767,9.79959],[-83.26501,9.7991],[-83.26221,9.80189],[-83.2605,9.80118],[-83.25869,9.79858],[-83.25325,9.79789],[-83.25087,9.79554],[-83.24524,9.79538],[-83.24444,9.79184],[-83.23983,9.78931],[-83.24003,9.7863],[-83.24124,9.7843],[-83.24024,9.78266],[-83.23823,9.7829],[-83.23737,9.78753],[-83.23963,9.79297],[-83.23313,9.79731],[-83.22831,9.79794],[-83.22299,9.79657],[-83.22151,9.79876],[-83.21082,9.80535],[-83.20422,9.8066],[-83.19543,9.80674],[-83.19301,9.80833],[-83.1905,9.8086],[-83.18536,9.80757],[-83.18207,9.80349],[-83.1796,9.80197],[-83.17446,9.80219],[-83.17149,9.80537],[-83.16945,9.80587],[-83.16197,9.79659],[-83.15717,9.79317],[-83.15095,9.7915],[-83.14672,9.78726],[-83.13666,9.78695],[-83.13471,9.78501],[-83.13111,9.78531],[-83.12907,9.7845],[-83.127,9.7885],[-83.12357,9.7906],[-83.12027,9.79455],[-83.11508,9.79595],[-83.11271,9.79498],[-83.10965,9.79672],[-83.10635,9.79549],[-83.10199,9.79568],[-83.09887,9.79723],[-83.09736,9.79923],[-83.097,9.80277],[-83.09496,9.80493],[-83.09467,9.80756],[-83.09108,9.81042],[-83.08872,9.80996],[-83.08462,9.81922],[-83.0833,9.81843],[-83.08226,9.82042],[-83.08085,9.82074],[-83.08046,9.82341],[-83.07857,9.82305],[-83.0769,9.82565],[-83.07518,9.82365],[-83.0701,9.82703],[-83.0669,9.82686],[-83.06383,9.82534],[-83.05731,9.82616],[-83.05531,9.82462],[-83.05361,9.82541],[-83.0527,9.82746],[-83.04918,9.82718],[-83.04791,9.82904],[-83.04679,9.82887],[-83.04825,9.8317],[-83.04951,9.83826],[-83.05461,9.84314],[-83.05466,9.84477],[-83.05612,9.84591],[-83.05347,9.8478],[-83.05143,9.85238],[-83.0486,9.85323],[-83.04621,9.85236],[-83.0464,9.85044],[-83.04871,9.8519],[-83.05,9.85106],[-83.04889,9.84707],[-83.04275,9.84761],[-83.03895,9.84614],[-83.03789,9.85012],[-83.03479,9.85288],[-83.03214,9.85876],[-83.02655,9.8609],[-83.02358,9.86378],[-83.02018,9.86286],[-83.01324,9.86445],[-83.01064,9.87223],[-83.00945,9.87197],[-83.01016,9.86982],[-83.00887,9.86951],[-83.00554,9.87269],[-83.00565,9.87386],[-83.0085,9.87632],[-83.00181,9.87823],[-83.00005,9.88198],[-83.00049,9.88488],[-82.99735,9.88499],[-82.99801,9.8865],[-82.99164,9.89037],[-82.99122,9.89279],[-82.98705,9.89415],[-82.98506,9.89344],[-82.98375,9.89143],[-82.98203,9.89509],[-82.98083,9.89453],[-82.97949,9.89574],[-82.9777,9.89548],[-82.97542,9.89275],[-82.97277,9.89202],[-82.97139,9.88985],[-82.97192,9.88831],[-82.96891,9.88712],[-82.96976,9.88542],[-82.96806,9.88555],[-82.96635,9.88428],[-82.95849,9.8744],[-82.95809,9.87507],[-82.98143,9.9056],[-82.98542,9.90934],[-82.98703,9.91288],[-82.99494,9.92364],[-82.99629,9.92431],[-82.99965,9.93017]]]}}]},"pintura":{"fill":{"paint":{"fill-color":"#ffd43b","fill-opacity":0.06}},"line":{"paint":{"line-color":"#ffd43b","line-width":2.2,"line-dasharray":[3,1.5]}}}},{"id":"limon_asp","titulo":"Áreas silvestres protegidas","color":"#69db7c","opacidad":1,"g":"poligono","atribucion":"Sistema Nacional de Áreas de Conservación (SINAC)","tipo":"vector","datos":{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"nombre":"Limoncito","categoria":"Refugio Nacional de Vida Silvestre"},"geometry":{"type":"Polygon","coordinates":[[[-83.03227,9.96603],[-83.00779,9.93338],[-83.00702,9.9357],[-83.00536,9.93377],[-83.0037,9.92884],[-83.05468,9.95143],[-83.05461,9.96793],[-83.03635,9.97328],[-83.03641,9.97587],[-83.0354,9.97655],[-83.03197,9.97266],[-83.03227,9.96603]]]}},{"type":"Feature","properties":{"nombre":"Nacional Cariari","categoria":"Humedal"},"geometry":{"type":"Polygon","coordinates":[[[-83.17218,10.07242],[-83.15823,10.06302],[-83.13595,10.03484],[-83.11012,10.00743],[-83.10351,10.00534],[-83.10195,10.00381],[-83.10237,10.0022],[-83.1001,10.00334],[-83.09762,10.00204],[-83.09577,10.0],[-83.09378,9.99671],[-83.09081,9.99978],[-83.08466,9.99772],[-83.08144,9.99777],[-83.0803,10.00263],[-83.07984,10.00093],[-83.08121,9.99726],[-83.08435,9.99713],[-83.0906,9.9994],[-83.09242,9.9969],[-83.09383,9.99635],[-83.09673,10.00069],[-83.09888,10.00243],[-83.10031,10.00305],[-83.10219,10.00182],[-83.10274,10.00225],[-83.10242,10.00386],[-83.10395,10.00531],[-83.10963,10.00628],[-83.13606,10.03338],[-83.15932,10.06288],[-83.15968,10.06178],[-83.15694,10.05573],[-83.1538,10.05213],[-83.1508,10.04742],[-83.15036,10.04226],[-83.15124,10.04748],[-83.15728,10.05535],[-83.16047,10.06194],[-83.15959,10.06381],[-83.16262,10.06502],[-83.16668,10.06866],[-83.1725,10.07214],[-83.17393,10.07151],[-83.17368,10.06679],[-83.17012,10.06378],[-83.16953,10.06237],[-83.17055,10.0615],[-83.17316,10.06196],[-83.17511,10.05962],[-83.17661,10.05947],[-83.17717,10.05828],[-83.17672,10.05961],[-83.1751,10.05991],[-83.17317,10.06215],[-83.17074,10.06172],[-83.1698,10.06238],[-83.17017,10.06351],[-83.17384,10.06654],[-83.17426,10.07153],[-83.17302,10.07282],[-83.18559,10.09289],[-83.18515,10.09315],[-83.17218,10.07242]]]}}]}},{"id":"limon_vias","titulo":"Red vial nacional","color":"#ff922b","opacidad":1,"g":"linea","atribucion":"Ministerio de Obras Públicas y Transportes (MOPT)","tipo":"vector","datos":{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"ruta":36,"descripcion":"Limón(R.32)-Río Banano(R.241)"},"geometry":{"type":"LineString","coordinates":[[-83.03326,9.98963],[-83.03262,9.98668],[-83.0328,9.9808],[-83.03166,9.97494],[-83.02792,9.96703],[-83.02911,9.96401],[-83.02692,9.96081],[-83.02429,9.96051],[-83.01805,9.95121],[-83.0044,9.93383],[-83.00205,9.9292],[-83.00622,9.919],[-83.01024,9.91701],[-83.01212,9.91783],[-83.01478,9.9173],[-83.0176,9.91803]]}},{"type":"Feature","properties":{"ruta":240,"descripcion":"Buenos Aires(R.32)-Moín(Entrada Muelle)"},"geometry":{"type":"LineString","coordinates":[[-83.09324,9.98582],[-83.09068,9.98675],[-83.08723,9.98612],[-83.08483,9.98679],[-83.08303,9.98948],[-83.07976,9.99142],[-83.07775,9.99519],[-83.07573,9.99755],[-83.07585,9.99936]]}},{"type":"Feature","properties":{"ruta":240,"descripcion":"Moín(Entrada Muelle)-Limón(R.32)(Muelle Nacional)"},"geometry":{"type":"LineString","coordinates":[[-83.07585,9.99936],[-83.07545,10.00148],[-83.07605,10.00378],[-83.07536,10.00537],[-83.0696,10.00753],[-83.0675,10.00702],[-83.0669,10.00771],[-83.06716,10.00967],[-83.06663,10.01031],[-83.06574,10.01032],[-83.0629,10.00854],[-83.05932,10.00793],[-83.04972,10.01021],[-83.04835,10.00864],[-83.04697,10.00902],[-83.04572,10.00858],[-83.04316,10.00861],[-83.03926,10.00616],[-83.03644,10.00547],[-83.03391,10.00411],[-83.03201,10.00203],[-83.03253,10.00029],[-83.031,9.9954],[-83.03006,9.9957],[-83.0286,9.99108]]}},{"type":"Feature","properties":{"ruta":241,"descripcion":"Pueblo Nuevo/ Limón(R.32)-Beverley(R.802)"},"geometry":{"type":"LineString","coordinates":[[-83.05367,9.98522],[-83.0554,9.98326],[-83.05692,9.98359],[-83.05926,9.9826],[-83.06005,9.98189],[-83.06002,9.98054],[-83.06168,9.97999],[-83.06297,9.98024],[-83.06388,9.97887],[-83.06513,9.97834],[-83.06715,9.97513],[-83.06725,9.97377],[-83.06821,9.97307],[-83.06827,9.96991],[-83.06998,9.9667],[-83.07061,9.96589],[-83.07232,9.96556],[-83.07395,9.96431],[-83.07472,9.96235],[-83.07284,9.96087],[-83.07216,9.95932],[-83.07122,9.9591],[-83.06996,9.95783],[-83.06818,9.95733],[-83.06769,9.9549],[-83.06394,9.95168],[-83.06338,9.94893],[-83.04064,9.92631]]}},{"type":"Feature","properties":{"ruta":241,"descripcion":"Beverley(R.802)-Río Banano(R.36)"},"geometry":{"type":"LineString","coordinates":[[-83.04064,9.92631],[-83.03514,9.92218],[-83.02551,9.92061],[-83.02163,9.91876],[-83.0176,9.91803]]}},{"type":"Feature","properties":{"ruta":802,"descripcion":"Beverly (R.241) - La Bomba (R.Banano)"},"geometry":{"type":"LineString","coordinates":[[-83.06532,9.91759],[-83.06507,9.91926],[-83.06346,9.92021],[-83.05943,9.92086],[-83.05442,9.92296],[-83.05033,9.928],[-83.04064,9.92631]]}},{"type":"Feature","properties":{"ruta":32,"descripcion":"Liverpool(Escuela)-Limón(Muelle Alemán)"},"geometry":{"type":"LineString","coordinates":[[-83.12945,9.99178],[-83.1261,9.99207],[-83.12066,9.99039],[-83.11067,9.99071],[-83.10455,9.99169],[-83.10197,9.99161],[-83.09875,9.99041],[-83.09411,9.98639],[-83.09216,9.98538],[-83.08477,9.98534],[-83.07251,9.98257],[-83.06057,9.98494],[-83.04674,9.98552],[-83.02402,9.99251]]}},{"type":"Feature","properties":{"ruta":32,"descripcion":"Toro (Rio Toro)(Lte Cantonal)-Liverpool(Escuela)"},"geometry":{"type":"LineString","coordinates":[[-83.20974,10.01662],[-83.19718,10.00814],[-83.19454,10.00689],[-83.17627,10.00452],[-83.17368,10.0038],[-83.16519,9.99691],[-83.16243,9.99551],[-83.15105,9.99397],[-83.14474,9.991],[-83.14132,9.99019],[-83.12945,9.99178]]}},{"type":"Feature","properties":{"ruta":257,"descripcion":"Finca Sandoval,Limon(R.32)-Paradero, Moin (Proyecto T.C.M)"},"geometry":{"type":"LineString","coordinates":[[-83.107,9.99123],[-83.10746,9.99788],[-83.10699,9.99905],[-83.10476,10.00088],[-83.10399,10.00225],[-83.10403,10.00335],[-83.10511,10.00564],[-83.10435,10.00928]]}}]},"pintura":{"line":{"paint":{"line-color":"#ff922b","line-width":3}}}},{"id":"limon_escuelas","titulo":"Centros educativos públicos","color":"#4dabf7","opacidad":1,"g":"punto","atribucion":"Ministerio de Educación Pública (MEP)","tipo":"vector","datos":{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"nombre":"VILLA HERMOSA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.06671,9.97664]}},{"type":"Feature","properties":{"nombre":"BALVANERO VARGAS MOLINA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03208,9.97481]}},{"type":"Feature","properties":{"nombre":"ATILIA MATA FRESES","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03744,9.98711]}},{"type":"Feature","properties":{"nombre":"BEVERLY","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03754,9.92429]}},{"type":"Feature","properties":{"nombre":"RÍO VICTORIA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.1598,9.95136]}},{"type":"Feature","properties":{"nombre":"BARRIO LIMONCITO","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.04163,9.98251]}},{"type":"Feature","properties":{"nombre":"LIVERPOOL","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.12955,9.99118]}},{"type":"Feature","properties":{"nombre":"MOÍN","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.08127,9.99969]}},{"type":"Feature","properties":{"nombre":"I.E.G.B. LIMÓN 2000","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.14089,9.986]}},{"type":"Feature","properties":{"nombre":"EL TRÉBOL","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.08757,9.93634]}},{"type":"Feature","properties":{"nombre":"VILLA DEL MAR # 2","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.07988,9.98676]}},{"type":"Feature","properties":{"nombre":"LOS CORALES","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.04331,9.99735]}},{"type":"Feature","properties":{"nombre":"VILLA DEL MAR # 1","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.06962,9.99579]}},{"type":"Feature","properties":{"nombre":"LOS LIRIOS","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03812,9.97472]}},{"type":"Feature","properties":{"nombre":"GENERAL TOMÁS GUARDIA GUTIÉRREZ","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.02973,9.9923]}},{"type":"Feature","properties":{"nombre":"LA BOMBA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05911,9.92138]}},{"type":"Feature","properties":{"nombre":"CASTILLO NUEVO","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05789,9.92712]}},{"type":"Feature","properties":{"nombre":"OLYMPIA TREJOS LÓPEZ","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03347,10.00246]}},{"type":"Feature","properties":{"nombre":"LA COLINA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05061,9.98346]}},{"type":"Feature","properties":{"nombre":"PORTETE","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05851,10.00659]}},{"type":"Feature","properties":{"nombre":"MARGARITA ROJAS ZÚÑIGA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05424,9.98904]}},{"type":"Feature","properties":{"nombre":"OJO DE AGUA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.06056,9.99922]}},{"type":"Feature","properties":{"nombre":"RAFAEL YGLESIAS CASTRO","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03026,9.99391]}},{"type":"Feature","properties":{"nombre":"RÍO BLANCO","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.15416,9.97461]}},{"type":"Feature","properties":{"nombre":"SANTA RITA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.12788,9.97062]}},{"type":"Feature","properties":{"nombre":"VALLE LA AURORA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.09391,9.94659]}},{"type":"Feature","properties":{"nombre":"SANTA EDUVIGES","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03875,10.001]}},{"type":"Feature","properties":{"nombre":"SANTA ROSA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.06645,9.9545]}},{"type":"Feature","properties":{"nombre":"MIRAVALLES","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.11335,9.96824]}},{"type":"Feature","properties":{"nombre":"LICEO RÍO BANANO","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.01682,9.92021]}},{"type":"Feature","properties":{"nombre":"COLEGIO DE LIMÓN","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03368,9.99932]}},{"type":"Feature","properties":{"nombre":"LICEO MARIO BOURNE BOURNE","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05842,9.98453]}},{"type":"Feature","properties":{"nombre":"C.T.P. DE LIMÓN","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.04305,9.9966]}},{"type":"Feature","properties":{"nombre":"COLEGIO DEPORTIVO DE LIMÓN","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.06671,9.98819]}},{"type":"Feature","properties":{"nombre":"NOCTURNO DE LIMÓN","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03368,9.99932]}},{"type":"Feature","properties":{"nombre":"PROYECTO PACUARE","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05095,9.99963]}},{"type":"Feature","properties":{"nombre":"CINDEA LIMÓN-LIMÓN 2000","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.14089,9.986]}},{"type":"Feature","properties":{"nombre":"CINDEA LIMÓN-TOMÁS GUARDIA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.02973,9.9923]}},{"type":"Feature","properties":{"nombre":"CINDEA LIMÓN-RÍO BLANCO","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.15416,9.97461]}},{"type":"Feature","properties":{"nombre":"CINDEA LIMÓN","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.03026,9.99391]}},{"type":"Feature","properties":{"nombre":"CONED LIMÓN","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.0703,9.98344]}},{"type":"Feature","properties":{"nombre":"COLEGIO DE PACUARE","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.04943,9.99959]}},{"type":"Feature","properties":{"nombre":"CINDEA LA BOMBA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.05911,9.92138]}},{"type":"Feature","properties":{"nombre":"C.T.P. DE LIVERPOOL","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.12883,9.99357]}},{"type":"Feature","properties":{"nombre":"LOMA LINDA","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.10315,9.9814]}},{"type":"Feature","properties":{"nombre":"CINDEA LIMÓN-C.A.I. MARCUS GARVEY","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.09749,9.98851]}},{"type":"Feature","properties":{"nombre":"CIENTÍFICO DE COSTA RICA DEL ATLANTICO -UNED-","tipo":"PÚBLICO"},"geometry":{"type":"Point","coordinates":[-83.0703,9.98344]}}]}},{"id":"limon_salud","titulo":"Hospitales, clínicas y EBAIS","color":"#ff6b6b","opacidad":1,"g":"punto","atribucion":"© OpenStreetMap contributors, Healthsites.io","tipo":"vector","datos":{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"nombre":"Ebais Limón","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.0265,9.99206]}},{"type":"Feature","properties":{"nombre":"Ebais Vista del Mar","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.07317,9.99493]}},{"type":"Feature","properties":{"nombre":"Clínica de Oftalmología","operador":""},"geometry":{"type":"Point","coordinates":[-83.03231,9.99866]}},{"type":"Feature","properties":{"nombre":"Ebais Limón 2000","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.14114,9.98926]}},{"type":"Feature","properties":{"nombre":"Clínica CCSS Limón","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.03706,9.98565]}},{"type":"Feature","properties":{"nombre":"Clínica Quiribri","operador":""},"geometry":{"type":"Point","coordinates":[-83.02984,9.99126]}},{"type":"Feature","properties":{"nombre":"Clínica de Especialidades","operador":""},"geometry":{"type":"Point","coordinates":[-83.03272,9.99062]}},{"type":"Feature","properties":{"nombre":"Ebais Río Blanco","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.15584,9.97367]}},{"type":"Feature","properties":{"nombre":"Laboratorio Clínico","operador":""},"geometry":{"type":"Point","coordinates":[-83.03085,9.99434]}},{"type":"Feature","properties":{"nombre":"Ebais Santa Rita","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.12731,9.97157]}},{"type":"Feature","properties":{"nombre":"Hospital Dr. Tony Facio Castro","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.02669,9.99961]}},{"type":"Feature","properties":{"nombre":"Clínica Saint Mary","operador":""},"geometry":{"type":"Point","coordinates":[-83.03213,9.99839]}},{"type":"Feature","properties":{"nombre":"Clínica Somedica","operador":""},"geometry":{"type":"Point","coordinates":[-83.02961,9.99571]}},{"type":"Feature","properties":{"nombre":"Ebais Santa Eduviges","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.03902,10.00047]}},{"type":"Feature","properties":{"nombre":"Ebais Filadelfia","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.04527,9.93687]}},{"type":"Feature","properties":{"nombre":"Ebais Liverpool","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.12905,9.9915]}},{"type":"Feature","properties":{"nombre":"Clínica San Juan","operador":""},"geometry":{"type":"Point","coordinates":[-83.02915,9.99551]}},{"type":"Feature","properties":{"nombre":"Ebais Valle La Aurora","operador":"CCSS"},"geometry":{"type":"Point","coordinates":[-83.09497,9.94649]}}]}}],"logos":[],"info":{"subtitulo":"Cabecera del cantón central y de la provincia de Limón, frente al mar Caribe: puertos, ferrocarril y cultura afrocaribeña.","autor":"GeoSolutions Consulting","institucion":"Geoportal Costa Rica","contacto":"","fuente":"Población y superficie: INEC, estimación 2025 por distrito. Centros educativos: MEP. Áreas protegidas: SINAC. Red vial: MOPT. Salud: Healthsites.io a partir de OpenStreetMap. Aeropuerto: OurAirports. Sismo: USGS. Clima: reanálisis ERA5 (Copernicus/ECMWF) vía Open-Meteo, promedio 1991-2020 de la celda de 9,95° N 83,07° O. Lugares: OpenStreetMap (Nominatim).","descripcion":"La ciudad de Limón ocupa el distrito central del cantón, 59,7 km² junto al mar Caribe, donde viven unas 53 200 personas. Sus muelles y la terminal de Moín forman el principal complejo portuario del país, y la ruta 32 la une con el Valle Central.\n\nEsta infografía se hizo con la plantilla «Infografía» del geoportal, con las capas de su catálogo. Entre con su cuenta para hacer las suyas."},"ig":{"antetitulo":"Infografía · Geoportal Costa Rica","ubicacion":true,"cifras":[{"valor":"53 200","etiqueta":"habitantes en el distrito Limón (2025)"},{"valor":"92 065","etiqueta":"habitantes en el cantón, en 4 distritos"},{"valor":"1 760,7 km²","etiqueta":"superficie del cantón"},{"valor":"147","etiqueta":"centros educativos públicos en el cantón"},{"valor":"24,9 °C","etiqueta":"temperatura media anual (ERA5, 1991-2020)"},{"valor":"4 131 mm","etiqueta":"lluvia media al año (ERA5, 1991-2020)"}],"graficos":[{"titulo":"Población por distrito, 2025","series":["Habitantes",""],"filas":[{"e":"Limón","a":53200,"b":null},{"e":"Valle La Estrella","a":20129,"b":null},{"e":"Río Blanco","a":10394,"b":null},{"e":"Matama","a":8342,"b":null}]},{"titulo":"Clima medio mensual (1991-2020)","series":["Lluvia (mm)","Temperatura (°C)"],"filas":[{"e":"E","a":295,"b":23.8},{"e":"F","a":196,"b":24.1},{"e":"M","a":181,"b":24.6},{"e":"A","a":172,"b":25.3},{"e":"M","a":388,"b":25.5},{"e":"J","a":426,"b":25.5},{"e":"J","a":506,"b":25.0},{"e":"A","a":396,"b":25.3},{"e":"S","a":303,"b":25.5},{"e":"O","a":369,"b":25.2},{"e":"N","a":487,"b":24.5},{"e":"D","a":412,"b":24.1}]}],"notas":[{"lon":-83.0113,"lat":9.9937,"titulo":"Isla Uvita","texto":"Frente a ella fondeó Cristóbal Colón en su cuarto viaje, en 1502."},{"lon":-83.0252,"lat":9.9927,"titulo":"Parque Vargas","texto":"Parque frente al mar en el centro de la ciudad."},{"lon":-83.0244,"lat":9.9895,"titulo":"Muelle de los Turistas","texto":"Atracan los cruceros, junto al centro."},{"lon":-83.0267,"lat":9.9996,"titulo":"Hospital Tony Facio","texto":"Hospital de la CCSS que atiende la región Huetar Caribe."},{"lon":-83.0635,"lat":10.0099,"titulo":"Playa Bonita","texto":"Playa de Portete, al noroeste del centro."},{"lon":-83.0982,"lat":10.0128,"titulo":"Terminal de Contenedores de Moín","texto":"Terminal de contenedores en Moín, en operación desde 2019."},{"lon":-83.022,"lat":9.95796,"titulo":"Aeropuerto Internacional de Limón","texto":"Códigos LIO / MRLM; pista a 7 pies sobre el mar."}],"tarjetas":[{"titulo":"El terremoto de 1991","texto":"El 22 de abril de 1991 un sismo de magnitud 7,6 con epicentro a unos 34 km al sur de la ciudad sacudió la región Caribe (catálogo del USGS, capa «Sismos M ≥ 5»)."},{"titulo":"Áreas protegidas","texto":"El cantón toca 7 áreas silvestres protegidas; junto a la ciudad está el Refugio Nacional de Vida Silvestre Limoncito, y tierra adentro la Reserva Biológica Hitoy Cerere y la Zona Protectora Río Banano."},{"titulo":"Un año muy lluvioso","texto":"No hay estación seca marcada: según ERA5 llueve más de 170 mm en cada mes, con los máximos en julio y noviembre."},{"titulo":"Haga la suya","texto":"En Publicar › Mapa web elija la plantilla «Infografía»: título, logos, cifras, gráficos, notas en el mapa y tarjetas."}]}};
+/* ---------- Publicaciones: logos, información e infografías ----------
+   Cada mapa web lleva, además del título, un subtítulo, hasta cuatro logos propios más el de la institución de la
+   cuenta, y la autoría (autor, institución, contacto, fuente y descripción): todo viaja dentro de la especificación,
+   así que la página publicada no depende del portal. La plantilla «Infografía» arma una página tipo cartel: banda
+   de título, columna con cifras clave y gráficos, el mapa grande con notas numeradas, rosa de los vientos, escala,
+   mapa de ubicación y leyenda, tarjetas de texto y el pie con las fuentes.
+   El perfil de cada institución (logo, nombre, descripción y web) lo cambian su administrador y el superadministrador
+   en Administrar › Mi institución; vive en app.instituciones del servidor y lo lee cualquiera, sin sesión, para la
+   portada «Acerca del proyecto». Sin servidor se guarda en este navegador. */
+const PERFILES_K = 'geoportal.perfilesInst';
+const perf = {lista: null, cargando: null, servidor: false, error: '', inst: null, borrador: null, guardando: false, msg: ''};
+async function cargarPerfiles(forzar) {
+  if (perf.lista && !forzar) return perf.lista;
+  if (perf.cargando) return perf.cargando;
+  perf.cargando = (async () => {
+    let lista = null;
+    try {
+      const b = await baseEnlaces(); if (!b) throw new Error('sin servidor del geoportal');
+      lista = (await pedirEnlace(b + 'instituciones', {espera: 8000})).instituciones || [];
+      perf.servidor = true; perf.error = '';
+    } catch (e) { perf.servidor = false; perf.error = e.message || String(e); }
+    perf.lista = lista || Object.entries(leerLS(PERFILES_K, {})).map(([entidad, x]) => Object.assign({entidad}, x));
+    perf.cargando = null;
+    return perf.lista;
+  })();
+  return perf.cargando;
+}
+const perfilDe = alias => (perf.lista || []).find(p => p.entidad === alias) || null;
+async function guardarPerfil(alias, datos) {
+  const st = window.cfgUsuario && cfgUsuario._st;
+  let r;
+  if (perf.servidor && st && st.servidor && st.token)
+    r = await pedirEnlace(st.base + 'institucion', {metodo: 'POST', token: st.token, cuerpo: Object.assign({entidad: alias}, datos), espera: 20000});
+  else {
+    const loc = leerLS(PERFILES_K, {});
+    loc[alias] = Object.assign(loc[alias] || {}, datos, {actualizado: new Date().toISOString(), por: sesion.usuario});
+    if (!guardarLS(PERFILES_K, loc)) throw new Error('el navegador no deja guardar');
+    r = Object.assign({entidad: alias}, loc[alias]);
+  }
+  perf.lista = (perf.lista || []).filter(p => p.entidad !== alias).concat([r]);
+  return r;
+}
+
+// un logo subido: se reduce a lo sumo a 480 × 200 px y se guarda como data:URL (PNG, o WebP si el PNG pesa más de 100 KB)
+const LOGO_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+function leerLogo(archivo) {
+  return new Promise((ok, mal) => {
+    if (!archivo || !/^image\//.test(archivo.type)) { mal(new Error('el archivo no es una imagen')); return; }
+    if (archivo.size > 8e6) { mal(new Error('la imagen pasa de 8 MB')); return; }
+    const u = URL.createObjectURL(archivo), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(u);
+      let w = img.naturalWidth || 480, h = img.naturalHeight || 200, k = Math.min(1, 480 / w, 200 / h), d = '';
+      for (let i = 0; i < 4; i++, k *= .75) {
+        const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        d = c.toDataURL('image/png'); if (d.length <= 100000) break;
+        d = c.toDataURL('image/webp', .85); if (d.length <= 100000 && d.startsWith('data:image/webp')) break;
+      }
+      if (d.length > 100000 || !LOGO_RE.test(d)) mal(new Error('el logo sigue pesando demasiado')); else ok(d);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); mal(new Error('no se pudo leer la imagen')); };
+    img.src = u;
+  });
+}
+
+/* --- Administrar › Mi institución --- */
+function institucionesPerfil() {
+  const yo = yoDemo(), todas = institucionesDemo();
+  return esSuperDemo() ? todas : todas.filter(i => yo && i.alias === yo.alias && yo.rol === 'Administrador');
+}
+async function pInstitucion(el) {
+  if (!sesion) { el.innerHTML = notaNavegador('Entre con su cuenta para cambiar el perfil de su institución.'); return; }
+  if (!perf.lista) { el.innerHTML = '<div class="small muted">Cargando…</div>'; await cargarPerfiles(); }
+  const insts = institucionesPerfil(), sup = esSuperDemo();
+  if (!insts.length) { el.innerHTML = notaNavegador('El perfil de la institución lo cambian su administrador y el superadministrador.'); return; }
+  if (!perf.inst || !insts.some(i => i.alias === perf.inst)) { perf.inst = insts[0].alias; perf.borrador = null; }
+  const inst = insts.find(i => i.alias === perf.inst), p = perfilDe(perf.inst) || {};
+  if (!perf.borrador || perf.borrador.entidad !== perf.inst)
+    perf.borrador = {entidad: perf.inst, nombre: p.nombre || inst.institucion || '', descripcion: p.descripcion || '', web: p.web || '', logo: p.logo || ''};
+  const b = perf.borrador, cambiado = ['nombre', 'descripcion', 'web', 'logo'].some(k => (b[k] || '') !== (p[k] || (k === 'nombre' ? inst.institucion || '' : '')));
+  el.innerHTML = `${perf.servidor ? '' : notaNavegador('Sin conexión con el servidor del geoportal: el perfil se guarda sólo en este navegador.')}
+    <div class="field"><label for="piInst">Institución</label>${sup ? `<select class="select" id="piInst">${insts.map(i => `<option value="${esc(i.alias)}" ${i.alias === perf.inst ? 'selected' : ''}>${esc(i.alias)} · ${esc(i.institucion)}</option>`).join('')}</select>`
+      : `<div class="row" style="gap:6px"><span class="badge" style="flex:none">${esc(inst.alias)}</span><strong style="font-size:13px">${esc(inst.institucion)}</strong></div>`}</div>
+    <div class="lbl-s" style="margin-bottom:6px">Logo</div>
+    <div class="card pi-logo">${b.logo ? `<img src="${b.logo}" alt="Logo de ${esc(b.nombre)}">` : '<span class="small muted">Sin logo</span>'}</div>
+    <div class="row" style="gap:6px;margin:6px 0 12px"><label class="btn sm">${I('upload', 'sm')}${b.logo ? 'Cambiar' : 'Subir'} logo<input type="file" id="piArchivo" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+      ${b.logo ? `<button class="btn sm ghost" type="button" id="piQuitar">${I('trash', 'sm')}Quitar</button>` : ''}<span class="small muted grow">PNG, JPEG, WebP o SVG; se reduce a 480 × 200 px.</span></div>
+    <div class="field"><label for="piNombre">Nombre que se muestra</label><input class="input" id="piNombre" maxlength="160" value="${esc(b.nombre)}"></div>
+    <div class="field"><label for="piWeb">Sitio web</label><input class="input" id="piWeb" maxlength="300" placeholder="https://" value="${esc(b.web)}"></div>
+    <div class="field"><label for="piDesc">Descripción (${b.descripcion.length}/2000)</label><textarea class="input" id="piDesc" rows="5" maxlength="2000" placeholder="Qué hace la institución y qué datos aporta al geoportal">${esc(b.descripcion)}</textarea></div>
+    <div class="small muted" style="margin-bottom:10px">El perfil es público: aparece en «Acerca del proyecto» de la portada y su logo se puede poner en las publicaciones de las cuentas de la institución.${p.por ? ` Cambiado por ${esc(p.por)} el ${esc(new Date(p.actualizado).toLocaleString('es-CR', {dateStyle: 'medium', timeStyle: 'short'}))}.` : ''}</div>
+    <div class="row" style="gap:6px"><button class="btn primary sm" type="button" id="piGuardar" ${cambiado && !perf.guardando ? '' : 'disabled'}>${I('save', 'sm')}${perf.guardando ? 'Guardando…' : 'Guardar'}</button>
+      <button class="btn sm ghost" type="button" id="piDeshacer" ${cambiado ? '' : 'disabled'}>Deshacer</button><span class="small grow" id="piMsg" role="status">${esc(perf.msg)}</span></div>`;
+  const re = () => pInstitucion(el);
+  { const s = $('#piInst', el); if (s) s.onchange = () => { perf.inst = s.value; perf.borrador = null; perf.msg = ''; re(); }; }
+  const marcar = () => { perf.msg = ''; const g = $('#piGuardar', el), d = $('#piDeshacer', el); if (g) g.disabled = false; if (d) d.disabled = false; };
+  $('#piNombre', el).oninput = e => { b.nombre = e.target.value; marcar(); };
+  $('#piWeb', el).oninput = e => { b.web = e.target.value.trim(); marcar(); };
+  $('#piDesc', el).oninput = e => { b.descripcion = e.target.value; marcar(); };
+  $('#piArchivo', el).onchange = async e => {
+    try { b.logo = await leerLogo(e.target.files[0]); perf.msg = ''; } catch (x) { perf.msg = 'No se pudo usar el logo: ' + (x.message || x); }
+    re();
+  };
+  { const q = $('#piQuitar', el); if (q) q.onclick = () => { b.logo = ''; re(); }; }
+  $('#piDeshacer', el).onclick = () => { perf.borrador = null; perf.msg = ''; re(); };
+  $('#piGuardar', el).onclick = async () => {
+    if (b.web && !/^https?:\/\/[^ "<>]{3,300}$/.test(b.web)) { perf.msg = 'El sitio web debe empezar por http:// o https://'; re(); return; }
+    perf.guardando = true; re();
+    try {
+      await guardarPerfil(b.entidad, {nombre: b.nombre.trim(), descripcion: b.descripcion, web: b.web, logo: b.logo});
+      auditar('usuarios', 'cambió el perfil de la institución', b.entidad, {logo: b.logo ? 'sí' : 'no'});
+      perf.borrador = null; perf.msg = 'Guardado.';
+    } catch (x) { perf.msg = 'No se guardó: ' + (x.message || x); }
+    perf.guardando = false; re();
+  };
+}
+
+/* --- Publicar › Mapa web: logos e información --- */
+mw.info = {subtitulo: '', autor: '', institucion: '', contacto: '', fuente: '', descripcion: ''};
+mw.logos = []; mw.logoInst = true;
+mw.ig = {antetitulo: '', cifras: '', g1t: '', g1: '', g2t: '', g2: '', notas: [], tarjetas: '', ubicacion: true};
+const miPerfil = () => { const yo = yoDemo(); return yo && yo.alias ? perfilDe(yo.alias) : null; };
+function logosPublicacion() {
+  const p = miPerfil(), propio = mw.logoInst && p && p.logo && LOGO_RE.test(p.logo) ? [p.logo] : [];
+  return [...propio, ...mw.logos].slice(0, 5);
+}
+function formPublicacion() {
+  if (perf.lista === null && !perf.cargando) cargarPerfiles().then(() => { const el = document.querySelector('#mwPub'); if (el) refrescarPanel('mapaweb'); });
+  const i = mw.info, p = miPerfil(), yo = yoDemo() || {}, pl = mw.plantilla;
+  const inp = (id, lbl, k, ph = '') => `<div class="field"><label for="${id}">${lbl}</label><input class="input" id="${id}" data-mwi="${k}" value="${esc(i[k])}" placeholder="${esc(ph)}"></div>`;
+  const autoria = pl === 'formal' ? '' : `<div class="row" style="gap:8px">${inp('mwAu', 'Autor', 'autor', yo.nombre || '')}${inp('mwIn', 'Institución', 'institucion', (p && p.nombre) || yo.institucion || '')}</div>
+      ${inp('mwFu', 'Fuente de los datos', 'fuente', 'Por omisión, la atribución de cada capa')}
+      ${pl === 'relato' ? '' : `<div class="field"><label for="mwDe">${pl === 'infografia' ? 'Entrada (el texto que abre la infografía)' : 'Descripción'}</label><textarea class="input" id="mwDe" data-mwi="descripcion" rows="3">${esc(i.descripcion)}</textarea></div>`}`;
+  return `<details class="card mw-pub" id="mwPub" ${mw.pubAbierto ? 'open' : ''}><summary><strong>Logos e información</strong> <span class="small muted">${mw.logos.length + (mw.logoInst && p && p.logo ? 1 : 0)} logos</span></summary>
+    ${inp('mwSu', 'Subtítulo', 'subtitulo', 'Una línea bajo el título')}
+    <div class="lbl-s" style="margin:4px 0 6px">Logos (hasta 4 propios)</div>
+    ${p && p.logo ? `<div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="small row" style="gap:6px"><img class="mw-logo-min" src="${p.logo}" alt="">Logo de ${esc(p.nombre || p.entidad)}</span><input class="switch" type="checkbox" role="switch" id="mwLI" ${mw.logoInst ? 'checked' : ''} aria-label="Incluir el logo de la institución"></div>` : ''}
+    <div class="mw-logos">${mw.logos.map((u, k) => `<span class="mw-logo"><img src="${u}" alt="Logo ${k + 1}"><button class="iconbtn" type="button" data-mwlq="${k}" aria-label="Quitar el logo ${k + 1}">${I('x', 'sm')}</button></span>`).join('')}
+      ${mw.logos.length < 4 ? `<label class="btn sm">${I('upload', 'sm')}Agregar logo<input type="file" id="mwLA" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>` : ''}</div>
+    <div class="small" id="mwLMsg" role="status"></div>
+    ${autoria}
+    ${inp('mwCo', 'Contacto', 'contacto', 'Correo, teléfono o sitio web')}
+  </details>`;
+}
+function formInfografia() {
+  const g = mw.ig, ta = (id, lbl, k, filas, ph, ayuda = '') => `<div class="field"><label for="${id}">${lbl}</label><textarea class="input mono" id="${id}" data-mwg="${k}" rows="${filas}" placeholder="${esc(ph)}">${esc(g[k])}</textarea>${ayuda ? `<span class="small muted">${ayuda}</span>` : ''}</div>`;
+  const tx = (id, lbl, k, ph) => `<div class="field"><label for="${id}">${lbl}</label><input class="input" id="${id}" data-mwg="${k}" value="${esc(g[k])}" placeholder="${esc(ph)}"></div>`;
+  return `<details class="card mw-pub" id="mwIg" open><summary><strong>Contenido de la infografía</strong></summary>
+    ${tx('igAn', 'Antetítulo', 'antetitulo', 'Una palabra o frase sobre el título')}
+    ${ta('igCi', 'Cifras clave (hasta 8)', 'cifras', 4, '53 200 | habitantes\n59,7 km² | superficie', 'Una por línea: valor | qué es.')}
+    ${tx('igG1t', 'Gráfico 1 · título', 'g1t', 'Población por distrito')}
+    ${ta('igG1', 'Gráfico 1 · datos', 'g1', 4, 'Distrito | Habitantes\nLimón | 53200', 'Una barra por línea: etiqueta | valor. Con una tercera columna se dibuja además una línea (eje derecho); la primera línea puede llevar los nombres.')}
+    ${tx('igG2t', 'Gráfico 2 · título', 'g2t', 'Lluvia y temperatura')}
+    ${ta('igG2', 'Gráfico 2 · datos', 'g2', 3, 'Mes | Lluvia (mm) | Temperatura (°C)\nE | 295 | 23,8')}
+    <div class="lbl-s" style="margin:4px 0 6px">Notas en el mapa (${g.notas.length}/20)</div>
+    <ol class="mw-notas">${g.notas.map((n, k) => `<li><div class="row" style="gap:6px"><input class="input grow" data-mwn="${k}" data-k="titulo" value="${esc(n.titulo)}" maxlength="80" aria-label="Título de la nota ${k + 1}">
+      <button class="iconbtn" type="button" data-mwnq="${k}" aria-label="Quitar la nota ${k + 1}">${I('trash', 'sm')}</button></div>
+      <input class="input" data-mwn="${k}" data-k="texto" value="${esc(n.texto)}" maxlength="300" placeholder="Texto breve" aria-label="Texto de la nota ${k + 1}"></li>`).join('')}</ol>
+    <button class="btn sm" type="button" id="igNota" ${g.notas.length >= 20 ? 'disabled' : ''}>${I('plus', 'sm')}Nota en el centro del mapa</button>
+    <div class="small muted" style="margin:4px 0 10px">Centre el mapa del portal en el lugar y pulse el botón: la nota queda numerada ahí.</div>
+    ${ta('igTa', 'Tarjetas (hasta 6)', 'tarjetas', 4, 'Historia: Colón llegó en 1502…\n\nPuerto: …', 'Una por párrafo (línea en blanco entre ellas): Título: texto.')}
+    <div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="small">Mapa de ubicación</span><input class="switch" type="checkbox" role="switch" id="igUb" ${g.ubicacion ? 'checked' : ''} aria-label="Mapa de ubicación"></div>
+  </details>`;
+}
+function enlazarPublicacion(el) {
+  const cambio = () => { mw.enlace = ''; };
+  { const d = $('#mwPub', el); if (d) d.ontoggle = () => { mw.pubAbierto = d.open; }; }
+  $$('[data-mwi]', el).forEach(x => x.oninput = () => { mw.info[x.dataset.mwi] = x.value; cambio(); });
+  // el autor y la institución de la cuenta, si se dejan vacíos
+  ['mwAu', 'mwIn'].forEach(id => { const x = $('#' + id, el); if (x && !x.value && x.placeholder) { x.value = x.placeholder; mw.info[x.dataset.mwi] = x.value; } });
+  { const s = $('#mwLI', el); if (s) s.onchange = () => { mw.logoInst = s.checked; cambio(); }; }
+  { const a = $('#mwLA', el); if (a) a.onchange = async () => {
+    try { mw.logos.push(await leerLogo(a.files[0])); cambio(); mw.pubAbierto = true; pMapaWeb(el); }
+    catch (x) { $('#mwLMsg', el).textContent = 'No se pudo usar el logo: ' + (x.message || x); }
+  }; }
+  $$('[data-mwlq]', el).forEach(b => b.onclick = () => { mw.logos.splice(+b.dataset.mwlq, 1); cambio(); pMapaWeb(el); });
+  if (mw.plantilla !== 'infografia') return;
+  $$('[data-mwg]', el).forEach(x => x.oninput = () => { mw.ig[x.dataset.mwg] = x.value; cambio(); });
+  $$('[data-mwn]', el).forEach(x => x.oninput = () => { mw.ig.notas[+x.dataset.mwn][x.dataset.k] = x.value; cambio(); });
+  $$('[data-mwnq]', el).forEach(b => b.onclick = () => { mw.ig.notas.splice(+b.dataset.mwnq, 1); cambio(); pMapaWeb(el); });
+  $('#igNota', el).onclick = () => { const c = mapa.getCenter(); mw.ig.notas.push({lon: +c.lng.toFixed(6), lat: +c.lat.toFixed(6), titulo: 'Nota ' + (mw.ig.notas.length + 1), texto: ''}); cambio(); pMapaWeb(el); };
+  $('#igUb', el).onchange = e => { mw.ig.ubicacion = e.target.checked; cambio(); };
+}
+// los textos del formulario como datos: cifras, gráficos y tarjetas
+const numeroIg = v => { const t = String(v).replace(/\s/g, '').replace(/[^0-9,.\-]/g, ''); if (!t) return null;
+  const n = Number(/,\d{1,2}$/.test(t) ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '')); return Number.isFinite(n) ? n : null; };
+function graficoIg(titulo, texto) {
+  const filas = String(texto || '').split('\n').map(l => l.split('|').map(x => x.trim())).filter(f => f[0] !== '' && f.length >= 2);
+  let series = ['', ''];
+  if (filas.length && numeroIg(filas[0][1]) === null) series = [filas[0][1] || '', filas.shift()[2] || ''];
+  const datos = filas.map(f => ({e: f[0], a: numeroIg(f[1]), b: f.length > 2 ? numeroIg(f[2]) : null})).filter(f => f.a !== null).slice(0, 24);
+  return datos.length ? {titulo: String(titulo || '').trim(), series, filas: datos} : null;
+}
+function specInfografia() {
+  const g = mw.ig;
+  return {antetitulo: g.antetitulo.trim(), ubicacion: g.ubicacion, notas: g.notas.slice(0, 20),
+    cifras: g.cifras.split('\n').map(l => l.split('|').map(x => x.trim())).filter(f => f[0]).map(f => ({valor: f[0], etiqueta: f.slice(1).join(' | ')})).slice(0, 8),
+    graficos: [graficoIg(g.g1t, g.g1), graficoIg(g.g2t, g.g2)].filter(Boolean),
+    tarjetas: g.tarjetas.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p => { const m = /^([^:\n]{1,100}):\s*([\s\S]*)$/.exec(p); return m ? {titulo: m[1].trim(), texto: m[2].trim()} : {titulo: '', texto: p}; }).slice(0, 6)};
+}
+function specPublicacion() {
+  const i = mw.info, t = k => String(i[k] || '').trim();
+  return {info: {subtitulo: t('subtitulo'), autor: t('autor'), institucion: t('institucion'), contacto: t('contacto'), fuente: t('fuente'), descripcion: t('descripcion')},
+    logos: logosPublicacion(), ...(mw.plantilla === 'infografia' ? {ig: specInfografia()} : {})};
+}
+function sanearPublicacion(s) {
+  const txt = (v, n) => String(v == null ? '' : v).slice(0, n), i = s.info || {}, arr = (v, n) => (Array.isArray(v) ? v : []).filter(x => x && typeof x === 'object').slice(0, n);
+  const num = (v, a, b) => { const x = Number(v); return v !== null && v !== '' && Number.isFinite(x) ? Math.min(b, Math.max(a, x)) : null; };
+  const out = {info: {subtitulo: txt(i.subtitulo, 300), autor: txt(i.autor, 200), institucion: txt(i.institucion, 200), contacto: txt(i.contacto, 200), fuente: txt(i.fuente, 1500), descripcion: txt(i.descripcion, 4000)},
+    logos: (Array.isArray(s.logos) ? s.logos : []).filter(u => typeof u === 'string' && u.length <= 110000 && LOGO_RE.test(u)).slice(0, 5)};
+  if (s.plantilla === 'infografia') {
+    const g = s.ig || {};
+    out.ig = {antetitulo: txt(g.antetitulo, 120), ubicacion: g.ubicacion !== false,
+      cifras: arr(g.cifras, 8).map(c => ({valor: txt(c.valor, 40), etiqueta: txt(c.etiqueta, 160)})),
+      graficos: arr(g.graficos, 2).map(k => ({titulo: txt(k.titulo, 160), series: [0, 1].map(j => txt((Array.isArray(k.series) ? k.series : [])[j], 60)),
+        filas: arr(k.filas, 24).map(f => ({e: txt(f.e, 40), a: num(f.a, -1e12, 1e12), b: num(f.b, -1e12, 1e12)})).filter(f => f.a !== null)})).filter(k => k.filas.length),
+      notas: arr(g.notas, 20).map(n => ({lon: num(n.lon, -180, 180), lat: num(n.lat, -85, 85), titulo: txt(n.titulo, 80), texto: txt(n.texto, 300)})).filter(n => n.lon !== null && n.lat !== null),
+      tarjetas: arr(g.tarjetas, 6).map(t => ({titulo: txt(t.titulo, 100), texto: txt(t.texto, 1500)}))};
+  }
+  return out;
+}
+
+/* --- lo que la página publicada muestra (se arma en el portal, al generar el HTML) --- */
+const escP = s => String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[ch]));
+const logosPub = sp => (sp.logos || []).length ? `<div class="pub-logos">${sp.logos.map(u => `<img src="${u}" alt="">`).join('')}</div>` : '';
+const subPub = sp => sp.info && sp.info.subtitulo ? `<span class="pub-sub">${escP(sp.info.subtitulo)}</span>` : '';
+function fuentesPub(sp) {
+  return (sp.info && sp.info.fuente) || [...new Set(sp.capas.map(c => String(c.atribucion || '').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim()).filter(Boolean))].join('; ');
+}
+function infoPub(sp, conDescripcion) {
+  const i = sp.info || {};
+  const filas = [['Autor', i.autor], ['Institución', i.institucion], ['Contacto', i.contacto], ['Fuente', i.fuente]].filter(r => r[1]);
+  return (conDescripcion && i.descripcion ? i.descripcion.split(/\n{2,}/).map(p => `<p>${escP(p)}</p>`).join('') : '')
+    + (filas.length ? `<dl class="pub-dl">${filas.map(([k, v]) => `<dt>${k}</dt><dd>${escP(v)}</dd>`).join('')}</dl>` : '');
+}
+function cssPublicacion(sp) {
+  return `.pub-logos{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pub-logos img{max-height:40px;max-width:140px;object-fit:contain;display:block}
+.pub-sub{display:block;font-weight:400;font-size:12.5px;opacity:.8;margin-top:2px}.pub-dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px;margin:12px 0 0}.pub-dl dt{font-weight:600}.pub-dl dd{margin:0;overflow-wrap:anywhere}
+.titulo{display:flex;align-items:center;gap:12px;max-width:min(560px,calc(100vw - 80px))}.titulo .pub-logos img{max-height:34px}.titulo .pub-desc{display:block;font-weight:400;font-size:12px;margin-top:4px;opacity:.85}
+.lado .pub-logos{margin-bottom:12px}.lado h1 .pub-sub{margin-top:4px}
+.lm-tt{display:flex;align-items:flex-end;gap:4mm;min-width:0}.lm-titulo .pub-logos{gap:2.5mm;margin-bottom:1.5mm}.lm-titulo .pub-logos img{max-height:10mm;max-width:32mm}.lm-sub{font-size:8pt;color:#444;margin:0 0 1.6mm}
+${sp.plantilla === 'infografia' ? cssInfografia() : ''}`;
+}
+// la cabecera del visor: logos, título, subtítulo y descripción; el pie lleva la autoría
+function tituloVisorPub(sp) {
+  const i = sp.info || {};
+  return `${logosPub(sp)}<div>${escP(sp.titulo)}${subPub(sp)}${i.descripcion ? `<span class="pub-desc">${escP(i.descripcion)}</span>` : ''}</div>`;
+}
+const pieVisorPub = sp => { const i = sp.info || {}, t = [i.autor, i.institucion, i.contacto].filter(Boolean).map(escP).join(' · '); return t ? t + ' · ' : ''; };
+
+/* --- Plantilla «Infografía» --- */
+function svgGraficoIg(g, acento, texto) {
+  const n = g.filas.length, va = g.filas.map(f => f.a), vb = g.filas.map(f => f.b).filter(v => v !== null);
+  const fmtN = v => Math.abs(v) >= 1e4 ? Math.round(v).toLocaleString('es-CR') : (+v.toFixed(1)).toLocaleString('es-CR');
+  const techo = v => { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); return [1, 2, 2.5, 5, 10].map(k => k * p).find(k => k >= v); };
+  const maxA = techo(Math.max(...va, 0)), minB = vb.length ? Math.floor(Math.min(...vb)) : 0, maxB = vb.length ? Math.ceil(Math.max(...vb)) : 1;
+  // el margen izquierdo, a la medida del rótulo más largo del eje; abajo, sitio para la leyenda
+  const ley = !!(g.series[0] || g.series[1]), W = 320, H = ley ? 186 : 176;
+  const m = {i: 8 + 5.6 * fmtN(maxA).length, d: vb.length ? 26 : 8, s: 14, b: ley ? 34 : 22}, w = W - m.i - m.d, h = H - m.s - m.b;
+  const bw = w / n, ya = v => m.s + h - (v / maxA) * h, yb = v => m.s + h - ((v - minB) / ((maxB - minB) || 1)) * h;
+  const gris = 'color-mix(in srgb,' + texto + ' 45%,transparent)';
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escP(g.titulo)}" style="width:100%;height:auto;font:10px system-ui,sans-serif">`;
+  [0, .5, 1].forEach(f => { const y = m.s + h - f * h; s += `<line x1="${m.i}" x2="${W - m.d}" y1="${y}" y2="${y}" stroke="${gris}" stroke-width=".5"/><text x="${m.i - 4}" y="${y + 3}" text-anchor="end" fill="${texto}" opacity=".75">${fmtN(maxA * f)}</text>`; });
+  g.filas.forEach((f, k) => {
+    const x = m.i + k * bw, y = ya(Math.max(0, f.a));
+    s += `<rect x="${(x + bw * .14).toFixed(1)}" y="${y.toFixed(1)}" width="${(bw * .72).toFixed(1)}" height="${(m.s + h - y).toFixed(1)}" rx="1.5" fill="${acento}"><title>${escP(f.e)}: ${fmtN(f.a)}</title></rect>`;
+    if (n <= 8) s += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 3).toFixed(1)}" text-anchor="middle" fill="${texto}" font-weight="600">${fmtN(f.a)}</text>`;
+    s += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - m.b + 12}" text-anchor="middle" fill="${texto}">${escP(n > 6 ? f.e.slice(0, 3) : f.e.length > 14 ? f.e.slice(0, 13) + '…' : f.e)}</text>`;
+  });
+  if (vb.length) {
+    const pts = g.filas.map((f, k) => f.b === null ? null : [m.i + k * bw + bw / 2, yb(f.b)]).filter(Boolean);
+    s += `<polyline points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" fill="none" stroke="#d9480f" stroke-width="2"/>`
+      + pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="#fff" stroke="#d9480f" stroke-width="1.5"/>`).join('');
+    [0, 1].forEach(f => s += `<text x="${W - m.d + 4}" y="${(m.s + h - f * h + 3).toFixed(1)}" fill="#d9480f">${fmtN(minB + f * (maxB - minB))}</text>`);
+  }
+  if (g.series[0] || g.series[1]) s += `<g transform="translate(${m.i},${H - 6})"><rect width="9" height="7" y="-7" fill="${acento}"/><text x="13" y="0" fill="${texto}">${escP(g.series[0])}</text>`
+    + (vb.length && g.series[1] ? `<line x1="${W / 2 - 20}" x2="${W / 2 - 8}" y1="-3.5" y2="-3.5" stroke="#d9480f" stroke-width="2"/><text x="${W / 2 - 4}" y="0" fill="#d9480f">${escP(g.series[1])}</text>` : '') + '</g>';
+  return s + '</svg>';
+}
+function marcoInfografia(sp, legal) {
+  const g = sp.ig || {}, i = sp.info || {}, c = sp.colores, hoy = sp.fecha;
+  const fuentes = fuentesPub(sp), base = MAPAS_BASE[sp.base] || {};
+  const pie = [['Fuentes', fuentes], ['Mapa base', (base.nombre || sp.base) + (base.attrib ? ' · ' + String(base.attrib).replace(/<[^>]+>/g, '') : ' · OpenFreeMap, © colaboradores de OpenStreetMap')],
+    ['Autor', i.autor], ['Institución', i.institucion], ['Contacto', i.contacto], ['Fecha', hoy]].filter(r => r[1]);
+  return `<div class="ig">
+  <header class="ig-cab"><div class="ig-tt">${g.antetitulo ? `<span class="ig-ante">${escP(g.antetitulo)}</span>` : ''}<h1>${escP(sp.titulo)}</h1>${i.subtitulo ? `<p class="ig-sub">${escP(i.subtitulo)}</p>` : ''}</div>${logosPub(sp)}</header>
+  <div class="ig-cuerpo">
+    <aside class="ig-izq">
+      ${i.descripcion ? i.descripcion.split(/\n{2,}/).map((p, k) => `<p class="${k ? '' : 'ig-intro'}">${escP(p)}</p>`).join('') : ''}
+      ${(g.cifras || []).length ? `<div class="ig-cifras">${g.cifras.map(x => `<div class="ig-cifra"><b>${escP(x.valor)}</b><span>${escP(x.etiqueta)}</span></div>`).join('')}</div>` : ''}
+      ${(g.graficos || []).map(k => `<figure class="ig-graf">${k.titulo ? `<figcaption>${escP(k.titulo)}</figcaption>` : ''}${svgGraficoIg(k, c.acento, c.texto)}</figure>`).join('')}
+    </aside>
+    <div class="ig-der">
+      <div class="ig-mapa"><div id="mapa"></div><div class="ig-rosa">${rosaLamina('rosa', 15)}</div>${g.ubicacion ? '<div class="ig-loc" id="igLoc" aria-label="Mapa de ubicación"></div>' : ''}</div>
+      ${sp.leyenda ? '<div class="ig-ley" id="ley"></div>' : ''}
+      ${(g.notas || []).length ? `<ol class="ig-lnotas">${g.notas.map(n => `<li><b>${escP(n.titulo)}</b>${n.texto ? ' ' + escP(n.texto) : ''}</li>`).join('')}</ol>` : ''}
+    </div>
+  </div>
+  ${(g.tarjetas || []).length ? `<section class="ig-tarjetas">${g.tarjetas.map(t => `<article>${t.titulo ? `<h3>${escP(t.titulo)}</h3>` : ''}${t.texto.split(/\n+/).map(p => `<p>${escP(p)}</p>`).join('')}</article>`).join('')}</section>` : ''}
+  <footer class="ig-pie"><dl>${pie.map(([k, v]) => `<dt>${k}</dt><dd>${escP(v)}</dd>`).join('')}</dl>
+    <p>Hecho con el ${escP(MARCA.nombre)}. ${legal} <button type="button" class="ig-imp" onclick="print()">Imprimir</button></p></footer>
+</div>`;
+}
+function cssInfografia() {
+  return `html,body{height:auto;min-height:100%}body{background:color-mix(in srgb,var(--fondo) 70%,#fff)}
+.ig{max-width:1280px;margin:0 auto;background:var(--sup);box-shadow:0 0 0 1px color-mix(in srgb,var(--texto) 10%,transparent)}
+.ig-cab{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 28px;background:color-mix(in srgb,var(--acento) 82%,#000);color:#fff}
+.ig-ante{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:rgba(255,255,255,.16);padding:3px 8px;border-radius:4px;margin-bottom:8px}
+.ig-tt h1{margin:0;font-size:clamp(26px,4.2vw,46px);line-height:1.04;font-weight:800;letter-spacing:-.01em;text-wrap:balance}.ig-sub{margin:8px 0 0;font-size:clamp(14px,1.6vw,18px);opacity:.92;max-width:62ch}
+.ig-cab .pub-logos{background:#fff;padding:8px 12px;border-radius:10px;flex:none;max-width:45%}.ig-cab .pub-logos img{max-height:46px}
+.ig-cuerpo{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:0}
+.ig-izq{padding:20px 22px;border-right:1px solid color-mix(in srgb,var(--texto) 12%,transparent);font-size:14px;line-height:1.5}
+.ig-izq p{margin:0 0 10px}.ig-intro{font-size:15.5px;font-weight:500}.ig-intro::first-letter{font-size:2.6em;float:left;line-height:.9;margin:4px 6px 0 0;font-weight:800;color:var(--acento)}
+.ig-cifras{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px}.ig-cifra{border-top:3px solid var(--acento);background:color-mix(in srgb,var(--acento) 7%,var(--sup));padding:8px 10px;border-radius:0 0 8px 8px}
+.ig-cifra b{display:block;font-size:22px;line-height:1.1;color:color-mix(in srgb,var(--acento) 80%,var(--texto))}.ig-cifra span{font-size:12px;line-height:1.3;display:block;margin-top:3px}
+.ig-graf{margin:14px 0 0}.ig-graf figcaption{font-weight:700;font-size:13px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+.ig-der{min-width:0;display:flex;flex-direction:column}.ig-mapa{position:relative;height:min(78vh,720px);min-height:420px}#mapa{position:absolute;inset:0}
+.ig-rosa{position:absolute;left:12px;top:12px;background:rgba(255,255,255,.88);border-radius:50%;padding:4px;line-height:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.ig-loc{position:absolute;right:10px;bottom:28px;width:170px;height:130px;border:2px solid #fff;border-radius:6px;box-shadow:0 3px 12px rgba(0,0,0,.35);overflow:hidden;background:#dfe6ea}
+.ig-ley{display:flex;flex-wrap:wrap;gap:4px 16px;padding:10px 16px;font-size:12.5px;border-top:1px solid color-mix(in srgb,var(--texto) 12%,transparent)}.ig-ley .it{margin:0}.ig-ley .cl{display:flex;flex-wrap:wrap;gap:2px 10px;margin:0}
+.ig-lnotas{margin:0;padding:10px 16px 12px 36px;columns:2 260px;column-gap:24px;font-size:12.5px;line-height:1.4}.ig-lnotas li{break-inside:avoid;margin-bottom:4px}.ig-lnotas li::marker{font-weight:700;color:var(--acento)}
+.ig-pt{width:22px;height:22px;border-radius:50%;background:var(--acento);color:#fff;border:2px solid #fff;font:700 12px/18px system-ui,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.45);cursor:default;position:relative}
+.ig-pt span{position:absolute;top:-3px;left:28px;width:max-content;max-width:190px;background:rgba(255,255,255,.95);color:#111;font:600 11.5px/1.3 system-ui,sans-serif;text-align:left;padding:4px 7px;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,.3);border-left:3px solid var(--acento)}
+.ig-pt.izq span{left:auto;right:28px;border-left:0;border-right:3px solid var(--acento)}
+.ig-tarjetas{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0;border-top:1px solid color-mix(in srgb,var(--texto) 12%,transparent)}
+.ig-tarjetas article{padding:16px 20px;border-right:1px solid color-mix(in srgb,var(--texto) 10%,transparent);font-size:13.5px;line-height:1.5}.ig-tarjetas h3{margin:0 0 6px;font-size:15px;color:color-mix(in srgb,var(--acento) 80%,var(--texto))}.ig-tarjetas p{margin:0 0 6px}
+.ig-pie{padding:14px 22px;font-size:11.5px;background:color-mix(in srgb,var(--texto) 5%,var(--sup));border-top:1px solid color-mix(in srgb,var(--texto) 12%,transparent)}
+.ig-pie dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0 0 8px}.ig-pie dt{font-weight:700}.ig-pie dd{margin:0;overflow-wrap:anywhere}.ig-pie p{margin:0;opacity:.8}.ig-pie a{color:inherit}
+.ig-imp{font:600 12px system-ui,sans-serif;padding:4px 10px;border-radius:6px;border:1px solid currentColor;background:none;color:inherit;cursor:pointer;margin-left:6px}
+@media (max-width:820px){.ig-cab{flex-direction:column;align-items:flex-start;padding:18px 16px}.ig-cab .pub-logos{max-width:100%}.ig-cuerpo{grid-template-columns:1fr}.ig-izq{border-right:0;padding:16px}.ig-mapa{height:62vh;min-height:340px}.ig-loc{width:120px;height:92px}.ig-pt span{max-width:130px}}
+@media print{body{background:#fff}.ig{box-shadow:none;max-width:none}.ig-imp{display:none}.ig-mapa{height:150mm}.ig-cab,.ig-cifra,.ig-pt{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+`;
+}
+function datosIgPagina(sp) {
+  const g = sp.ig || {};
+  return {notas: g.notas || [], ubicacion: !!g.ubicacion, locBase: estiloBase('liberty')};
+}
+/* --- lo que corre dentro de la página de la infografía (se copia como texto) --- */
+function iniciarInfografia(D, mapa) {
+  const G = D.ig;
+  mapa.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
+  mapa.addControl(new maplibregl.ScaleControl({unit: 'metric', maxWidth: 140}), 'bottom-left');
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[ch]));
+  // las atribuciones de las capas son largas: plegadas, tras el botón «i»
+  mapa.once('load', () => { const a = mapa.getContainer().querySelector('.maplibregl-ctrl-attrib'); if (a) a.classList.remove('maplibregl-compact-show'); });
+  // notas numeradas: el rótulo va hacia el lado con más espacio
+  G.notas.forEach((n, k) => {
+    const d = document.createElement('div'); d.className = 'ig-pt' + (n.lon > D.vista.center[0] + .004 ? ' izq' : ''); d.textContent = k + 1;
+    d.title = n.titulo + (n.texto ? ': ' + n.texto : '');
+    const s = document.createElement('span'); s.innerHTML = esc(n.titulo); d.appendChild(s);
+    new maplibregl.Marker({element: d}).setLngLat([n.lon, n.lat]).addTo(mapa);
+  });
+  // al imprimir el mapa cambia de alto
+  addEventListener('beforeprint', () => mapa.resize());
+  if (!G.ubicacion || !document.getElementById('igLoc')) return;
+  // mapa de ubicación: el país si la vista cae en Costa Rica; si no, la región; el recuadro es lo que muestra el mapa grande
+  const c = D.vista.center, enCR = c[0] > -86.2 && c[0] < -82.4 && c[1] > 7.9 && c[1] < 11.4;
+  const loc = new maplibregl.Map({container: 'igLoc', style: G.locBase, interactive: false, attributionControl: false, fadeDuration: 0,
+    center: enCR ? [-84.2, 9.65] : c, zoom: enCR ? 5.15 : Math.max(1, D.vista.zoom - 5)});
+  if (enCR) loc.once('load', () => loc.fitBounds([[-86, 8], [-82.5, 11.25]], {padding: 4, duration: 0}));
+  const caja = () => { const b = mapa.getBounds(), o = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth();
+    return {type: 'FeatureCollection', features: [{type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: [[[o, s], [e, s], [e, n], [o, n], [o, s]]]}},
+      {type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: mapa.getCenter().toArray()}}]}; };
+  loc.on('load', () => {
+    loc.addSource('caja', {type: 'geojson', data: caja()});
+    loc.addLayer({id: 'caja-f', type: 'fill', source: 'caja', filter: ['==', ['geometry-type'], 'Polygon'], paint: {'fill-color': '#e03131', 'fill-opacity': .25}});
+    loc.addLayer({id: 'caja-l', type: 'line', source: 'caja', filter: ['==', ['geometry-type'], 'Polygon'], paint: {'line-color': '#e03131', 'line-width': 1.6}});
+    loc.addLayer({id: 'caja-p', type: 'circle', source: 'caja', filter: ['==', ['geometry-type'], 'Point'], paint: {'circle-radius': 4, 'circle-color': '#e03131', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5}});
+    mapa.on('moveend', () => loc.getSource('caja').setData(caja()));
+  });
+}
+const PAGINA_INFOGRAFIA = () => iniciarInfografia.toString() + '\n';
+/* ---------- Portada pública ----------
+   Lo primero que ve quien llega sin sesión: un menú con «Inicio» (la infografía de la ciudad de Limón, hecha con la
+   misma plantilla «Infografía» de Publicar › Mapa web), «Acerca del proyecto» (qué es, qué permite y las instituciones
+   participantes con el logo y la descripción que pone su administrador) y «Entrar», que abre el acceso con cuenta.
+   #entrar en la dirección va directo al acceso; #acerca, a la página del proyecto. */
+const portada = {lista: false};
+function mostrarPortada(v = 'inicio') {
+  const p = $('#portada'); if (!p) return;
+  if (v === 'entrar') { p.hidden = true; try { history.replaceState(null, '', location.pathname + location.search + '#entrar'); } catch (e) {} $('#accUsuario').focus(); return; }
+  p.hidden = false;
+  $$('[data-portada]', p).forEach(b => { if (b.dataset.portada !== 'entrar') b.setAttribute('aria-current', b.dataset.portada === v ? 'page' : 'false'); });
+  $('#ptInicio').hidden = v !== 'inicio'; $('#ptAcerca').hidden = v !== 'acerca';
+  if (v === 'inicio' && !portada.lista) {
+    portada.lista = true;
+    try { $('#ptMarco').srcdoc = htmlMapaWeb(sanearMapaWeb(PORTADA_LIMON)); } catch (e) { $('#ptInicio').innerHTML = notaNavegador('No se pudo armar la infografía (' + esc(e.message || e) + ').'); }
+  }
+  if (v === 'acerca') pintarAcerca();
+  try { history.replaceState(null, '', location.pathname + location.search + (v === 'acerca' ? '#acerca' : '')); } catch (e) {}
+  const t = $('#ptAcerca'); if (v === 'acerca' && t) t.scrollTop = 0;
+}
+async function pintarAcerca() {
+  const caja = $('#ptInstituciones'); if (!caja) return;
+  const insts = institucionesDemo();
+  const dibujar = () => {
+    caja.innerHTML = insts.map(i => {
+      const p = perfilDe(i.alias) || {}, nombre = p.nombre || i.institucion || i.alias, web = /^https?:\/\//.test(p.web || '') ? p.web : '';
+      return `<article class="pt-inst">${p.logo && LOGO_RE.test(p.logo) ? `<img src="${p.logo}" alt="Logo de ${esc(nombre)}">` : `<span class="pt-sigla" aria-hidden="true">${esc(i.alias.slice(0, 4))}</span>`}
+        <div><h3>${esc(nombre)}</h3>${p.descripcion ? p.descripcion.split(/\n{2,}/).map(t => `<p>${esc(t)}</p>`).join('') : i.funciones ? `<p>${esc(i.funciones)}</p>` : ''}
+        ${web ? `<a href="${esc(web)}" target="_blank" rel="noopener">${esc(web.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a>` : ''}</div></article>`;
+    }).join('') || '<p class="muted">Todavía no hay instituciones.</p>';
+  };
+  dibujar();
+  await cargarPerfiles();
+  dibujar();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-portada]'); if (!b) return;
+  e.preventDefault(); mostrarPortada(b.dataset.portada);
+});
 function pMapaWeb(el) {
   const vis = estado.capas.filter(c => c.visible), restr = FUENTE.tipo === 'geonode' && SESION_GN.token && vis.some(c => c.modo === 'wms' && c.wms);
   const tam = vis.reduce((s, c) => s + (c.modo !== 'wms' && c.datos ? (c.datos.features || []).length : 0), 0);
   el.innerHTML = `<div class="field"><label for="mwT">Título del mapa</label><input class="input" id="mwT" value="${esc(mw.titulo)}"></div>
-    <div class="lbl-s" style="margin-bottom:6px">Plantilla</div><div class="seg" style="margin-bottom:10px" role="group" aria-label="Plantilla">${[['visor', 'Visor'], ['relato', 'Relato'], ['panel', 'Panel'], ['formal', 'Formal']].map(([k, t]) => `<button type="button" data-mwp="${k}" aria-pressed="${mw.plantilla === k}">${t}</button>`).join('')}</div>
-    <div class="small muted" style="margin:-4px 0 10px">${{visor: 'El mapa a pantalla completa con el título y la leyenda encima.', relato: 'Un texto a la izquierda que cuenta lo que muestra el mapa.', panel: 'Un panel lateral para encender y apagar cada capa.', formal: 'Una lámina estática para PDF o iframe: norte arriba, escala fija, coordenadas en los bordes, leyenda y autoría.'}[mw.plantilla]}</div>
+    <div class="lbl-s" style="margin-bottom:6px">Plantilla</div><div class="seg" style="margin-bottom:10px" role="group" aria-label="Plantilla">${[['visor', 'Visor'], ['relato', 'Relato'], ['panel', 'Panel'], ['formal', 'Formal'], ['infografia', 'Infografía']].map(([k, t]) => `<button type="button" data-mwp="${k}" aria-pressed="${mw.plantilla === k}">${t}</button>`).join('')}</div>
+    <div class="small muted" style="margin:-4px 0 10px">${{visor: 'El mapa a pantalla completa con el título y la leyenda encima.', relato: 'Un texto a la izquierda que cuenta lo que muestra el mapa.', panel: 'Un panel lateral para encender y apagar cada capa.', formal: 'Una lámina estática para PDF o iframe: norte arriba, escala fija, coordenadas en los bordes, leyenda y autoría.', infografia: 'Una página tipo cartel: banda de título con logos, cifras clave, gráficos, el mapa grande con notas numeradas, rosa, escala y mapa de ubicación, tarjetas y fuentes.'}[mw.plantilla]}</div>
     ${mw.plantilla === 'relato' ? `<div class="field"><label for="mwX">Texto (un párrafo por línea en blanco)</label><textarea class="input" id="mwX" rows="4">${esc(mw.texto)}</textarea></div>` : ''}
     ${mw.plantilla === 'formal' ? formLamina() : ''}
+    ${formPublicacion()}${mw.plantilla === 'infografia' ? formInfografia() : ''}
     <div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="small">Incluir leyenda (${vis.length} capas)</span><input class="switch" type="checkbox" role="switch" id="mwL" ${mw.leyenda ? 'checked' : ''} aria-label="Incluir leyenda"></div>
     <div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="small">Usar los colores del tema «${esc(temaActual.nombre)}»</span><input class="switch" type="checkbox" role="switch" id="mwTe" ${mw.tema ? 'checked' : ''} aria-label="Usar el tema actual"></div>
     <div class="small muted" style="margin-bottom:10px">Se guarda la vista actual (centro, zoom, giro e inclinación) y las capas visibles: los datos vectoriales van dentro de la página (${fmt(tam)} entidades) y las capas WMS se piden al servidor al abrirla.${restr ? ' Las capas restringidas no se verán: la página no lleva su sesión.' : ''}</div>
@@ -8052,6 +8542,7 @@ function pMapaWeb(el) {
   { const b = $('#mwCopiarLargo', el); if (b) b.addEventListener('click', () => copyText(mw.enlaceLargo)); }
   { const b = $('#mwIfC', el); if (b) b.onclick = () => copyText(codigoIframe(mw.enlace)); }
   if (mw.plantilla === 'formal') enlazarLamina(el);
+  enlazarPublicacion(el);
   ['#mwT', '#mwX'].forEach(q => { const i = $(q, el); if (i) i.addEventListener('input', () => { mw.enlace = ''; }); });
   $('#mwBajar', el).onclick = () => { download(nombreArchivo(mw.titulo) + '.html', htmlMapaWeb(), 'text/html'); auditar('datos', 'publicó un mapa web', mw.titulo, {formato: 'HTML'}); toast('Mapa web descargado', 'monitor'); };
 }
@@ -8363,6 +8854,7 @@ async function acceso() {
     try { sessionStorage.removeItem('ipde.sesion'); } catch (e) {}
     if (u0.activo !== false) { auditar('sesion', 'sesión caducada', 'Geoportal', {minutos: POLITICA.inactividadMin}, u0.usuario); aviso = aviso || `La sesión se cerró tras ${POLITICA.inactividadMin} min sin actividad.`; }
   }
+  if (!inv && !aviso && location.hash !== '#entrar') mostrarPortada(location.hash === '#acerca' ? 'acerca' : 'inicio');
   const err = t => { $('#accError').textContent = t; };
   err(aviso);
   if (inv && inv.usuario) { $('#accUsuario').value = inv.usuario; $('#accClave').focus(); } else $('#accUsuario').focus();
