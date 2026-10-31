@@ -241,6 +241,10 @@ code,.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
 .capas-activas input[type=range]{min-width:40px}
 .ca-cfg{display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--muted)}
 .pb-lista{display:flex;flex-direction:column;gap:8px}
+.cl-tabla{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+.cl-tabla th{text-align:left;font-weight:600;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line)}
+.cl-tabla td{padding:4px;border-bottom:1px solid var(--line);vertical-align:top}
+.cl-tabla tr.cl-oculta td:not(:first-child){opacity:.55}
 .pb-mapa{display:flex;flex-direction:column}
 .pb-editor{margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2)}
 .pb-op{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:2px 0;cursor:pointer}
@@ -729,6 +733,9 @@ const COMANDOS = {
   'publicado':       {etiqueta:'Publicado', icono:'link', menu:'publicar', panel:'publicado',
     descripcion:'Los mapas web que usted publicó con enlace corto, sus visitas y quién tiene permiso de verlos: cualquiera con el enlace, cualquier cuenta o sólo las entidades y cuentas que elija.',
     requiere:['mapa-web'], habilita:[], alternativas:[]},
+  'columnas':        {etiqueta:'Columnas publicadas', icono:'table', menu:'publicar', panel:'columnas',
+    descripcion:'Elige qué columnas de las capas del servidor ven las demás entidades y el público (por ejemplo, el propietario de los pozos). Las cuentas de la entidad dueña ven todas.',
+    requiere:[], habilita:[], alternativas:[]},
   'servicio-ogc':    {etiqueta:'Servicio OGC', icono:'server', menu:'publicar', panel:'servicioogc',
     descripcion:'Expone una capa como WMS, WFS u OGC API Features para que otras instituciones la consuman.',
     requiere:['capas','seguridad'], habilita:['compartir','ogc-externo'], alternativas:['mapa-web']},
@@ -791,7 +798,7 @@ const DISPOSICION_ORIGINAL = {
   version: 1, nombre: 'Original',
   menus: Object.keys(MENUS).map(m => ({id: m, abierto: ['datos', 'mapa', 'vista', 'metricas'].includes(m), items: Object.keys(COMANDOS).filter(c => COMANDOS[c].menu === m)})),
   barras: {mapa: ['capas', 'vista-3d', 'medir-distancia', 'medir-area', 'coordenadas'], superior: ['catalogo', 'leyenda', 'compartir']},
-  paneles: {izquierda: ['catalogo', 'buscar', 'subir', 'dem', 'postgis', 'ogc'], derecha: ['derivadas', 'simbologia', 'leyenda', 'basemaps', 'medir', 'coordenadas', 'dibujar', 'vertices', 'mapaweb', 'publicado', 'servicioogc', 'compartir', 'usuarios', 'permisos', 'seguridad', 'extensiones', 'extcatalogo', 'crearplugin', 'temas', 'legaladm', 'disposicion', 'sugerencias', 'legal', 'acerca'], abajo: ['atributos', 'historial', 'auditoria']},
+  paneles: {izquierda: ['catalogo', 'buscar', 'subir', 'dem', 'postgis', 'ogc'], derecha: ['derivadas', 'simbologia', 'leyenda', 'basemaps', 'medir', 'coordenadas', 'dibujar', 'vertices', 'mapaweb', 'publicado', 'columnas', 'servicioogc', 'compartir', 'usuarios', 'permisos', 'seguridad', 'extensiones', 'extcatalogo', 'crearplugin', 'temas', 'legaladm', 'disposicion', 'sugerencias', 'legal', 'acerca'], abajo: ['atributos', 'historial', 'auditoria']},
   abiertos: ['catalogo', 'leyenda'],
   plegados: [],
   navVisible: true
@@ -1213,6 +1220,7 @@ const PANELES = {
   historial:  {titulo:'Historial de cambios', icono:'git', render: pHistorial},
   mapaweb:    {titulo:'Publicar mapa web', icono:'monitor', render: pMapaWeb},
   publicado:  {titulo:'Mapas publicados', icono:'link', render: el => { pub.lista = null; pPublicado(el); }},
+  columnas:   {titulo:'Columnas publicadas', icono:'table', render: el => { col.lista = null; pColumnas(el); }},
   servicioogc:{titulo:'Publicar servicio OGC', icono:'server', render: pServicioOgc},
   compartir:  {titulo:'Compartir', icono:'share', render: pCompartir},
   usuarios:   {titulo:'Usuarios y roles', icono:'users', render: pUsuarios},
@@ -1884,7 +1892,8 @@ const urlWfsGeoJSON = (base, tipo) => conSesion(conParams(base, {service: 'WFS',
 async function leerGeoJSON(url, max = 50000) {
   let fs = [], u = url, j0 = null;
   for (let n = 0; u && n < 60; n++) {
-    const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status);
+    const r = await fetch(u, opcCapaServidor(u));
+    if (!r.ok) throw new Error(opcCapaServidor(u) ? (r.status === 404 ? 'el servidor del geoportal no tiene esta capa' : 'el servidor del geoportal respondió ' + r.status) : 'HTTP ' + r.status);
     const j = await r.json(); if (!j0) j0 = j;
     if (j.type === 'Feature') { fs.push(j); break; }
     fs = fs.concat(j.features || []);
@@ -1919,15 +1928,15 @@ async function catalogoEstatico() {
   const r = await fetch(RUTA_INDICE, {cache: 'no-store'}); if (!r.ok) throw new Error('HTTP ' + r.status);
   const j = await r.json(), lista = Array.isArray(j) ? j : (j.capas || j.layers || []);
   const base = new URL(RUTA_INDICE, location.href);
-  const conocidos = new Set(['wms', 'modo', 'id', 'titulo', 'title', 'nombre', 'descripcion', 'description', 'geometria', 'geometry', 'tipo', 'archivo', 'file', 'url', 'fuente', 'source', 'licencia', 'license', 'color', 'grupo', 'group', 'estado', 'provisional', 'fecha', 'date', 'fecha_datos', 'atribucion', 'attribution', 'estilo', 'elementos', 'tamano_kb', 'tabla_origen']);
+  const conocidos = new Set(['wms', 'modo', 'id', 'titulo', 'title', 'nombre', 'descripcion', 'description', 'geometria', 'geometry', 'tipo', 'archivo', 'file', 'url', 'servidor', 'fuente', 'source', 'licencia', 'license', 'color', 'grupo', 'group', 'estado', 'provisional', 'fecha', 'date', 'fecha_datos', 'atribucion', 'attribution', 'estilo', 'elementos', 'tamano_kb', 'tabla_origen']);
   return {meta: Array.isArray(j) ? {} : j, capas: lista.map((c, i) => {
     const titulo = c.titulo || c.title || c.nombre || c.id || ('Capa ' + (i + 1));
     const extra = {}; Object.keys(c).forEach(k => { if (!conocidos.has(k) && typeof c[k] !== 'object') extra[k] = c[k]; });
     return {id: String(c.id || titulo).toLowerCase().replace(/[^a-z0-9_-]+/g, '_'), titulo, descripcion: c.descripcion || c.description || '',
-      geometria: normGeom(c.geometria || c.geometry || c.tipo), archivo: (c.archivo || c.file || c.url) ? new URL(c.archivo || c.file || c.url, base).href : '',
+      geometria: normGeom(c.geometria || c.geometry || c.tipo), archivo: c.servidor ? urlCapaServidor(String(c.id)) : (c.archivo || c.file || c.url) ? new URL(c.archivo || c.file || c.url, base).href : '',
       ...(c.wms && c.wms.url && c.wms.capa ? {wms: {url: String(c.wms.url), capa: String(c.wms.capa), ...(c.wms.crs ? {crs: String(c.wms.crs)} : {})},
         ...(c.archivo || c.file || c.url ? {} : {modo: 'wms'})} : {}),
-      archivoRel: c.archivo || c.file || c.url || '', fuente: c.fuente || c.source || '—', licencia: c.licencia || c.license || '—',
+      ...(c.servidor ? {servidor: true} : {}), archivoRel: c.servidor ? 'servidor del geoportal: api/capa/' + c.id : c.archivo || c.file || c.url || '', fuente: c.fuente || c.source || '—', licencia: c.licencia || c.license || '—',
       color: [c.color, c.estilo && c.estilo.color].find(x => /^#[0-9a-f]{3,8}$/i.test(x || '')) || PALETA[i % PALETA.length], grupo: c.grupo || c.group || 'General',
       provisional: c.provisional === true || /provisional/i.test(c.estado || ''), estado: c.estado || '', fecha: c.fecha || c.fecha_datos || c.date || '',
       atribucion: c.atribucion || c.attribution || '', elementos: c.elementos, tablaOrigen: c.tabla_origen || '', tamanoKb: c.tamano_kb,
@@ -2092,7 +2101,7 @@ async function mostrarFicha(id) {
   const reg = c.registro;
   // estática: se lee el GeoJSON (pequeño); en vivo no se descarga la capa para la ficha: la extensión viene del
   // registro y el número de entidades se pide con limit=1 (numberMatched de OGC API Features)
-  if (!c.datos && !reg && c.archivo) { try { const r = await fetch(c.archivo); c.crudos = await r.json(); c.datos = prepararDatos(filtrarAcceso(c.id, c.crudos)); } catch (e) {} }
+  if (!c.datos && !reg && c.archivo) { try { const r = await fetch(c.archivo, opcCapaServidor(c.archivo)); c.crudos = await r.json(); c.datos = prepararDatos(filtrarAcceso(c.id, c.crudos)); } catch (e) {} }
   if (reg && c.elementos == null && /\/items\?/.test(c.archivo || '')) { try { const j = await (await fetch(c.archivo.replace(/limit=\d+/, 'limit=1'))).json(); if (j.numberMatched != null) c.elementos = j.numberMatched; } catch (e) {} }
   const n = c.datos ? (c.datos.features || []).length : (c.elementos != null ? Number(c.elementos).toLocaleString('es-PA') : '—');
   const b = c.datos ? bboxDe(c.datos) : c.bbox, on = !!estado.capas.find(k => k.id === c.id);
@@ -3510,7 +3519,7 @@ function negadosPorDefecto(rol) {
   if (rol === 'Administrador') return FUNC_PORTAL;   // gestiona su institución: usuarios y auditoría
   const pub = Object.keys(COMANDOS).filter(c => COMANDOS[c].menu === 'administrar');
   if (rol === 'Publicador') return pub;
-  const ed = [...pub, 'mapa-web', 'publicado', 'servicio-ogc', 'postgis'];
+  const ed = [...pub, 'mapa-web', 'publicado', 'columnas', 'servicio-ogc', 'postgis'];
   if (rol === 'Editor') return ed;
   return [...ed, 'subir-capa', 'consultas-sql', 'dibujar', 'editar-vertices', 'historial', 'extensiones'];
 }
@@ -7727,6 +7736,95 @@ function enlazarLamina(el) {
   };
 }
 const codigoIframe = u => `<iframe src="${u}" width="100%" height="${mw.plantilla === 'formal' && mw.lamina.orientacion === 'vertical' ? 900 : 620}" style="border:0" loading="lazy" title="${String(mw.titulo).replace(/"/g, '&quot;')}"></iframe>`;
+/* ---------- Capas del servidor y «Publicar › Columnas publicadas» ----------
+   Algunas capas no están en el sitio público porque traen datos que no todos deben ver (los pozos de SENARA, con
+   el propietario): las sirve la base del servidor del geoportal por /api/capa/<id> (indice.json: "servidor": true,
+   sin archivo). Todas las columnas quedan en la base y el servidor entrega a cada cuenta las que le tocan: las de la
+   entidad dueña y el superadministrador, todas; los demás (y quien no ha entrado), sólo las publicadas, que eligen
+   el administrador o el publicador de esa entidad (o el superadministrador) en este panel. */
+const baseServidor = () => {
+  const st = window.cfgUsuario && cfgUsuario._st, cf = (typeof FUENTE !== 'undefined' && FUENTE.config) || {};
+  return st && st.servidor && st.base ? st.base : new URL(cf.api || 'api/', location.href).href.replace(/\/?$/, '/');
+};
+const urlCapaServidor = id => baseServidor() + 'capa/' + encodeURIComponent(id);
+// la sesión del servidor va con la petición de una capa suya: así la entidad dueña recibe todas las columnas
+function opcCapaServidor(u) {
+  const st = window.cfgUsuario && cfgUsuario._st;
+  if (!/\/capa\/[a-z0-9_]+$/.test(String(u || ''))) return undefined;
+  return Object.assign({cache: 'no-store'}, st && st.token && st.base && String(u).startsWith(st.base) ? {headers: {Authorization: 'Bearer ' + st.token}} : {});
+}
+
+const col = {lista: null, cargando: false, error: '', cambios: {}};
+async function pColumnas(el) {
+  const st = window.cfgUsuario && cfgUsuario._st;
+  if (!st || !st.servidor || !st.token) {
+    el.innerHTML = `<div class="note">${I('info', 'sm')}<span>Las capas con columnas restringidas viven en la base del servidor del geoportal. ${esc(st && st.error || 'En esta sesión no hay conexión con él.')}</span></div>`;
+    return;
+  }
+  if (col.lista === null) {
+    if (col.cargando) return;
+    col.cargando = true; el.innerHTML = `<div class="small muted">Cargando las capas del servidor…</div>`;
+    try { col.lista = (await pedirEnlace(st.base + 'columnas', {token: st.token, espera: 20000})).capas || []; col.error = ''; }
+    catch (e) { col.lista = []; col.error = e.message; }
+    col.cargando = false; col.cambios = {};
+  }
+  const fecha = t => t ? new Date(t).toLocaleString('es-CR', {dateStyle: 'medium', timeStyle: 'short'}) : '';
+  const inst = new Map(institucionesDemo().map(i => [i.alias, i.institucion]));
+  const tarjeta = k => {
+    const pub = new Set(col.cambios[k.id] || k.publicas || []), sucio = !!col.cambios[k.id];
+    return `<li class="card pb-mapa" data-clcapa="${esc(k.id)}">
+      <div class="row" style="gap:6px"><span style="color:var(--accent)">${I('table', 'sm')}</span><strong class="grow" style="font-size:13px;min-width:0;overflow-wrap:anywhere">${esc(k.titulo || k.id)}</strong></div>
+      <div class="small muted">${fmt(k.elementos || 0)} elementos · de ${esc(inst.get(k.entidad) || k.entidad)}${k.por ? ' · cambiado por ' + esc(k.por) + ' el ' + esc(fecha(k.actualizado)) : ''}</div>
+      <table class="cl-tabla"><thead><tr><th scope="col">Publicar</th><th scope="col">Columna</th><th scope="col">Ejemplo</th><th scope="col">Con dato</th></tr></thead><tbody>
+      ${(k.columnas || []).map(c => `<tr class="${pub.has(c.nombre) ? '' : 'cl-oculta'}">
+        <td><input type="checkbox" data-col="${esc(c.nombre)}" ${pub.has(c.nombre) ? 'checked' : ''} aria-label="Publicar ${esc(c.titulo || c.nombre)}"></td>
+        <td><strong>${esc(c.titulo || c.nombre)}</strong><div class="mono small muted">${esc(c.nombre)}</div></td>
+        <td class="small" style="overflow-wrap:anywhere">${esc(c.ejemplo == null ? '—' : String(c.ejemplo).slice(0, 40))}</td>
+        <td class="small muted">${k.elementos ? Math.round(100 * (c.llenos || 0) / k.elementos) + ' %' : '—'}</td></tr>`).join('')}
+      </tbody></table>
+      <div class="small muted" style="margin-top:6px">${pub.size} de ${(k.columnas || []).length} columnas publicadas. Las demás no salen del servidor: sólo las reciben las cuentas de ${esc(k.entidad)} y el superadministrador.</div>
+      <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn sm primary" type="button" data-cl="guardar" ${sucio ? '' : 'disabled'}>${I('check', 'sm')}Guardar</button>
+        <button class="btn sm ghost" type="button" data-cl="todas">Todas</button><button class="btn sm ghost" type="button" data-cl="ninguna">Ninguna</button>
+        ${sucio ? `<button class="btn sm ghost" type="button" data-cl="deshacer">Deshacer</button>` : ''}</div>
+    </li>`;
+  };
+  el.innerHTML = `${col.error ? `<div class="note">${I('info', 'sm')}<span>${esc(col.error)}</span></div>` : ''}
+    <div class="row" style="gap:6px;margin-bottom:8px"><span class="small muted grow">${col.lista.length ? 'Marque las columnas que pueden ver las demás entidades y el público.' : 'Su cuenta no administra capas del servidor: las eligen el administrador o el publicador de la entidad dueña.'}</span><button class="btn sm ghost" type="button" data-cl="recargar">${I('reset', 'sm')}Actualizar</button></div>
+    <ul class="list pb-lista">${col.lista.map(tarjeta).join('')}</ul>`;
+  el.querySelectorAll('[data-clcapa]').forEach(li => {
+    const k = col.lista.find(x => x.id === li.dataset.clcapa);
+    const poner = sel => { const v = (k.columnas || []).map(c => c.nombre).filter(sel); col.cambios[k.id] = v; if (v.join() === (k.publicas || []).join()) delete col.cambios[k.id]; pColumnas(el); };
+    li.querySelectorAll('[data-col]').forEach(c => c.addEventListener('change', () => {
+      const marcadas = new Set([...li.querySelectorAll('[data-col]:checked')].map(x => x.dataset.col)); poner(n => marcadas.has(n));
+    }));
+    li.querySelectorAll('[data-cl]').forEach(b => b.addEventListener('click', async () => {
+      const a = b.dataset.cl;
+      if (a === 'todas') return poner(() => true);
+      if (a === 'ninguna') return poner(() => false);
+      if (a === 'deshacer') { delete col.cambios[k.id]; return pColumnas(el); }
+      b.disabled = true;
+      try {
+        const j = await pedirEnlace(st.base + 'columnas', {metodo: 'PUT', token: st.token, cuerpo: {id: k.id, publicas: col.cambios[k.id]}});
+        const antes = new Set(k.publicas || []);
+        k.publicas = j.publicas || []; k.por = j.por; k.actualizado = new Date().toISOString(); delete col.cambios[k.id];
+        auditar('datos', 'cambió las columnas publicadas', k.titulo || k.id, {
+          publicadas: k.publicas.filter(n => !antes.has(n)).join(', ') || '—', retiradas: [...antes].filter(n => !k.publicas.includes(n)).join(', ') || '—'});
+        toast('Columnas publicadas guardadas: los demás ya sólo reciben esas', 'check');
+        await recargarCapaServidor(k.id);
+      } catch (e) { toast(e.message, 'info'); }
+      pColumnas(el);
+    }));
+  });
+  const r = el.querySelector('[data-cl=recargar]'); if (r) r.addEventListener('click', () => { col.lista = null; pColumnas(el); });
+}
+// tras cambiar las columnas: se olvida lo leído y, si la capa está en el mapa, se vuelve a pedir
+async function recargarCapaServidor(id) {
+  const m = estado.catalogo && estado.catalogo.capas.find(c => c.id === id); if (!m) return;
+  delete m.datos; delete m.crudos;
+  const c = estado.capas.find(x => x.id === id);
+  if (c) { await activarCapaCatalogo(m, false, true); await activarCapaCatalogo(m, true, true); }
+}
 function pMapaWeb(el) {
   const vis = estado.capas.filter(c => c.visible), restr = FUENTE.tipo === 'geonode' && SESION_GN.token && vis.some(c => c.modo === 'wms' && c.wms);
   const tam = vis.reduce((s, c) => s + (c.modo !== 'wms' && c.datos ? (c.datos.features || []).length : 0), 0);
@@ -7923,6 +8021,7 @@ const USUARIOS = [
   // cinco cuentas por entidad: ALIAS_ADMIN, ALIAS_PUBLICADOR, ALIAS_EDITOR, ALIAS_LECTOR01 y ALIAS_LECTOR02,
   // cada una con su rol; la contraseña es el mismo usuario en mayúsculas (demostración: sólo identifica).
   // Cada cuenta lleva el nombre de la entidad, sus funciones (resumen) y las capas que se le asignan.
+  // La última es la del superadministrador, con una contraseña larga al azar (no es el usuario en mayúsculas).
   {"usuario": "municorredores_admin", "nombre": "Administración MUNICORREDORES", "alias": "MUNICORREDORES", "institucion": "Municipalidad de Corredores", "sector": "Gobierno local", "rol": "Administrador", "funciones": "Gobierno local del cantón de Corredores (Puntarenas): catastro y valoración de bienes inmuebles, red vial cantonal, recolección de residuos, aseo de vías y ordenamiento territorial.", "capas": ["corredores_distritos", "corredores_barrios", "corredores_catastro", "corredores_zonas_homogeneas", "corredores_zona_agropecuaria", "corredores_red_vial", "corredores_cauces", "corredores_humedales", "corredores_corredor_biologico", "corredores_areas_publicas", "corredores_puntos_referencia", "corredores_rutas_recoleccion", "corredores_aseo_vias", "corredores_decreto_retiros"], "sal": "ef07232968f93771", "huella": "3bfb13536917b3c17709632d0a15599664170a95e449eeb12cf783e1ce64384a"},
   {"usuario": "municorredores_publicador", "nombre": "Publicador MUNICORREDORES", "alias": "MUNICORREDORES", "institucion": "Municipalidad de Corredores", "sector": "Gobierno local", "rol": "Publicador", "funciones": "Gobierno local del cantón de Corredores (Puntarenas): catastro y valoración de bienes inmuebles, red vial cantonal, recolección de residuos, aseo de vías y ordenamiento territorial.", "capas": ["corredores_distritos", "corredores_barrios", "corredores_catastro", "corredores_zonas_homogeneas", "corredores_zona_agropecuaria", "corredores_red_vial", "corredores_cauces", "corredores_humedales", "corredores_corredor_biologico", "corredores_areas_publicas", "corredores_puntos_referencia", "corredores_rutas_recoleccion", "corredores_aseo_vias", "corredores_decreto_retiros"], "sal": "822e58f652242768", "huella": "1f23bbd2ca53ebeb387e78a6b55b43519062552f223bdda1a2637be902dc0548"},
   {"usuario": "municorredores_editor", "nombre": "Editor MUNICORREDORES", "alias": "MUNICORREDORES", "institucion": "Municipalidad de Corredores", "sector": "Gobierno local", "rol": "Editor", "funciones": "Gobierno local del cantón de Corredores (Puntarenas): catastro y valoración de bienes inmuebles, red vial cantonal, recolección de residuos, aseo de vías y ordenamiento territorial.", "capas": ["corredores_distritos", "corredores_barrios", "corredores_catastro", "corredores_zonas_homogeneas", "corredores_zona_agropecuaria", "corredores_red_vial", "corredores_cauces", "corredores_humedales", "corredores_corredor_biologico", "corredores_areas_publicas", "corredores_puntos_referencia", "corredores_rutas_recoleccion", "corredores_aseo_vias", "corredores_decreto_retiros"], "sal": "5c7cdbf98ac5300e", "huella": "fc22ddae87a7f60413239652adb1ba58741ba5f091035de15dc8fe276c713f9d"},
@@ -7993,6 +8092,7 @@ const USUARIOS = [
   {"usuario": "fcgg_editor", "nombre": "Editor FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Editor", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "363d731f9e51e46c", "huella": "ce4fd3b0f63d9683df9c606248f3a2ab9b6f48344faa6d783a0825c6a217fb34"},
   {"usuario": "fcgg_lector01", "nombre": "Lector 01 FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Lector", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "27acbe0b7aea1d46", "huella": "50ac32747bc03c38ce4647cd3d292a5108b2b3164a46bf8249061ed0ca43b369"},
   {"usuario": "fcgg_lector02", "nombre": "Lector 02 FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Lector", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "c9e7ed760fabbf8f", "huella": "0074a76d93a3008fed293afa8654eca22fe2fe4df217d9d308708e2fc980141b"},
+  {"usuario": "superadmin", "nombre": "Superadministrador del portal", "institucion": "GeoSolutions Consulting", "sector": "Administración del portal", "rol": "Superadministrador", "funciones": "Administra el portal entero: cuentas de todas las entidades, permisos por rol, capas, columnas publicadas de las capas del servidor y bitácora.", "capas": [], "sal": "e838190064502a45", "huella": "48f5a719bb948e5f8a634514f777020ed71d6cbd4f8b51368032c339cf2c5625"},
 ];
 const FUENTE_ENTIDADES = 'Demostración: la Municipalidad de Corredores y entidades que publican servicios en el Sistema Nacional de Información Territorial (SNIT)';
 let sesion = null;

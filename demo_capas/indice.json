@@ -1737,6 +1737,125 @@
           "color": ""
         }
       }
+    },
+    {
+      "id": "ac_pozos_senara",
+      "titulo": "Pozos registrados (SENARA)",
+      "geometria": "Point",
+      "servidor": true,
+      "descripcion": "18 459 pozos de la base de datos DIGH-SENARA con su uso  profundidad y caudal. Los sirve el servidor del geoportal: el administrador o el publicador de AgriCien eligen qué columnas se publican (el propietario  por omisión  no).",
+      "elementos": 18459,
+      "fuente": "SENARA · Dirección de Investigación y Gestión Hídrica (base DIGH) · ordenado por AgriCien S.A. (Agricultura Científica)",
+      "licencia": "Uso con atribución a SENARA",
+      "atribucion": "SENARA (DIGH)",
+      "fecha_datos": "2026-10-06",
+      "estilo": {
+        "color": "#1c7ed6"
+      },
+      "grupo": "AgriCien · Aguas subterráneas",
+      "simbologia": {
+        "modo": "categorias",
+        "campo": "uso",
+        "clases": [
+          {
+            "valor": "Riego, doméstico y turismo",
+            "color": "#7048e8",
+            "etiqueta": "Riego, doméstico y turismo"
+          },
+          {
+            "valor": "Doméstico y riego",
+            "color": "#4dabf7",
+            "etiqueta": "Doméstico y riego"
+          },
+          {
+            "valor": "Riego y turismo",
+            "color": "#20c997",
+            "etiqueta": "Riego y turismo"
+          },
+          {
+            "valor": "Agropecuario y riego",
+            "color": "#94d82d",
+            "etiqueta": "Agropecuario y riego"
+          },
+          {
+            "valor": "Agroindustrial",
+            "color": "#e8590c",
+            "etiqueta": "Agroindustrial"
+          },
+          {
+            "valor": "Industrial",
+            "color": "#c92a2a",
+            "etiqueta": "Industrial"
+          },
+          {
+            "valor": "Doméstico",
+            "color": "#1c7ed6",
+            "etiqueta": "Doméstico"
+          },
+          {
+            "valor": "Riego",
+            "color": "#2f9e44",
+            "etiqueta": "Riego"
+          },
+          {
+            "valor": "Abastecimiento público",
+            "color": "#0b7285",
+            "etiqueta": "Abastecimiento público"
+          },
+          {
+            "valor": "Turístico",
+            "color": "#f783ac",
+            "etiqueta": "Turístico"
+          },
+          {
+            "valor": "Urbanístico",
+            "color": "#ae3ec9",
+            "etiqueta": "Urbanístico"
+          },
+          {
+            "valor": "Comercial",
+            "color": "#f59f00",
+            "etiqueta": "Comercial"
+          },
+          {
+            "valor": "Investigación",
+            "color": "#868e96",
+            "etiqueta": "Investigación"
+          },
+          {
+            "valor": "Piezómetro",
+            "color": "#495057",
+            "etiqueta": "Piezómetro"
+          },
+          {
+            "valor": "Abrevadero",
+            "color": "#a9e34b",
+            "etiqueta": "Abrevadero"
+          },
+          {
+            "valor": "Fuera de uso",
+            "color": "#212529",
+            "etiqueta": "Fuera de uso"
+          },
+          {
+            "valor": "Varios",
+            "color": "#ffd43b",
+            "etiqueta": "Varios"
+          },
+          {
+            "valor": "Sin dato",
+            "color": "#ced4da",
+            "etiqueta": "Sin dato"
+          }
+        ],
+        "relleno": {
+          "opacidad": 0.9
+        },
+        "borde": {
+          "ancho": 0.5,
+          "color": "#ffffff"
+        }
+      }
     }
   ]
 }
