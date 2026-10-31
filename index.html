@@ -2048,6 +2048,47 @@ function simbolo(c, tam = 22) {
   if (c.geometria === 'poligono') return `<svg width="${tam}" height="${tam}" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6 11 2l8 5-2 12H5Z" fill="${col}" fill-opacity=".25" stroke="${col}" stroke-width="2" stroke-linejoin="round"/></svg>`;
   return `<svg width="${tam}" height="${tam}" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 15 9 9l4 4 6-7" fill="none" stroke="${col}" stroke-width="2.4" stroke-linecap="round"/><circle cx="6" cy="6" r="3" fill="${col}"/><rect x="12" y="14" width="7" height="5" rx="1" fill="${col}" fill-opacity=".3" stroke="${col}"/></svg>`;
 }
+/* ---------- Catálogo por institución (administradores) ----------
+   El administrador y el superadministrador ven todas las capas: en vez de una lista larga por tema, el catálogo las
+   ordena como «Usuarios y roles», una tarjeta plegable por institución (sigla, nombre y cuántas capas tiene) y dentro
+   sus capas por tema. Una capa es de una institución si está entre sus capas asignadas o si el índice dice
+   "entidad": "<ALIAS>" (las capas del servidor, que no se encienden al entrar). Las que no son de ninguna van al final.
+   «Por tema» vuelve a la lista de siempre. */
+const catInst = {vista: 'institucion', abiertas: new Set(), iniciado: false};
+const catPorInstitucion = () => sesion && esAdminDemo() && catInst.vista === 'institucion';
+const capasDeInstitucion = (i, capas) => capas.filter(c => (i.capas || []).includes(c.id) || (c.extra && c.extra.entidad === i.alias));
+function htmlCatInstituciones(capas, itemCat, buscando) {
+  const yo = yoDemo(), usadas = new Set();
+  if (!catInst.iniciado) { catInst.iniciado = true; if (yo && yo.alias) catInst.abiertas.add(yo.alias); }
+  const porTema = cs => {
+    const g = {}; cs.forEach(c => (g[c.grupo] = g[c.grupo] || []).push(c));
+    const ks = Object.keys(g);
+    return ks.map(k => `${ks.length > 1 ? `<div class="lbl-s" style="margin:8px 0 2px">${esc(k)}</div>` : ''}<ul class="list">${g[k].map(itemCat).join('')}</ul>`).join('');
+  };
+  // las capas encendidas salen del catálogo (van a «Capas activas»): se dice cuántas de la institución están en el mapa
+  const enMapa = new Set(estado.capas.map(k => k.id));
+  const tarjeta = (clave, cabeza, cs, activas = 0) => {
+    const ab = buscando || catInst.abiertas.has(clave);
+    return `<li class="card us-grupo" data-catgrupo="${esc(clave)}" style="display:block;padding:8px 10px">
+      <button type="button" data-catinst="${esc(clave)}" aria-expanded="${ab}" style="display:flex;align-items:center;gap:6px;width:100%;padding:2px 0;border:0;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer">
+        <span style="display:inline-flex;transform:rotate(${ab ? 0 : -90}deg)">${I('chev', 'sm')}</span>${cabeza}<span class="small muted" style="flex:none;text-align:right">${cs.length} ${cs.length === 1 ? 'capa' : 'capas'}${activas ? `<br>+ ${activas} en el mapa` : ''}</span></button>
+      ${ab ? porTema(cs) : ''}</li>`;
+  };
+  const filas = institucionesDemo().map(i => {
+    const cs = capasDeInstitucion(i, capas); cs.forEach(c => usadas.add(c.id));
+    const activas = capasDeInstitucion(i, estado.catalogo.capas).filter(c => enMapa.has(c.id)).length;
+    return cs.length || (activas && !buscando) ? tarjeta(i.alias, `<span class="badge" style="flex:none">${esc(i.alias)}</span><span style="min-width:0;flex:1"><strong>${esc(i.institucion)}</strong></span>`, cs, activas) : '';
+  });
+  const resto = capas.filter(c => !usadas.has(c.id));
+  if (resto.length) filas.push(tarjeta('-', `<strong style="flex:1">Sin institución asignada</strong>`, resto));
+  return `<ul class="list" style="gap:8px">${filas.join('')}</ul>`;
+}
+function enlazarCatInstituciones(el) {
+  el.querySelectorAll('[data-catinst]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.catinst; if (catInst.abiertas.has(k)) catInst.abiertas.delete(k); else catInst.abiertas.add(k); pCatalogo(el);
+  }));
+  el.querySelectorAll('[data-catvista]').forEach(b => b.addEventListener('click', () => { catInst.vista = b.dataset.catvista; pCatalogo(el); }));
+}
 function pCatalogo(el) {
   const cat = estado.catalogo, q = (el.querySelector('#catQ') || {}).value || '';
   if (!cat) { el.innerHTML = '<div class="empty">Cargando catálogo…</div>'; return; }
@@ -2075,21 +2116,24 @@ function pCatalogo(el) {
   const grupos = {}; cat.capas.filter(c => !enMapa.has(c.id) && filtro(c) && (c.local || c.agregada || veCapa(c.id))).forEach(c => (grupos[c.grupo] = grupos[c.grupo] || []).push(c));
   const m = cat.meta || {}, tit = m.titulo || (m.catalogo ? 'Catálogo de Costa Rica' : ''), act = m.actualizado || m.generado;
   const enVivo = cat.fuente && cat.fuente !== 'estatica';
+  const itemCat = c => `<li class="cat-item"><span class="cat-sym">${simbolo(c)}</span>
+        <div style="min-width:0"><div class="cat-title">${esc(c.titulo)}</div>
+          <div class="cat-meta"><span>${GEOM[c.geometria]}${c.elementos != null ? ' · ' + Number(c.elementos).toLocaleString('es-PA') : ''}</span><span aria-hidden="true">·</span><span>${esc(c.fuente.length > 70 ? c.fuente.slice(0, 68) + '…' : c.fuente)}</span>${c.provisional ? '<span class="badge warn">Provisional</span>' : ''}${capaRestringida(c.id) ? `<span class="badge" title="${esc(resumenAcceso(c.id))}">${I('shield', 'sm')} Restringida</span>` : ''}</div></div>
+        <div class="cat-actions">${editaAcc && !c.local && !c.agregada ? `<button class="iconbtn" type="button" data-acceso="${esc(c.id)}" aria-label="Acceso por perfil a ${esc(c.titulo)}" title="Qué perfiles ven la capa y qué atributos">${I('shield', 'sm')}</button>` : ''}${esDemMeta(c) ? `<button class="iconbtn" type="button" data-derivadas="${esc(c.id)}" aria-label="Derivadas de ${esc(c.titulo)}" title="Derivadas: curvas de nivel, sombreado, pendiente, orientación">${I('mountain', 'sm')}</button>` : ''}${c.agregada ? `<button class="iconbtn" type="button" data-quitar-cat="${esc(c.id)}" aria-label="Quitar ${esc(c.titulo)} del catálogo" title="Quitar del catálogo">${I('x', 'sm')}</button>` : ''}<button class="iconbtn" type="button" data-ficha="${esc(c.id)}" aria-label="Ficha de metadatos de ${esc(c.titulo)}">${I('info', 'sm')}</button>
+          <input class="switch" type="checkbox" role="switch" data-capa="${esc(c.id)}" aria-label="Mostrar ${esc(c.titulo)} en el mapa"></div></li>`;
   el.innerHTML = `${enVivo ? `<div class="row small" style="margin-bottom:6px;gap:6px"><span class="badge ok">En vivo</span><span class="muted" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(nombreFuente())}">${esc(nombreFuente())}</span></div>` : ''}
     ${tit ? `<div class="small muted" style="margin-bottom:8px">${esc(tit)}${act ? ' · actualizado ' + esc(act) : ''}${m.crs ? ' · ' + esc(m.crs) : ''}</div>` : ''}${m.nota ? `<div class="note" style="margin-bottom:8px">${I('info', 'sm')}<span>${esc(m.nota)}</span></div>` : ''}
     <div class="searchbox" style="max-width:none;margin-bottom:4px">${I('search', 'sm')}<label for="catQ" class="sr-only">Buscar en el catálogo</label>
       <input id="catQ" type="search" placeholder="Buscar en ${cat.capas.length} capas…" value="${esc(q)}"></div>
     ${srv && srv.q === q && srv.ids ? `<div class="small muted" style="margin:2px 0 6px">Búsqueda en el catálogo del servidor (OGC API Records, <span class="mono">q=</span>)</div>` : ''}
     ${htmlCapasActivas()}
-    <div class="cat-grupo cat-seccion">${I('library', 'sm')}Capas del catálogo</div>
+    <div class="cat-grupo cat-seccion" style="display:flex;align-items:center;gap:6px">${I('library', 'sm')}<span style="flex:1">Capas del catálogo</span>${sesion && esAdminDemo() ? ['institucion', 'tema'].map(v => `<button type="button" class="btn sm ${catInst.vista === v ? '' : 'ghost'}" data-catvista="${v}" aria-pressed="${catInst.vista === v}" style="text-transform:none;letter-spacing:0">${v === 'tema' ? 'Por tema' : 'Por institución'}</button>`).join('') : ''}</div>
     ${Object.keys(grupos).length ? '' : `<div class="empty">${q ? 'Ninguna capa disponible coincide con la búsqueda.' : 'Todas las capas del catálogo están en el mapa.'}</div>`}
-    ${Object.entries(grupos).map(([g, cs]) => `<div class="cat-grupo">${esc(g)}</div><ul class="list">${cs.map(c => `<li class="cat-item"><span class="cat-sym">${simbolo(c)}</span>
-        <div style="min-width:0"><div class="cat-title">${esc(c.titulo)}</div>
-          <div class="cat-meta"><span>${GEOM[c.geometria]}${c.elementos != null ? ' · ' + Number(c.elementos).toLocaleString('es-PA') : ''}</span><span aria-hidden="true">·</span><span>${esc(c.fuente.length > 70 ? c.fuente.slice(0, 68) + '…' : c.fuente)}</span>${c.provisional ? '<span class="badge warn">Provisional</span>' : ''}${capaRestringida(c.id) ? `<span class="badge" title="${esc(resumenAcceso(c.id))}">${I('shield', 'sm')} Restringida</span>` : ''}</div></div>
-        <div class="cat-actions">${editaAcc && !c.local && !c.agregada ? `<button class="iconbtn" type="button" data-acceso="${esc(c.id)}" aria-label="Acceso por perfil a ${esc(c.titulo)}" title="Qué perfiles ven la capa y qué atributos">${I('shield', 'sm')}</button>` : ''}${esDemMeta(c) ? `<button class="iconbtn" type="button" data-derivadas="${esc(c.id)}" aria-label="Derivadas de ${esc(c.titulo)}" title="Derivadas: curvas de nivel, sombreado, pendiente, orientación">${I('mountain', 'sm')}</button>` : ''}${c.agregada ? `<button class="iconbtn" type="button" data-quitar-cat="${esc(c.id)}" aria-label="Quitar ${esc(c.titulo)} del catálogo" title="Quitar del catálogo">${I('x', 'sm')}</button>` : ''}<button class="iconbtn" type="button" data-ficha="${esc(c.id)}" aria-label="Ficha de metadatos de ${esc(c.titulo)}">${I('info', 'sm')}</button>
-          <input class="switch" type="checkbox" role="switch" data-capa="${esc(c.id)}" aria-label="Mostrar ${esc(c.titulo)} en el mapa"></div></li>`).join('')}</ul>`).join('')}`;
+    ${catPorInstitucion() ? htmlCatInstituciones(Object.values(grupos).flat(), itemCat, !!q.trim())
+      : Object.entries(grupos).map(([g, cs]) => `<div class="cat-grupo">${esc(g)}</div><ul class="list">${cs.map(itemCat).join('')}</ul>`).join('')}`;
   const inp = $('#catQ', el);
   inp.oninput = () => { const pos = inp.selectionStart; pCatalogo(el); const n = $('#catQ', el); n.focus(); n.setSelectionRange(pos, pos); };
+  enlazarCatInstituciones(el);
 }
 document.addEventListener('change', e => {
   const s = e.target.closest('[data-capa]'); if (!s) return;

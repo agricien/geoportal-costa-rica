@@ -1743,6 +1743,7 @@
       "titulo": "Pozos registrados (SENARA)",
       "geometria": "Point",
       "servidor": true,
+      "entidad": "AGRICIEN",
       "descripcion": "18 459 pozos de la base de datos DIGH-SENARA con su uso  profundidad y caudal. Los sirve el servidor del geoportal: el administrador o el publicador de AgriCien eligen qué columnas se publican (el propietario  por omisión  no).",
       "elementos": 18459,
       "fuente": "SENARA · Dirección de Investigación y Gestión Hídrica (base DIGH) · ordenado por AgriCien S.A. (Agricultura Científica)",
