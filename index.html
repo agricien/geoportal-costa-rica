@@ -5241,12 +5241,18 @@ async function baseEnlaces() {
 }
 async function acortarEnlace(z) {
   const st = window.cfgUsuario && cfgUsuario._st;
-  if (!st || !st.servidor || !st.token || !st.base) return '';
-  try { const j = await pedirEnlace(st.base + 'enlace', {metodo: 'POST', token: st.token, cuerpo: {datos: z, titulo: mw.titulo || ''}}); pub.lista = null; return /^[A-Za-z0-9_-]{6,16}$/.test(j.id || '') ? j.id : ''; }
-  catch (e) { console.warn('enlace corto:', e); return ''; }
+  mw.sinCorto = '';
+  if (!st || !st.servidor || !st.token || !st.base) {
+    mw.sinCorto = (st && st.error) || 'esta sesión no está conectada al servidor del geoportal. Salga y vuelva a entrar con su contraseña';
+    return '';
+  }
+  try { const j = await pedirEnlace(st.base + 'enlace', {metodo: 'POST', token: st.token, cuerpo: {datos: z, titulo: mw.titulo || ''}}); pub.lista = null; if (/^[A-Za-z0-9_-]{6,16}$/.test(j.id || '')) return j.id; mw.sinCorto = 'el servidor no devolvió el enlace'; return ''; }
+  catch (e) { console.warn('enlace corto:', e); mw.sinCorto = 'el servidor respondió: ' + (e.message || e); return ''; }
 }
 async function enlaceMapaWeb() {
-  const z = b64url(await comprimir(JSON.stringify(specMapaWeb(true)))), raiz = location.origin + location.pathname;
+  const sp = specMapaWeb(true);
+  if (Array.isArray(sp.logos)) sp.logos = await Promise.all(sp.logos.map(achicarLogo));
+  const z = b64url(await comprimir(JSON.stringify(sp))), raiz = location.origin + location.pathname;
   mw.enlaceLargo = raiz + '#mapaweb=' + z;
   const id = await acortarEnlace(z);
   return id ? raiz + '#m=' + id : mw.enlaceLargo;
@@ -8146,7 +8152,8 @@ async function guardarPerfil(alias, datos) {
   return r;
 }
 
-// un logo subido: se reduce a lo sumo a 480 × 200 px y se guarda como data:URL (PNG, o WebP si el PNG pesa más de 100 KB)
+// un logo subido: se muestra a 46 px de alto como mucho, así que se reduce a 320 × 96 px (nítido en pantallas dobles) y
+// se guarda como data:URL en PNG o WebP, el que pese menos: viaja dentro de cada enlace largo del mapa web
 const LOGO_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
 function leerLogo(archivo) {
   return new Promise((ok, mal) => {
@@ -8155,17 +8162,32 @@ function leerLogo(archivo) {
     const u = URL.createObjectURL(archivo), img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(u);
-      let w = img.naturalWidth || 480, h = img.naturalHeight || 200, k = Math.min(1, 480 / w, 200 / h), d = '';
-      for (let i = 0; i < 4; i++, k *= .75) {
-        const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        d = c.toDataURL('image/png'); if (d.length <= 100000) break;
-        d = c.toDataURL('image/webp', .85); if (d.length <= 100000 && d.startsWith('data:image/webp')) break;
-      }
+      const d = codificarLogo(img);
       if (d.length > 100000 || !LOGO_RE.test(d)) mal(new Error('el logo sigue pesando demasiado')); else ok(d);
     };
     img.onerror = () => { URL.revokeObjectURL(u); mal(new Error('no se pudo leer la imagen')); };
     img.src = u;
+  });
+}
+function codificarLogo(img) {
+  let w = img.naturalWidth || 320, h = img.naturalHeight || 96, k = Math.min(1, 320 / w, 96 / h), d = '';
+  for (let i = 0; i < 4; i++, k *= .75) {
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const png = c.toDataURL('image/png'), webp = c.toDataURL('image/webp', .9);
+    d = webp.startsWith('data:image/webp') && webp.length < png.length ? webp : png;
+    if (d.length <= 100000) break;
+  }
+  return d;
+}
+// los logos guardados antes (hasta 480 × 200 px) se reducen al armar el enlace; si no se puede, va el original
+function achicarLogo(d) {
+  return new Promise(ok => {
+    if (!LOGO_RE.test(d || '') || d.length < 8000) { ok(d); return; }
+    const img = new Image();
+    img.onload = () => { try { const n = codificarLogo(img); ok(LOGO_RE.test(n) && n.length < d.length ? n : d); } catch (e) { ok(d); } };
+    img.onerror = () => ok(d);
+    img.src = d;
   });
 }
 
@@ -8530,6 +8552,7 @@ function pMapaWeb(el) {
     <div class="small muted" style="margin-bottom:10px">Se guarda la vista actual (centro, zoom, giro e inclinación) y las capas visibles: los datos vectoriales van dentro de la página (${fmt(tam)} entidades) y las capas WMS se piden al servidor al abrirla.${restr ? ' Las capas restringidas no se verán: la página no lleva su sesión.' : ''}</div>
     <div class="row" style="flex-wrap:wrap"><button class="btn primary" type="button" id="mwVer" ${vis.length ? '' : 'disabled'}>${I('eye', 'sm')}Vista previa</button>${mw.plantilla === 'formal' ? `<button class="btn" type="button" id="mwPdf" ${vis.length ? '' : 'disabled'}>${I('download', 'sm')}PDF</button>` : ''}<button class="btn" type="button" id="mwEnlace" ${vis.length ? '' : 'disabled'}>${I('link', 'sm')}Copiar enlace</button><button class="btn" type="button" id="mwBajar" ${vis.length ? '' : 'disabled'}>${I('download', 'sm')}Descargar HTML</button></div>
     ${mw.enlace ? `<div class="field" style="margin-top:10px"><label for="mwUrl">Dirección del mapa · ${mw.enlace.length < 2048 ? mw.enlace.length + ' caracteres' : fmt(Math.round(mw.enlace.length / 1024)) + ' KB'}${mw.enlace.length > 1.5e6 ? ' (demasiado larga para algunos navegadores: descargue el HTML)' : mw.enlace.length > 8000 ? ' (larga: compártala como enlace, no por SMS)' : ''}</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwUrl" readonly value="${esc(mw.enlace)}"><a class="btn sm" href="${esc(mw.enlace)}" target="_blank" rel="noopener">${I('open', 'sm')}Abrir</a></div></div>` : ''}
+    ${mw.enlace && mw.sinCorto && mw.enlace === mw.enlaceLargo ? `<div class="note" style="margin-top:6px">${I('info', 'sm')}<span>Salió el enlace largo, que no queda en «Publicado»: ${esc(mw.sinCorto)}. Igual lo abre cualquiera que lo tenga, sin cuenta.</span></div>` : ''}
     ${mw.enlace && mw.enlaceLargo && mw.enlaceLargo !== mw.enlace ? `<div class="field" style="margin-top:6px"><label for="mwUrlLargo">Enlace largo · ${mw.enlaceLargo.length < 2048 ? mw.enlaceLargo.length + ' caracteres' : fmt(Math.round(mw.enlaceLargo.length / 1024)) + ' KB'} · no depende del servidor</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwUrlLargo" readonly value="${esc(mw.enlaceLargo)}"><button class="btn sm" type="button" id="mwCopiarLargo">${I('copy', 'sm')}Copiar</button></div></div>` : ''}
     ${mw.enlace ? `<div class="field" style="margin-top:6px"><label for="mwIf">Código para incrustar (iframe)</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwIf" readonly value="${esc(codigoIframe(mw.enlace))}"><button class="btn sm" type="button" id="mwIfC">${I('copy', 'sm')}Copiar</button></div></div>` : ''}
     <div class="small muted" style="margin-top:10px">Con sesión en el servidor del geoportal, «Copiar enlace» da una dirección corta (#m=…) guardada en su base: se abre sin cuenta mientras el servidor esté encendido. El enlace largo lleva el mapa comprimido en la propia dirección: se abre sin servidor y sin cuenta. En «Publicar › Publicado» están sus mapas con enlace corto y ahí se elige quién puede verlos. Las capas del catálogo van por su dirección y las suyas dentro del enlace. Para un mapa muy grande, descargue el HTML y publíquelo en cualquier servidor web.</div>`;
