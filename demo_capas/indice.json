@@ -1570,6 +1570,126 @@
       "grupo": "GIZ · Fincas piloto de hipsolíneas (LDI)"
     },
     {
+      "id": "ac_pozos_senara",
+      "titulo": "Pozos registrados (SENARA)",
+      "geometria": "Point",
+      "servidor": true,
+      "entidad": "AGRICIEN",
+      "descripcion": "18 459 pozos de la base de datos DIGH-SENARA con su uso  profundidad y caudal. Los sirve el servidor del geoportal: el administrador o el publicador de AgriCien eligen qué columnas se publican (el propietario  por omisión  no).",
+      "elementos": 18459,
+      "fuente": "SENARA · Dirección de Investigación y Gestión Hídrica (base DIGH) · ordenado por AgriCien S.A. (Agricultura Científica)",
+      "licencia": "Uso con atribución a SENARA",
+      "atribucion": "SENARA (DIGH)",
+      "fecha_datos": "2026-10-06",
+      "estilo": {
+        "color": "#1c7ed6"
+      },
+      "grupo": "AgriCien · Aguas subterráneas",
+      "simbologia": {
+        "modo": "categorias",
+        "campo": "uso",
+        "clases": [
+          {
+            "valor": "Riego, doméstico y turismo",
+            "color": "#7048e8",
+            "etiqueta": "Riego, doméstico y turismo"
+          },
+          {
+            "valor": "Doméstico y riego",
+            "color": "#4dabf7",
+            "etiqueta": "Doméstico y riego"
+          },
+          {
+            "valor": "Riego y turismo",
+            "color": "#20c997",
+            "etiqueta": "Riego y turismo"
+          },
+          {
+            "valor": "Agropecuario y riego",
+            "color": "#94d82d",
+            "etiqueta": "Agropecuario y riego"
+          },
+          {
+            "valor": "Agroindustrial",
+            "color": "#e8590c",
+            "etiqueta": "Agroindustrial"
+          },
+          {
+            "valor": "Industrial",
+            "color": "#c92a2a",
+            "etiqueta": "Industrial"
+          },
+          {
+            "valor": "Doméstico",
+            "color": "#1c7ed6",
+            "etiqueta": "Doméstico"
+          },
+          {
+            "valor": "Riego",
+            "color": "#2f9e44",
+            "etiqueta": "Riego"
+          },
+          {
+            "valor": "Abastecimiento público",
+            "color": "#0b7285",
+            "etiqueta": "Abastecimiento público"
+          },
+          {
+            "valor": "Turístico",
+            "color": "#f783ac",
+            "etiqueta": "Turístico"
+          },
+          {
+            "valor": "Urbanístico",
+            "color": "#ae3ec9",
+            "etiqueta": "Urbanístico"
+          },
+          {
+            "valor": "Comercial",
+            "color": "#f59f00",
+            "etiqueta": "Comercial"
+          },
+          {
+            "valor": "Investigación",
+            "color": "#868e96",
+            "etiqueta": "Investigación"
+          },
+          {
+            "valor": "Piezómetro",
+            "color": "#495057",
+            "etiqueta": "Piezómetro"
+          },
+          {
+            "valor": "Abrevadero",
+            "color": "#a9e34b",
+            "etiqueta": "Abrevadero"
+          },
+          {
+            "valor": "Fuera de uso",
+            "color": "#212529",
+            "etiqueta": "Fuera de uso"
+          },
+          {
+            "valor": "Varios",
+            "color": "#ffd43b",
+            "etiqueta": "Varios"
+          },
+          {
+            "valor": "Sin dato",
+            "color": "#ced4da",
+            "etiqueta": "Sin dato"
+          }
+        ],
+        "relleno": {
+          "opacidad": 0.9
+        },
+        "borde": {
+          "ancho": 0.5,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
       "id": "fcgg_fincas",
       "titulo": "Fincas del proyecto de ganadería regenerativa",
       "descripcion": "Las 50 fincas ganaderas del proyecto con el INDER, por cámara de ganaderos (Cañas, Liberia, Bagaces, Abangares, La Cruz, Carrillo, Hojancha, Nicoya…), con su área en hectáreas.",
@@ -1589,11 +1709,11 @@
     {
       "id": "fcgg_hipsolineas",
       "titulo": "Hipsolíneas de diseño en las fincas",
-      "descripcion": "Líneas guía en curva de nivel (diseño Keyline/LDI) de las fincas del proyecto, con su nivel en metros.",
+      "descripcion": "Diseño Keyline/LDI de las fincas del proyecto: las líneas clave siguen la curva de nivel (con su nivel en metros) y las paralelas de diseño van cada 2,5 m de ellas (paralela_m, la distancia a la línea clave). Se distinguen al acercarse a la finca: a escala de cantón las paralelas se funden.",
       "geometria": "LineString",
       "archivo": "fcgg_hipsolineas.geojson",
       "elementos": 18566,
-      "tamano_kb": 3652,
+      "tamano_kb": 9326,
       "fuente": "Federación de Cámaras de Ganaderos de Guanacaste · AgriCien S.A.",
       "licencia": "Uso con atribución a la entidad",
       "atribucion": "Federación de Cámaras de Ganaderos de Guanacaste · AgriCien S.A.",
@@ -1601,7 +1721,30 @@
       "estilo": {
         "color": "#1c7ed6"
       },
-      "grupo": "Federación de Cámaras de Ganaderos de Guanacaste"
+      "grupo": "Federación de Cámaras de Ganaderos de Guanacaste",
+      "simbologia": {
+        "modo": "categorias",
+        "campo": "tipo",
+        "clases": [
+          {
+            "valor": "clave",
+            "color": "#0b3d91",
+            "etiqueta": "Línea clave (curva de nivel)"
+          },
+          {
+            "valor": "paralela",
+            "color": "#4dabf7",
+            "etiqueta": "Paralela de diseño cada 2,5 m"
+          }
+        ],
+        "relleno": {
+          "opacidad": 0.65
+        },
+        "borde": {
+          "ancho": 0.8,
+          "color": ""
+        }
+      }
     },
     {
       "id": "fcgg_calicatas",
@@ -1735,126 +1878,6 @@
         "borde": {
           "ancho": 0,
           "color": ""
-        }
-      }
-    },
-    {
-      "id": "ac_pozos_senara",
-      "titulo": "Pozos registrados (SENARA)",
-      "geometria": "Point",
-      "servidor": true,
-      "entidad": "AGRICIEN",
-      "descripcion": "18 459 pozos de la base de datos DIGH-SENARA con su uso  profundidad y caudal. Los sirve el servidor del geoportal: el administrador o el publicador de AgriCien eligen qué columnas se publican (el propietario  por omisión  no).",
-      "elementos": 18459,
-      "fuente": "SENARA · Dirección de Investigación y Gestión Hídrica (base DIGH) · ordenado por AgriCien S.A. (Agricultura Científica)",
-      "licencia": "Uso con atribución a SENARA",
-      "atribucion": "SENARA (DIGH)",
-      "fecha_datos": "2026-10-06",
-      "estilo": {
-        "color": "#1c7ed6"
-      },
-      "grupo": "AgriCien · Aguas subterráneas",
-      "simbologia": {
-        "modo": "categorias",
-        "campo": "uso",
-        "clases": [
-          {
-            "valor": "Riego, doméstico y turismo",
-            "color": "#7048e8",
-            "etiqueta": "Riego, doméstico y turismo"
-          },
-          {
-            "valor": "Doméstico y riego",
-            "color": "#4dabf7",
-            "etiqueta": "Doméstico y riego"
-          },
-          {
-            "valor": "Riego y turismo",
-            "color": "#20c997",
-            "etiqueta": "Riego y turismo"
-          },
-          {
-            "valor": "Agropecuario y riego",
-            "color": "#94d82d",
-            "etiqueta": "Agropecuario y riego"
-          },
-          {
-            "valor": "Agroindustrial",
-            "color": "#e8590c",
-            "etiqueta": "Agroindustrial"
-          },
-          {
-            "valor": "Industrial",
-            "color": "#c92a2a",
-            "etiqueta": "Industrial"
-          },
-          {
-            "valor": "Doméstico",
-            "color": "#1c7ed6",
-            "etiqueta": "Doméstico"
-          },
-          {
-            "valor": "Riego",
-            "color": "#2f9e44",
-            "etiqueta": "Riego"
-          },
-          {
-            "valor": "Abastecimiento público",
-            "color": "#0b7285",
-            "etiqueta": "Abastecimiento público"
-          },
-          {
-            "valor": "Turístico",
-            "color": "#f783ac",
-            "etiqueta": "Turístico"
-          },
-          {
-            "valor": "Urbanístico",
-            "color": "#ae3ec9",
-            "etiqueta": "Urbanístico"
-          },
-          {
-            "valor": "Comercial",
-            "color": "#f59f00",
-            "etiqueta": "Comercial"
-          },
-          {
-            "valor": "Investigación",
-            "color": "#868e96",
-            "etiqueta": "Investigación"
-          },
-          {
-            "valor": "Piezómetro",
-            "color": "#495057",
-            "etiqueta": "Piezómetro"
-          },
-          {
-            "valor": "Abrevadero",
-            "color": "#a9e34b",
-            "etiqueta": "Abrevadero"
-          },
-          {
-            "valor": "Fuera de uso",
-            "color": "#212529",
-            "etiqueta": "Fuera de uso"
-          },
-          {
-            "valor": "Varios",
-            "color": "#ffd43b",
-            "etiqueta": "Varios"
-          },
-          {
-            "valor": "Sin dato",
-            "color": "#ced4da",
-            "etiqueta": "Sin dato"
-          }
-        ],
-        "relleno": {
-          "opacidad": 0.9
-        },
-        "borde": {
-          "ancho": 0.5,
-          "color": "#ffffff"
         }
       }
     }
