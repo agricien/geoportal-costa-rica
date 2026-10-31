@@ -2,7 +2,7 @@
   "producto": "Geoportal Costa Rica",
   "marca": {
     "nombre": "Costa Rica",
-    "subtitulo": "Software libre · datos abiertos del país y de la Municipalidad de Corredores"
+    "subtitulo": "Software libre · datos abiertos para el mundo"
   },
   "fuente": "estatica",
   "nota": "Sitio estático: el catálogo se lee de demo_capas/indice.json. Las capas del grupo «Servicios WMS del SNIT» se piden en vivo a los servidores del SNIT.",
