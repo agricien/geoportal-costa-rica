@@ -1681,6 +1681,13 @@ function prepararDatos(fc) {
   if (fs.length <= 3) fs.forEach(f => { const p = f.properties || (f.properties = {}); if (!p.nombre && p.magnitud != null) p._etiqueta = 'M' + p.magnitud; });
   return fc;
 }
+// la simbología del índice va sobre la de omisión de la capa
+function simbDelIndice(c, x) {
+  const d = simbDefecto(c), r = Object.assign({}, d, x, {tipo: 'vector'});
+  ['relleno', 'borde', 'punto', 'etiquetas'].forEach(k => { r[k] = Object.assign({}, d[k], x[k] || {}); });
+  r.clases = (Array.isArray(x.clases) ? x.clases : []).map(k => Object.assign({visible: true}, k));
+  return r;
+}
 async function activarCapaCatalogo(meta, on, silencioso = false) {
   const ya = estado.capas.find(c => c.id === meta.id);
   if (on && !ya && !meta.local && !veCapa(meta.id)) { toast('Su perfil no tiene acceso a «' + meta.titulo + '»', 'shield'); emitirCapas(); return; }
@@ -1694,7 +1701,8 @@ async function activarCapaCatalogo(meta, on, silencioso = false) {
       const modo = meta.modo || (meta.raster ? undefined : meta.archivo || meta.datos ? 'vector' : 'wms');   // ráster y curvas vuelven del catálogo con sus datos
       // se guarda lo leído (crudos) y el visor usa sólo lo que ve el perfil
       if (modo === 'vector' && !meta.datos) { const fc = await leerGeoJSON(meta.archivo); if (!meta.local) meta.crudos = fc; meta.datos = prepararDatos(meta.local ? fc : filtrarAcceso(meta.id, fc)); }
-      const c = Object.assign({}, meta, {modo, visible: true, opacidad: 1}); estado.capas.push(c); montarCapa(c); emitirCapas();
+      const c = Object.assign({}, meta, {modo, visible: true, opacidad: 1}); if (meta.simbIndice && !c.simbologia) c.simbologia = simbDelIndice(c, meta.simbIndice);
+      estado.capas.push(c); montarCapa(c); emitirCapas();
       if (meta.agregada === 'dem') marcarEnMapa(c, true);
       if (!silencioso) toast('«' + meta.titulo + '» añadida al mapa', 'layers');
     } catch (e) { toast('No se pudo leer «' + meta.titulo + '» (' + (e.message || e) + ')', 'info'); emitirCapas(); }
@@ -1923,7 +1931,7 @@ async function catalogoEstatico() {
       color: [c.color, c.estilo && c.estilo.color].find(x => /^#[0-9a-f]{3,8}$/i.test(x || '')) || PALETA[i % PALETA.length], grupo: c.grupo || c.group || 'General',
       provisional: c.provisional === true || /provisional/i.test(c.estado || ''), estado: c.estado || '', fecha: c.fecha || c.fecha_datos || c.date || '',
       atribucion: c.atribucion || c.attribution || '', elementos: c.elementos, tablaOrigen: c.tabla_origen || '', tamanoKb: c.tamano_kb,
-      destacado: /epicentro/i.test(c.id || ''), limites: /l[ií]mite/i.test(c.grupo || ''), extra};
+      ...(c.simbologia && typeof c.simbologia === 'object' ? {simbIndice: c.simbologia} : {}), destacado: /epicentro/i.test(c.id || ''), limites: /l[ií]mite/i.test(c.grupo || ''), extra};
   })};
 }
 // -- OGC API Records (pycsw) --
@@ -4909,6 +4917,7 @@ function aligerarCapa(b, c) {
   if (b.opacidad !== 1) r.opacidad = b.opacidad;
   if (b.clases) r.clases = b.clases;
   if (b.pintura) r.pintura = b.pintura;
+  if (b.g) r.g = b.g;
   return r;
 }
 async function completarCatalogo(s) {
@@ -5085,12 +5094,13 @@ function sanearMapaWeb(s) {
   const num = (v, d, a, b) => { const x = Number(v); return Number.isFinite(x) ? Math.min(b, Math.max(a, x)) : d; };
   const http = u => /^https?:\/\/[^\s"'<>]+$/i.test(u || '') ? String(u) : '';
   const c0 = s.colores || {}, v = s.vista || {}, ctr = Array.isArray(v.center) ? v.center : [];
-  return {v: 1, titulo: txt(s.titulo, 200), plantilla: ['visor', 'relato', 'panel'].includes(s.plantilla) ? s.plantilla : 'visor', texto: txt(s.texto, 20000), leyenda: !!s.leyenda,
+  return {v: 1, titulo: txt(s.titulo, 200), plantilla: ['visor', 'relato', 'panel', 'formal'].includes(s.plantilla) ? s.plantilla : 'visor', texto: txt(s.texto, 20000), leyenda: !!s.leyenda,
     colores: {fondo: col(c0.fondo), sup: col(c0.sup), texto: col(c0.texto), acento: col(c0.acento)}, base: MAPAS_BASE[s.base] ? s.base : 'positron',
     vista: {center: [num(ctr[0], -84.15, -180, 180), num(ctr[1], 9.62, -85, 85)], zoom: num(v.zoom, 6, 0, 22), bearing: num(v.bearing, 0, -360, 360), pitch: num(v.pitch, 0, 0, 85)},
-    fecha: txt(s.fecha, 10).replace(/[^0-9/]/g, ''),
+    fecha: txt(s.fecha, 10).replace(/[^0-9/]/g, ''), ...(s.plantilla === 'formal' ? {lamina: sanearLamina(s.lamina)} : {}),
     capas: (Array.isArray(s.capas) ? s.capas : []).slice(0, 60).map((c, i) => {
       const b = {id: 'c' + i, titulo: txt(c.titulo, 200), color: col(c.color), atribucion: esc(txt(c.atribucion, 300)), opacidad: num(c.opacidad, 1, 0, 1)};
+      if (['punto', 'linea', 'poligono'].includes(c.g)) b.g = c.g;
       if (Array.isArray(c.clases)) b.clases = c.clases.slice(0, 60).map(k => ({color: col(k && k.color), etiqueta: txt(k && k.etiqueta, 120)}));
       if (c.tipo === 'imagen') {
         const q = Array.isArray(c.coords) && c.coords.length === 4 ? c.coords.map(p => [num((p || [])[0], 0, -180, 180), num((p || [])[1], 0, -85, 85)]) : null;
@@ -7389,7 +7399,7 @@ function urlGetMapPublica(w) {   // sin el token de la sesión: la página se co
 }
 function capasMapaWeb(enlace = false) {
   return estado.capas.filter(c => c.visible).map(c => {
-    const base = {id: c.id.replace(/[^a-z0-9_-]/gi, '_'), titulo: c.titulo, color: c.color, atribucion: c.atribucion || (c.local || c.id === 'borrador' ? '' : c.fuente || ''), opacidad: c.opacidad};
+    const base = {id: c.id.replace(/[^a-z0-9_-]/gi, '_'), titulo: c.titulo, color: c.color, atribucion: c.atribucion || (c.local || c.id === 'borrador' ? '' : c.fuente || ''), opacidad: c.opacidad, g: c.geometria};
     const cl = clasesParaMapaWeb(c); if (cl) base.clases = cl;
     if (c.raster && c.raster.url) return Object.assign(base, {tipo: 'imagen', url: c.raster.url, coords: c.raster.malla.coords});
     if (c.modo === 'wms' && c.wms) { const w = alOrigenAbsoluto(wmsConEstilo(c)); return Object.assign(base, {tipo: 'wms'}, w.sld && encodeURIComponent(w.sld).length > SLD_POR_URL ? {tiles: 'wmspost://' + base.id + '/{bbox-epsg-3857}', post: {url: w.url, sld: w.sld, crs: crsMerc(w)}} : {tiles: urlGetMapPublica(w)}); }
@@ -7403,7 +7413,7 @@ function capasMapaWeb(enlace = false) {
 const alOrigenAbsoluto = w => Object.assign({}, w, {url: new URL(w.url, location.href).href});
 function specMapaWeb(enlace = false) {
   const t = temaActual.colores, d0 = new Date();
-  return {v: 1, titulo: mw.titulo, plantilla: mw.plantilla, texto: mw.texto, leyenda: mw.leyenda,
+  return {v: 1, titulo: mw.titulo, plantilla: mw.plantilla, texto: mw.texto, leyenda: mw.leyenda, ...(mw.plantilla === 'formal' ? {lamina: datosLamina()} : {}),
     colores: mw.tema ? {fondo: t.fondo, sup: t.superficie, texto: t.texto, acento: t.acento} : {fondo: '#eef1f5', sup: '#ffffff', texto: '#14181f', acento: '#c2410c'},
     base: idMapaBase(), vista: {center: mapa.getCenter().toArray().map(v => +v.toFixed(5)), zoom: +mapa.getZoom().toFixed(2), bearing: +mapa.getBearing().toFixed(1), pitch: +mapa.getPitch().toFixed(0)},
     capas: capasMapaWeb(enlace), fecha: String(d0.getDate()).padStart(2, '0') + '/' + String(d0.getMonth() + 1).padStart(2, '0') + '/' + d0.getFullYear()};
@@ -7412,7 +7422,7 @@ function specMapaWeb(enlace = false) {
 function htmlMapaWeb(sp = specMapaWeb()) {
   const capas = sp.capas, c = sp.colores, vista = sp.vista, hoy = sp.fecha;
   const portal = location.href.split(/[?#]/)[0], legal = `<a href="${portal}?legal=aviso" target="_blank" rel="noopener">Aviso legal</a> · <a href="${portal}?legal=privacidad" target="_blank" rel="noopener">Privacidad</a>`;
-  const datos = JSON.stringify({base: estiloBase(sp.base), vista, capas, leyenda: sp.leyenda, plantilla: sp.plantilla}).replace(/</g, '\\u003c');
+  const datos = JSON.stringify({base: estiloBase(sp.base), vista, capas, leyenda: sp.leyenda, plantilla: sp.plantilla, lamina: sp.plantilla === 'formal' ? datosLaminaPagina(sp) : null}).replace(/</g, '\\u003c');
   const e = s => String(s).replace(/[&<>"]/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[ch]));
   const lateral = sp.plantilla === 'relato' ? `<aside class="lado"><h1>${e(sp.titulo)}</h1>${(sp.texto || '').split(/\n{2,}/).map(p => `<p>${e(p)}</p>`).join('')}<div id="ley"></div><p class="pie">Generado con el ${e(MARCA.nombre)} el ${hoy}. ${legal}</p></aside>`
     : sp.plantilla === 'panel' ? `<aside class="lado"><h1>${e(sp.titulo)}</h1><div id="ley"></div><p class="pie">Generado con el ${e(MARCA.nombre)} el ${hoy}. ${legal}</p></aside>` : '';
@@ -7420,7 +7430,7 @@ function htmlMapaWeb(sp = specMapaWeb()) {
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${e(sp.titulo)}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css">
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js"><\/script>${sp.plantilla === 'formal' ? '\n<script src=\"https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js\"><\/script>' : ''}
 <style>
 :root{--fondo:${c.fondo};--sup:${c.sup};--texto:${c.texto};--acento:${c.acento}}
 *{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--fondo);color:var(--texto)}
@@ -7431,7 +7441,7 @@ function htmlMapaWeb(sp = specMapaWeb()) {
 .legal{position:absolute;left:8px;bottom:6px;font-size:11px;background:var(--sup);padding:2px 8px;border-radius:6px;opacity:.85}.legal a,.pie a{color:inherit}
 .it{display:flex;align-items:center;gap:8px;margin:4px 0}.sw{width:14px;height:14px;border-radius:4px;flex:none}.it input{margin:0}.cl{margin:0 0 6px 22px;font-size:11.5px}.cl .it{margin:2px 0}.cl .sw{width:11px;height:11px}
 @media (max-width:720px){.app{flex-direction:column}.lado{width:auto;max-width:none;max-height:38vh;border-right:0}}
-</style></head><body><div class="app">${lateral}<div id="mapa"></div></div>
+${sp.plantilla === 'formal' ? cssLamina(sp) : ''}</style></head><body>${sp.plantilla === 'formal' ? marcoLamina(sp) : `<div class="app">${lateral}<div id="mapa"></div></div>`}
 ${sp.plantilla === 'visor' ? `<div class="titulo">${e(sp.titulo)}</div>${sp.leyenda ? '<div class="leyenda" id="ley"></div>' : ''}<div class="legal">${legal}</div>` : ''}
 <script>
 (() => {
@@ -7442,9 +7452,9 @@ if (Object.keys(POST).length) maplibregl.addProtocol('wmspost', async (params, a
   const r = await fetch(d.url, {method: 'POST', signal: abort.signal, body: new URLSearchParams({service: 'WMS', version: '1.3.0', request: 'GetMap', sld_body: d.sld, format: 'image/png', transparent: 'true', crs: d.crs || 'EPSG:3857', width: '256', height: '256', bbox: decodeURIComponent(m[2])})});
   if (!r.ok) throw new Error('HTTP ' + r.status); return {data: await r.arrayBuffer()};
 });
-const mapa = new maplibregl.Map({container: 'mapa', style: D.base, center: D.vista.center, zoom: D.vista.zoom, bearing: D.vista.bearing, pitch: D.vista.pitch, attributionControl: {compact: true}});
+${sp.plantilla === 'formal' ? PAGINA_LAMINA() : ''}const mapa = new maplibregl.Map(Object.assign({container: 'mapa', style: D.base, center: D.vista.center, zoom: D.vista.zoom, bearing: D.vista.bearing, pitch: D.vista.pitch, attributionControl: {compact: true}}, D.lamina ? opcionesLamina(D) : {}));
 window.mapaWeb = mapa;
-mapa.addControl(new maplibregl.NavigationControl(), 'top-right'); mapa.addControl(new maplibregl.ScaleControl({unit: 'metric'}), 'bottom-right');
+if (D.lamina) iniciarLamina(D, mapa); else { mapa.addControl(new maplibregl.NavigationControl(), 'top-right'); mapa.addControl(new maplibregl.ScaleControl({unit: 'metric'}), 'bottom-right'); }
 const P = ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]], L = ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString']]], T = ['in', ['geometry-type'], ['literal', ['Point', 'MultiPoint']]];
 const ids = c => c.tipo === 'wms' || c.tipo === 'imagen' ? ['w-' + c.id] : ['f-' + c.id, 'l-' + c.id, 'p-' + c.id, 't-' + c.id];
 mapa.on('load', () => {
@@ -7470,19 +7480,268 @@ document.querySelectorAll('[data-c]').forEach(i => i.onchange = () => { const c 
 })();
 <\/script></body></html>`;
 }
+/* ---------- Mapa formal (plantilla «Formal» de Publicar › Mapa web) ----------
+   Una lámina estática para imprimir en PDF o incrustar en un iframe: título, mapa con el norte arriba a una escala
+   fija, coordenadas geográficas WGS 84 en los bordes norte y oeste y coordenadas locales (CRTM05 recomendada) en los
+   bordes sur y este, rosa de los vientos o flecha del norte, escala gráfica y numérica, leyenda, descripción y
+   metadatos de autoría. La página del mapa (htmlMapaWeb) la arma con marcoLamina() y la dibuja con las funciones de
+   PAGINA_LAMINA, que viajan como texto dentro de ella: no pueden usar nada del portal. */
+const HOJAS_LAMINA = {A4: [297, 210], Carta: [279.4, 215.9], Oficio: [330.2, 215.9], A3: [420, 297]};
+const PROY_LAMINA = [5367, 8908, 32616, 32617, 5456, 5457];
+const ESCALAS_LAMINA = [500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000, 100000, 200000, 250000, 500000, 1000000, 2000000, 5000000];
+mw.lamina = {descripcion: '', autor: '', institucion: '', fuente: '', fecha: '', proyeccion: 0, norte: 'rosa', escala: 0,
+  hoja: 'A4', orientacion: 'horizontal', escalaGrafica: true, cuadricula: true};
+// la proyección local que se recomienda para el centro del mapa: CRTM05 en Costa Rica, si no la zona UTM
+function proyRecomendada(lon, lat) {
+  if (lon > -87.2 && lon < -82.5 && lat > 5.4 && lat < 11.3) return 5367;
+  const z = Math.floor((lon + 180) / 6) + 1;
+  return z === 16 ? 32616 : z === 17 ? 32617 : 5367;
+}
+const fmtMiles = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+// la escala «según la vista»: la del mapa del portal en el ancho del marco de la hoja, redondeada a una serie usual
+function escalaSugerida(l = mw.lamina) {
+  const d = disenoLamina(l), c = mapa.getContainer(), y = c.clientHeight / 2;
+  const a = mapa.unproject([0, y]), b = mapa.unproject([c.clientWidth, y]);
+  const n = a.distanceTo(b) * 1000 / d.mapa.w, serie = [1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10];
+  const p = Math.pow(10, Math.floor(Math.log10(n))), k = serie.find(s => s * p >= n * .97) || 10;
+  return Math.max(200, k * p);
+}
+// la caja de cada elemento en milímetros: título arriba, el mapa con 6 mm de rótulos alrededor y el panel a la
+// derecha (horizontal) o debajo (vertical)
+function disenoLamina(l) {
+  let [W, H] = HOJAS_LAMINA[l.hoja] || HOJAS_LAMINA.A4;
+  if (l.orientacion === 'vertical') [W, H] = [H, W];
+  const m = 8, t = 15, b = 6, sup = m + t + 2;
+  if (l.orientacion !== 'vertical') {
+    const pw = Math.min(80, Math.round(W * .27));
+    return {W, H, vertical: false, titulo: {x: m, y: m, w: W - 2 * m, h: t},
+      mapa: {x: m + b, y: sup + b, w: W - 2 * m - pw - 4 - 2 * b, h: H - sup - m - 2 * b}, panel: {x: W - m - pw, y: sup, w: pw, h: H - sup - m}};
+  }
+  const ph = Math.round(Math.min(96, H * .33));
+  return {W, H, vertical: true, titulo: {x: m, y: m, w: W - 2 * m, h: t},
+    mapa: {x: m + b, y: sup + b, w: W - 2 * m - 2 * b, h: H - sup - m - ph - 4 - 2 * b}, panel: {x: m, y: H - m - ph, w: W - 2 * m, h: ph}};
+}
+function sanearLamina(l) {
+  l = l || {};
+  const txt = (v, n) => String(v == null ? '' : v).slice(0, n), uno = (v, lista, d) => lista.includes(v) ? v : d;
+  return {descripcion: txt(l.descripcion, 3000), autor: txt(l.autor, 200), institucion: txt(l.institucion, 200), fuente: txt(l.fuente, 600),
+    fecha: txt(l.fecha, 40), proyeccion: uno(+l.proyeccion, PROY_LAMINA, 5367), norte: uno(l.norte, ['rosa', 'flecha'], 'rosa'),
+    escala: Math.min(5e7, Math.max(100, Math.round(+l.escala) || 25000)), hoja: uno(l.hoja, Object.keys(HOJAS_LAMINA), 'A4'),
+    orientacion: uno(l.orientacion, ['horizontal', 'vertical'], 'horizontal'), escalaGrafica: l.escalaGrafica !== false, cuadricula: l.cuadricula !== false};
+}
+// lo que se guarda en el enlace: la escala «según la vista» queda fija en el número que da ahora
+function datosLamina() {
+  const l = Object.assign({}, mw.lamina), ctr = mapa.getCenter();
+  if (!l.escala) l.escala = escalaSugerida(l);
+  if (!l.proyeccion) l.proyeccion = proyRecomendada(ctr.lng, ctr.lat);
+  if (!l.fecha) l.fecha = new Date().toLocaleDateString('es-CR', {day: 'numeric', month: 'long', year: 'numeric'});
+  return sanearLamina(l);
+}
+const rosaLamina = (tipo, mm) => tipo === 'flecha'
+  ? `<svg width="${mm}mm" height="${mm}mm" viewBox="0 0 40 40" aria-label="Norte"><path d="M20 4 29 34 20 27 11 34Z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/><path d="M20 4 20 27 11 34Z" fill="#111"/><text x="20" y="40" text-anchor="middle" font-size="7" font-weight="700" fill="#111">N</text></svg>`
+  : `<svg width="${mm}mm" height="${mm}mm" viewBox="-24 -24 48 48" aria-label="Rosa de los vientos">
+    <circle r="15.5" fill="none" stroke="#111" stroke-width=".5"/><circle r="13.5" fill="none" stroke="#111" stroke-width=".3"/>
+    ${[45, 135, 225, 315].map(a => `<g transform="rotate(${a})"><path d="M0-12 2.2-2.2 0 0Z" fill="#111"/><path d="M0-12-2.2-2.2 0 0Z" fill="#fff" stroke="#111" stroke-width=".35"/></g>`).join('')}
+    ${[0, 90, 180, 270].map(a => `<g transform="rotate(${a})"><path d="M0-19 3.2-3.2 0 0Z" fill="#111"/><path d="M0-19-3.2-3.2 0 0Z" fill="#fff" stroke="#111" stroke-width=".4"/></g>`).join('')}
+    <text y="-20" text-anchor="middle" font-size="5.6" font-weight="700" fill="#111">N</text><text x="21.5" y="2" text-anchor="middle" font-size="4" fill="#111">E</text>
+    <text y="24" text-anchor="middle" font-size="4" fill="#111">S</text><text x="-21.5" y="2" text-anchor="middle" font-size="4" fill="#111">O</text></svg>`;
+// escala gráfica: unos 45 mm de papel en un número redondo de metros o kilómetros, en cuatro tramos
+function barraLamina(n, maxMm) {
+  const objetivo = Math.min(maxMm, 50) * n / 1000, p = Math.pow(10, Math.floor(Math.log10(objetivo)));
+  const L = [1, 2, 2.5, 5, 10].map(s => s * p).filter(v => v <= objetivo).pop() || p, mm = L * 1000 / n;
+  const et = v => L >= 2000 ? (v / 1000).toLocaleString('es-CR') : fmtMiles(v), u = L >= 2000 ? 'km' : 'm';
+  const tramos = [0, 1, 2, 3].map(i => `<rect x="${i * mm / 4}" y="4" width="${mm / 4}" height="1.6" fill="${i % 2 ? '#fff' : '#111'}" stroke="#111" stroke-width=".25"/>`).join('');
+  const rot = [0, .5, 1].map(f => `<text x="${f * mm}" y="2.8" text-anchor="middle" font-size="2.4" fill="#111">${et(L * f)}</text>`).join('');
+  return `<svg width="${mm + 12}mm" height="8mm" viewBox="-3 0 ${mm + 12} 8">${tramos}${rot}<text x="${mm + 2}" y="5.6" font-size="2.4" fill="#111">${u}</text></svg>`;
+}
+const simboloLamina = c => {
+  const col = c.color || '#1c7ed6';
+  if (c.tipo === 'wms' || c.tipo === 'imagen') return `<svg width="5mm" height="3.6mm" viewBox="0 0 14 10"><defs><linearGradient id="lg${c.id}"><stop offset="0" stop-color="#2b83ba"/><stop offset=".5" stop-color="#ffffbf"/><stop offset="1" stop-color="#d7191c"/></linearGradient></defs><rect width="14" height="10" rx="1.5" fill="url(#lg${c.id})" stroke="#555" stroke-width=".6"/></svg>`;
+  if (c.g === 'punto') return `<svg width="5mm" height="3.6mm" viewBox="0 0 14 10"><circle cx="7" cy="5" r="3.4" fill="${col}" stroke="#fff" stroke-width="1"/></svg>`;
+  if (c.g === 'linea') return `<svg width="5mm" height="3.6mm" viewBox="0 0 14 10"><path d="M1 8 5 3l4 4 4-5" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg width="5mm" height="3.6mm" viewBox="0 0 14 10"><rect x="1" y="1" width="12" height="8" rx="1" fill="${col}" fill-opacity=".3" stroke="${col}" stroke-width="1.2"/></svg>`;
+};
+const nombreProy = cod => (SRC_REGION[cod] || ['EPSG:' + cod])[0];
+// el marco de la página: hoja, título, mapa, rótulos (svg) y panel con norte, escala, leyenda, descripción y autoría
+function marcoLamina(sp) {
+  const l = sp.lamina, d = disenoLamina(l), e = esc, caja = b => `left:${b.x}mm;top:${b.y}mm;width:${b.w}mm;height:${b.h}mm`;
+  const capas = sp.capas.slice().reverse(), base = MAPAS_BASE[sp.base] || {};
+  const fuentes = l.fuente || [...new Set(capas.map(c => String(c.atribucion || '').replace(/<[^>]+>/g, '').trim()).filter(Boolean))].join('; ');
+  const ley = sp.leyenda && capas.length ? `<div class="lm-b lm-ley"><h3>Leyenda</h3>${capas.map(c => `<div class="lm-it">${simboloLamina(c)}<span>${e(c.titulo)}</span></div>`
+    + (c.clases ? `<div class="lm-cl">${c.clases.map(k => `<div class="lm-it"><span class="lm-sw" style="background:${k.color}"></span><span>${e(k.etiqueta)}</span></div>`).join('')}</div>` : '')).join('')}</div>` : '';
+  const meta = [['Autor', l.autor], ['Institución', l.institucion], ['Fecha', l.fecha], ['Fuente de los datos', fuentes],
+    ['Mapa base', (base.nombre || sp.base) + (base.attrib ? ' · ' + String(base.attrib).replace(/<[^>]+>/g, '') : base.url ? ' · OpenFreeMap, © colaboradores de OpenStreetMap' : '')],
+    ['Coordenadas', `bordes norte y oeste: geográficas WGS 84 (EPSG:4326); bordes sur y este: ${nombreProy(l.proyeccion)} (EPSG:${l.proyeccion}), en metros`]]
+    .filter(r => r[1]).map(([k, v]) => `<dt>${e(k)}</dt><dd>${e(v)}</dd>`).join('');
+  const ancho = d.vertical ? d.panel.w / 3 - 4 : d.panel.w - 6;
+  return `<div class="lm-fondo"><div class="hoja" id="hoja" style="width:${d.W}mm;height:${d.H}mm">
+  <div class="lm-titulo" style="${caja(d.titulo)}"><h1>${e(sp.titulo)}</h1><span>${e(MARCA.nombre)} · ${e(location.host || '')}</span></div>
+  <div class="lm-marco" style="${caja(d.mapa)}"><div id="mapa"></div></div>
+  <svg class="lm-svg" id="lmSvg" width="${d.W}mm" height="${d.H}mm" viewBox="0 0 ${d.W} ${d.H}"></svg>
+  <div class="lm-panel${d.vertical ? ' lm-vert' : ''}" style="${caja(d.panel)}">
+    <div class="lm-b lm-ne"><div class="lm-norte">${rosaLamina(l.norte, l.norte === 'rosa' ? 20 : 13)}</div>
+      <div class="lm-esc"><div class="lm-num">Escala 1:${fmtMiles(l.escala)}</div>${l.escalaGrafica ? barraLamina(l.escala, ancho - (l.norte === 'rosa' ? 20 : 13) - 18) : ''}
+      <div class="lm-nota">Hoja ${e(l.hoja)} ${l.orientacion} al 100 %</div></div></div>
+    ${ley}
+    ${l.descripcion ? `<div class="lm-b"><h3>Descripción</h3>${l.descripcion.split(/\n{2,}/).map(p => `<p>${e(p)}</p>`).join('')}</div>` : ''}
+    <div class="lm-b lm-meta"><dl>${meta}</dl></div>
+  </div></div></div>
+  <div class="lm-acciones"><button type="button" onclick="print()">Imprimir o guardar en PDF</button></div>`;
+}
+function cssLamina(sp) {
+  const d = disenoLamina(sp.lamina);
+  return `@page{size:${d.W}mm ${d.H}mm;margin:0}
+body{background:#d9dde3}.lm-fondo{position:fixed;inset:0;overflow:hidden}
+.hoja{position:absolute;left:50%;top:50%;transform-origin:center;background:#fff;color:#111;box-shadow:0 6px 30px rgba(0,0,0,.25);font-family:"Segoe UI",system-ui,sans-serif;overflow:hidden}
+.lm-titulo{position:absolute;display:flex;align-items:flex-end;justify-content:space-between;gap:4mm;border-bottom:.5mm solid #111}
+.lm-titulo h1{margin:0 0 1.5mm;font-size:17pt;line-height:1.1;font-weight:700}.lm-titulo span{font-size:7pt;color:#555;margin-bottom:2mm;white-space:nowrap}
+.lm-marco{position:absolute;overflow:hidden;background:#f4f4f2}#mapa{position:absolute;inset:0}
+.lm-svg{position:absolute;left:0;top:0;pointer-events:none;font-family:"Segoe UI",system-ui,sans-serif}
+.lm-panel{position:absolute;display:flex;flex-direction:column;gap:2.2mm;border:.35mm solid #111;padding:3mm;box-sizing:border-box;overflow:hidden;font-size:6.6pt;line-height:1.3}
+.lm-panel.lm-vert{display:block;column-count:3;column-gap:5mm;column-fill:auto}.lm-vert .lm-b{break-inside:avoid;margin-bottom:2.4mm}
+.lm-b h3{margin:0 0 1mm;font-size:1.12em;text-transform:uppercase;letter-spacing:.04em;border-bottom:.2mm solid #999;padding-bottom:.6mm}.lm-b p{margin:0 0 1mm}
+.lm-ne{display:flex;align-items:center;gap:3mm}.lm-num{font-weight:600;font-size:1.12em;margin-bottom:.6mm}.lm-nota{color:#666;font-size:.85em}
+.lm-it{display:flex;align-items:center;gap:1.6mm;margin:.12em 0}.lm-it svg{flex:none}.lm-cl{margin-left:6.6mm}.lm-sw{width:3mm;height:2.4mm;flex:none;border:.15mm solid #555}
+.lm-meta dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.4mm 2mm}.lm-meta dt{font-weight:600}.lm-meta dd{margin:0;overflow-wrap:anywhere}
+.lm-acciones{position:fixed;right:10px;top:10px;opacity:.25;transition:opacity .2s}.lm-acciones:hover{opacity:1}
+.lm-acciones button{font:600 13px system-ui,sans-serif;padding:8px 12px;border-radius:8px;border:1px solid #888;background:#fff;cursor:pointer}
+@media print{html,body{background:none;height:auto}.lm-fondo{position:static}.hoja{position:relative;left:0;top:0;transform:none!important;box-shadow:none}.lm-acciones{display:none}}
+`;
+}
+// los datos que la página necesita para dibujar: la definición proj4 de la proyección local va con ellos
+function datosLaminaPagina(sp) {
+  const l = sp.lamina, d = disenoLamina(l);
+  return {escala: l.escala, cuadricula: l.cuadricula, marco: d.mapa, W: d.W, H: d.H, proy: (SRC_REGION[l.proyeccion] || [])[1] || '', imprimir: !!l.imprimir};
+}
+
+/* --- lo que corre dentro de la página del mapa (se copia como texto) --- */
+function opcionesLamina(D) {
+  const L = D.lamina, mpp = L.escala * 25.4 / 96 / 1000, lat = D.vista.center[1] * Math.PI / 180;
+  // hoja ajustada a la ventana (o al iframe); al imprimir la escala vuelve a 1
+  const ajustar = () => { const h = document.getElementById('hoja'), s = Math.min(innerWidth / h.offsetWidth, innerHeight / h.offsetHeight) * .97;
+    h.style.transform = 'translate(-50%,-50%) scale(' + s + ')'; };
+  ajustar(); addEventListener('resize', ajustar);
+  return {zoom: Math.log2(40075016.686 * Math.cos(lat) / (512 * mpp)), bearing: 0, pitch: 0, interactive: false, attributionControl: false,
+    pixelRatio: Math.max(devicePixelRatio || 1, 3), preserveDrawingBuffer: true, canvasContextAttributes: {preserveDrawingBuffer: true}, fadeDuration: 0};
+}
+function iniciarLamina(D, mapa) {
+  const L = D.lamina, M = L.marco, k = 25.4 / 96, svg = document.getElementById('lmSvg'), NS = 'http://www.w3.org/2000/svg';
+  // una leyenda larga: la letra del panel se achica hasta que todo cabe
+  const pan = document.querySelector('.lm-panel');
+  for (let f = 6.6; pan && f > 4 && (pan.scrollHeight > pan.clientHeight + 1 || pan.scrollWidth > pan.clientWidth + 1); f -= .3) pan.style.fontSize = f.toFixed(1) + 'pt';
+  const el = (tag, at, txt) => { const n = document.createElementNS(NS, tag); for (const a in at) n.setAttribute(a, at[a]); if (txt != null) n.textContent = txt; svg.appendChild(n); return n; };
+  const c = mapa.getContainer(), Wp = c.clientWidth, Hp = c.clientHeight, X = px => M.x + px * k, Y = py => M.y + py * k;
+  const miles = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const gms = (v, lon) => { const h = lon ? (v < 0 ? 'O' : 'E') : (v < 0 ? 'S' : 'N'); const a = Math.abs(v) + 1e-9; let g = Math.floor(a), m = Math.floor((a - g) * 60), s = Math.round(((a - g) * 60 - m) * 60);
+    if (s === 60) { s = 0; m++; } if (m === 60) { m = 0; g++; } return g + '°' + (m || s ? String(m).padStart(2, '0') + '′' : '') + (s ? String(s).padStart(2, '0') + '″' : '') + ' ' + h; };
+  const paso = (rango, lista) => lista.find(p => rango / p <= 6) || lista[lista.length - 1];
+  const dibujar = () => {
+    svg.innerHTML = '';
+    el('rect', {x: M.x - 6, y: M.y - 6, width: M.w + 12, height: M.h + 12, fill: 'none', stroke: '#111', 'stroke-width': .2});
+    el('rect', {x: M.x, y: M.y, width: M.w, height: M.h, fill: 'none', stroke: '#111', 'stroke-width': .45});
+    const so = mapa.unproject([0, 0]), ne = mapa.unproject([Wp, Hp]), oe = mapa.unproject([0, Hp]), es = mapa.unproject([Wp, 0]);
+    const lon0 = so.lng, lon1 = es.lng, lat0 = ne.lat, lat1 = so.lat;
+    const GEO = [5, 2, 1, .5, .25, 10 / 60, 5 / 60, 2 / 60, 1 / 60, 30 / 3600, 15 / 3600, 10 / 3600, 5 / 3600, 2 / 3600, 1 / 3600].reverse();
+    const pg = paso(lon1 - lon0, GEO), pl = paso(lat1 - lat0, GEO), txt = {'font-size': 2.3, fill: '#111'};
+    // norte: longitudes; oeste: latitudes (en Mercator los meridianos son verticales y los paralelos horizontales)
+    for (let v = Math.ceil(lon0 / pg - 1e-9) * pg; v <= lon1 + 1e-12; v += pg) {
+      const x = X(mapa.project([v, lat1]).x); if (x < M.x + 3 || x > M.x + M.w - 3) continue;
+      el('line', {x1: x, y1: M.y - 1.6, x2: x, y2: M.y + 1.2, stroke: '#111', 'stroke-width': .25});
+      el('text', Object.assign({x, y: M.y - 2.4, 'text-anchor': 'middle'}, txt), gms(v, true));
+    }
+    for (let v = Math.ceil(lat0 / pl - 1e-9) * pl; v <= lat1 + 1e-12; v += pl) {
+      const y = Y(mapa.project([lon0, v]).y); if (y < M.y + 3 || y > M.y + M.h - 3) continue;
+      el('line', {x1: M.x - 1.6, y1: y, x2: M.x + 1.2, y2: y, stroke: '#111', 'stroke-width': .25});
+      el('text', Object.assign({x: M.x - 2.4, y, 'text-anchor': 'middle', transform: `rotate(-90 ${M.x - 2.4} ${y})`}, txt), gms(v, false));
+    }
+    if (!(window.proj4 && L.proy)) return;
+    const P = proj4('EPSG:4326', L.proy), LOC = [1, 2, 5, 10, 20, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000, 100000, 200000, 500000];
+    // sur: estes a lo largo del borde inferior; este: nortes a lo largo del borde derecho (muestreados e interpolados)
+    const borde = (n, f) => Array.from({length: n + 1}, (_, i) => { const t = i / n, p = f(t), ll = mapa.unproject(p); return {p, q: P.forward([ll.lng, ll.lat])}; });
+    const sur = borde(80, t => [t * Wp, Hp]), este = borde(80, t => [Wp, (1 - t) * Hp]);
+    const marcas = (pts, eje) => { const vs = pts.map(o => o.q[eje]), a = Math.min(...vs), b = Math.max(...vs), p = paso(b - a, LOC), r = [];
+      for (let v = Math.ceil(a / p) * p; v <= b; v += p) for (let i = 1; i < pts.length; i++) { const v0 = pts[i - 1].q[eje], v1 = pts[i].q[eje];
+        if ((v - v0) * (v - v1) <= 0 && v0 !== v1) { const t = (v - v0) / (v1 - v0); r.push({v, x: pts[i - 1].p[0] + t * (pts[i].p[0] - pts[i - 1].p[0]), y: pts[i - 1].p[1] + t * (pts[i].p[1] - pts[i - 1].p[1])}); break; } }
+      return {r, p}; };
+    const me = marcas(sur, 0), mn = marcas(este, 1);
+    if (L.cuadricula) {
+      const cp = el('clipPath', {id: 'lmClip'}), r = document.createElementNS(NS, 'rect');
+      [['x', M.x], ['y', M.y], ['width', M.w], ['height', M.h]].forEach(([a, v]) => r.setAttribute(a, v)); cp.appendChild(r);
+      const g = el('g', {'clip-path': 'url(#lmClip)', stroke: '#111', 'stroke-opacity': .45, 'stroke-width': .14, fill: 'none'});
+      const esq = [[0, 0], [Wp, 0], [0, Hp], [Wp, Hp]].map(p => { const ll = mapa.unproject(p); return P.forward([ll.lng, ll.lat]); });
+      const e0 = Math.min(...esq.map(q => q[0])), e1 = Math.max(...esq.map(q => q[0])), n0 = Math.min(...esq.map(q => q[1])), n1 = Math.max(...esq.map(q => q[1]));
+      const linea = (f, a, b) => { const d = Array.from({length: 25}, (_, i) => { const ll = P.inverse(f(a + (b - a) * i / 24)), p = mapa.project(ll); return X(p.x).toFixed(2) + ',' + Y(p.y).toFixed(2); });
+        const n = document.createElementNS(NS, 'polyline'); n.setAttribute('points', d.join(' ')); g.appendChild(n); };
+      for (let v = Math.ceil(e0 / me.p) * me.p; v <= e1; v += me.p) linea(n => [v, n], n0, n1);
+      for (let v = Math.ceil(n0 / mn.p) * mn.p; v <= n1; v += mn.p) linea(e => [e, v], e0, e1);
+    }
+    me.r.forEach(o => { const x = X(o.x); if (x < M.x + 3 || x > M.x + M.w - 3) return;
+      el('line', {x1: x, y1: M.y + M.h - 1.2, x2: x, y2: M.y + M.h + 1.6, stroke: '#111', 'stroke-width': .25});
+      el('text', Object.assign({x, y: M.y + M.h + 4.3, 'text-anchor': 'middle'}, txt), miles(o.v) + ' E'); });
+    mn.r.forEach(o => { const y = Y(o.y); if (y < M.y + 3 || y > M.y + M.h - 3) return; const x = M.x + M.w + 2.6;
+      el('line', {x1: M.x + M.w - 1.2, y1: y, x2: M.x + M.w + 1.6, y2: y, stroke: '#111', 'stroke-width': .25});
+      el('text', Object.assign({x, y, 'text-anchor': 'middle', 'dominant-baseline': 'hanging', transform: `rotate(-90 ${x} ${y})`}, txt), miles(o.v) + ' N'); });
+  };
+  mapa.on('load', dibujar);
+  if (L.imprimir) mapa.once('idle', () => setTimeout(() => print(), 400));
+}
+const PAGINA_LAMINA = () => opcionesLamina.toString() + '\n' + iniciarLamina.toString() + '\n';
+
+/* --- el formulario dentro de Publicar › Mapa web --- */
+function formLamina() {
+  const l = mw.lamina, ctr = mapa.getCenter(), rec = proyRecomendada(ctr.lng, ctr.lat), sug = escalaSugerida(l);
+  const yo = (sesion && cuentasDemo().find(u => u.usuario === sesion.usuario)) || {};
+  const sel = (id, lbl, ops, v) => `<div class="field"><label for="${id}">${lbl}</label><select class="input" id="${id}">${ops.map(([k, t]) => `<option value="${esc(k)}" ${String(v) === String(k) ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>`;
+  const sw = (id, lbl, v) => `<div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="small">${lbl}</span><input class="switch" type="checkbox" role="switch" id="${id}" ${v ? 'checked' : ''} aria-label="${esc(lbl)}"></div>`;
+  const inp = (id, lbl, v, ph = '') => `<div class="field"><label for="${id}">${lbl}</label><input class="input" id="${id}" value="${esc(v)}" placeholder="${esc(ph)}"></div>`;
+  return `<div class="field"><label for="lmD">Descripción del mapa</label><textarea class="input" id="lmD" rows="3" placeholder="Qué muestra el mapa, para qué sirve y cómo se hizo">${esc(l.descripcion)}</textarea></div>
+    <div class="row" style="gap:8px">${sel('lmH', 'Hoja', Object.keys(HOJAS_LAMINA).map(k => [k, k]), l.hoja)}${sel('lmO', 'Orientación', [['horizontal', 'Horizontal'], ['vertical', 'Vertical']], l.orientacion)}</div>
+    ${sel('lmE', 'Escala', [[0, `Según la vista (1:${fmtMiles(sug)})`], ...ESCALAS_LAMINA.map(n => [n, '1:' + fmtMiles(n)])], l.escala)}
+    ${sel('lmP', 'Coordenadas locales (bordes sur y este)', [[0, `Recomendada: ${nombreProy(rec)}`], ...PROY_LAMINA.map(c => [c, nombreProy(c) + ' · EPSG:' + c + (c === rec ? ' (recomendada)' : c === 5456 || c === 5457 ? ' (cartografía 1:50 000 antigua)' : '')])], l.proyeccion)}
+    <div class="small muted" style="margin:-4px 0 8px">Los bordes norte y oeste llevan coordenadas geográficas WGS 84 en grados, minutos y segundos.</div>
+    ${sel('lmN', 'Norte', [['rosa', 'Rosa de los vientos'], ['flecha', 'Flecha del norte']], l.norte)}
+    ${sw('lmG', 'Escala gráfica', l.escalaGrafica)}${sw('lmC', 'Cuadrícula de las coordenadas locales', l.cuadricula)}
+    <div class="lbl-s" style="margin:8px 0 6px">Autoría (metadatos)</div>
+    ${inp('lmA', 'Autor', l.autor, yo.nombre || '')}${inp('lmI', 'Institución', l.institucion, yo.institucion || '')}
+    ${inp('lmF', 'Fecha', l.fecha, new Date().toLocaleDateString('es-CR', {day: 'numeric', month: 'long', year: 'numeric'}))}
+    ${inp('lmFu', 'Fuente de los datos', l.fuente, 'Por omisión, la atribución de cada capa')}`;
+}
+function enlazarLamina(el) {
+  const l = mw.lamina, cambio = () => { mw.enlace = ''; };
+  const val = {lmD: 'descripcion', lmA: 'autor', lmI: 'institucion', lmF: 'fecha', lmFu: 'fuente'};
+  Object.entries(val).forEach(([id, k]) => { const i = $('#' + id, el); if (i) i.oninput = () => { l[k] = i.value; cambio(); }; });
+  // el autor y la institución de la cuenta, si se dejan vacíos
+  ['lmA', 'lmI'].forEach(id => { const i = $('#' + id, el); if (i && !i.value && i.placeholder) { i.value = i.placeholder; l[val[id]] = i.value; } });
+  const sel = {lmH: 'hoja', lmO: 'orientacion', lmN: 'norte'};
+  Object.entries(sel).forEach(([id, k]) => { const s = $('#' + id, el); if (s) s.onchange = () => { l[k] = s.value; cambio(); pMapaWeb(el); }; });
+  $('#lmE', el).onchange = e => { l.escala = +e.target.value; cambio(); };
+  $('#lmP', el).onchange = e => { l.proyeccion = +e.target.value; cambio(); };
+  $('#lmG', el).onchange = e => { l.escalaGrafica = e.target.checked; cambio(); };
+  $('#lmC', el).onchange = e => { l.cuadricula = e.target.checked; cambio(); };
+  const pdf = $('#mwPdf', el);
+  if (pdf) pdf.onclick = () => {
+    const sp = specMapaWeb(); sp.lamina = Object.assign({}, sp.lamina, {imprimir: true});
+    const u = URL.createObjectURL(new Blob([htmlMapaWeb(sp)], {type: 'text/html'})); window.open(u, '_blank');
+    setTimeout(() => URL.revokeObjectURL(u), 120000);
+    auditar('descargas', 'imprimió un mapa formal', mw.titulo, {formato: 'PDF', escala: '1:' + sp.lamina.escala});
+  };
+}
+const codigoIframe = u => `<iframe src="${u}" width="100%" height="${mw.plantilla === 'formal' && mw.lamina.orientacion === 'vertical' ? 900 : 620}" style="border:0" loading="lazy" title="${String(mw.titulo).replace(/"/g, '&quot;')}"></iframe>`;
 function pMapaWeb(el) {
   const vis = estado.capas.filter(c => c.visible), restr = FUENTE.tipo === 'geonode' && SESION_GN.token && vis.some(c => c.modo === 'wms' && c.wms);
   const tam = vis.reduce((s, c) => s + (c.modo !== 'wms' && c.datos ? (c.datos.features || []).length : 0), 0);
   el.innerHTML = `<div class="field"><label for="mwT">Título del mapa</label><input class="input" id="mwT" value="${esc(mw.titulo)}"></div>
-    <div class="lbl-s" style="margin-bottom:6px">Plantilla</div><div class="seg" style="margin-bottom:10px" role="group" aria-label="Plantilla">${[['visor', 'Visor'], ['relato', 'Relato'], ['panel', 'Panel']].map(([k, t]) => `<button type="button" data-mwp="${k}" aria-pressed="${mw.plantilla === k}">${t}</button>`).join('')}</div>
-    <div class="small muted" style="margin:-4px 0 10px">${{visor: 'El mapa a pantalla completa con el título y la leyenda encima.', relato: 'Un texto a la izquierda que cuenta lo que muestra el mapa.', panel: 'Un panel lateral para encender y apagar cada capa.'}[mw.plantilla]}</div>
+    <div class="lbl-s" style="margin-bottom:6px">Plantilla</div><div class="seg" style="margin-bottom:10px" role="group" aria-label="Plantilla">${[['visor', 'Visor'], ['relato', 'Relato'], ['panel', 'Panel'], ['formal', 'Formal']].map(([k, t]) => `<button type="button" data-mwp="${k}" aria-pressed="${mw.plantilla === k}">${t}</button>`).join('')}</div>
+    <div class="small muted" style="margin:-4px 0 10px">${{visor: 'El mapa a pantalla completa con el título y la leyenda encima.', relato: 'Un texto a la izquierda que cuenta lo que muestra el mapa.', panel: 'Un panel lateral para encender y apagar cada capa.', formal: 'Una lámina estática para PDF o iframe: norte arriba, escala fija, coordenadas en los bordes, leyenda y autoría.'}[mw.plantilla]}</div>
     ${mw.plantilla === 'relato' ? `<div class="field"><label for="mwX">Texto (un párrafo por línea en blanco)</label><textarea class="input" id="mwX" rows="4">${esc(mw.texto)}</textarea></div>` : ''}
+    ${mw.plantilla === 'formal' ? formLamina() : ''}
     <div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="small">Incluir leyenda (${vis.length} capas)</span><input class="switch" type="checkbox" role="switch" id="mwL" ${mw.leyenda ? 'checked' : ''} aria-label="Incluir leyenda"></div>
     <div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="small">Usar los colores del tema «${esc(temaActual.nombre)}»</span><input class="switch" type="checkbox" role="switch" id="mwTe" ${mw.tema ? 'checked' : ''} aria-label="Usar el tema actual"></div>
     <div class="small muted" style="margin-bottom:10px">Se guarda la vista actual (centro, zoom, giro e inclinación) y las capas visibles: los datos vectoriales van dentro de la página (${fmt(tam)} entidades) y las capas WMS se piden al servidor al abrirla.${restr ? ' Las capas restringidas no se verán: la página no lleva su sesión.' : ''}</div>
-    <div class="row" style="flex-wrap:wrap"><button class="btn primary" type="button" id="mwVer" ${vis.length ? '' : 'disabled'}>${I('eye', 'sm')}Vista previa</button><button class="btn" type="button" id="mwEnlace" ${vis.length ? '' : 'disabled'}>${I('link', 'sm')}Copiar enlace</button><button class="btn" type="button" id="mwBajar" ${vis.length ? '' : 'disabled'}>${I('download', 'sm')}Descargar HTML</button></div>
+    <div class="row" style="flex-wrap:wrap"><button class="btn primary" type="button" id="mwVer" ${vis.length ? '' : 'disabled'}>${I('eye', 'sm')}Vista previa</button>${mw.plantilla === 'formal' ? `<button class="btn" type="button" id="mwPdf" ${vis.length ? '' : 'disabled'}>${I('download', 'sm')}PDF</button>` : ''}<button class="btn" type="button" id="mwEnlace" ${vis.length ? '' : 'disabled'}>${I('link', 'sm')}Copiar enlace</button><button class="btn" type="button" id="mwBajar" ${vis.length ? '' : 'disabled'}>${I('download', 'sm')}Descargar HTML</button></div>
     ${mw.enlace ? `<div class="field" style="margin-top:10px"><label for="mwUrl">Dirección del mapa · ${mw.enlace.length < 2048 ? mw.enlace.length + ' caracteres' : fmt(Math.round(mw.enlace.length / 1024)) + ' KB'}${mw.enlace.length > 1.5e6 ? ' (demasiado larga para algunos navegadores: descargue el HTML)' : mw.enlace.length > 8000 ? ' (larga: compártala como enlace, no por SMS)' : ''}</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwUrl" readonly value="${esc(mw.enlace)}"><a class="btn sm" href="${esc(mw.enlace)}" target="_blank" rel="noopener">${I('open', 'sm')}Abrir</a></div></div>` : ''}
     ${mw.enlace && mw.enlaceLargo && mw.enlaceLargo !== mw.enlace ? `<div class="field" style="margin-top:6px"><label for="mwUrlLargo">Enlace largo · ${mw.enlaceLargo.length < 2048 ? mw.enlaceLargo.length + ' caracteres' : fmt(Math.round(mw.enlaceLargo.length / 1024)) + ' KB'} · no depende del servidor</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwUrlLargo" readonly value="${esc(mw.enlaceLargo)}"><button class="btn sm" type="button" id="mwCopiarLargo">${I('copy', 'sm')}Copiar</button></div></div>` : ''}
+    ${mw.enlace ? `<div class="field" style="margin-top:6px"><label for="mwIf">Código para incrustar (iframe)</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwIf" readonly value="${esc(codigoIframe(mw.enlace))}"><button class="btn sm" type="button" id="mwIfC">${I('copy', 'sm')}Copiar</button></div></div>` : ''}
     <div class="small muted" style="margin-top:10px">Con sesión en el servidor del geoportal, «Copiar enlace» da una dirección corta (#m=…) guardada en su base: se abre sin cuenta mientras el servidor esté encendido. El enlace largo lleva el mapa comprimido en la propia dirección: se abre sin servidor y sin cuenta. En «Publicar › Publicado» están sus mapas con enlace corto y ahí se elige quién puede verlos. Las capas del catálogo van por su dirección y las suyas dentro del enlace. Para un mapa muy grande, descargue el HTML y publíquelo en cualquier servidor web.</div>`;
   $('#mwT', el).oninput = e => { mw.titulo = e.target.value; };
   const x = $('#mwX', el); if (x) x.oninput = () => { mw.texto = x.value; };
@@ -7495,6 +7754,8 @@ function pMapaWeb(el) {
     catch (e) { toast('No se pudo crear el enlace (' + (e.message || e) + ')', 'info'); }
   };
   { const b = $('#mwCopiarLargo', el); if (b) b.addEventListener('click', () => copyText(mw.enlaceLargo)); }
+  { const b = $('#mwIfC', el); if (b) b.onclick = () => copyText(codigoIframe(mw.enlace)); }
+  if (mw.plantilla === 'formal') enlazarLamina(el);
   ['#mwT', '#mwX'].forEach(q => { const i = $(q, el); if (i) i.addEventListener('input', () => { mw.enlace = ''; }); });
   $('#mwBajar', el).onclick = () => { download(nombreArchivo(mw.titulo) + '.html', htmlMapaWeb(), 'text/html'); auditar('datos', 'publicó un mapa web', mw.titulo, {formato: 'HTML'}); toast('Mapa web descargado', 'monitor'); };
 }
@@ -7717,6 +7978,21 @@ const USUARIOS = [
   {"usuario": "ice_editor", "nombre": "Editor ICE", "alias": "ICE", "institucion": "Instituto Costarricense de Electricidad", "sector": "Empresas públicas", "rol": "Editor", "funciones": "Genera, transmite y distribuye electricidad y presta servicios de telecomunicaciones.", "capas": ["provincias", "lineas_transmision"], "sal": "5d3866c0776d611a", "huella": "6949dc97bb68fb2975690b3a166b2e3bbfc79c537ea2a7a445dcf2bf5030df60"},
   {"usuario": "ice_lector01", "nombre": "Lector 01 ICE", "alias": "ICE", "institucion": "Instituto Costarricense de Electricidad", "sector": "Empresas públicas", "rol": "Lector", "funciones": "Genera, transmite y distribuye electricidad y presta servicios de telecomunicaciones.", "capas": ["provincias", "lineas_transmision"], "sal": "2ac65924c6b363a6", "huella": "e57bccc7baebaf5fb1e681ff7c2be8eb04c88757eca1bbdb393356678a54be12"},
   {"usuario": "ice_lector02", "nombre": "Lector 02 ICE", "alias": "ICE", "institucion": "Instituto Costarricense de Electricidad", "sector": "Empresas públicas", "rol": "Lector", "funciones": "Genera, transmite y distribuye electricidad y presta servicios de telecomunicaciones.", "capas": ["provincias", "lineas_transmision"], "sal": "5e44018ce53adae6", "huella": "2ae1fdb84099eedce4100305d7bccd17bc1af4dee3f963d57534ad1740b1abc3"},
+  {"usuario": "agricien_admin", "nombre": "Administración AGRICIEN", "alias": "AGRICIEN", "institucion": "AgriCien S.A. (Agricultura Científica)", "sector": "Empresa privada", "rol": "Administrador", "funciones": "Investigación aplicada y cartografía agroambiental: potencial eólico, sequía y El Niño, islas de calor, monitoreo de piña y origen de los suelos.", "capas": ["ac_eolico_predio", "ac_eolico_area_apta", "ac_eolico_sitios", "ac_eolico_viento100", "ac_nino_cuenca", "ac_nino_uea", "ac_nino_lluvia_anomalia", "ac_nino_lluvia_media", "ac_nino_vci", "ac_nino_suelo_rojez", "ac_calor_canton", "ac_calor_lst", "ac_calor_delta", "ac_pina_2019", "ac_pina_perdida_cobertura", "ac_trifinio_region", "ac_trifinio_zonas_manejo"], "sal": "8bc0b578a470be65", "huella": "2501c52beaae74189d24c701a550ef2855ec42af8b4859c75cc5c9f248ea2bd3"},
+  {"usuario": "agricien_publicador", "nombre": "Publicador AGRICIEN", "alias": "AGRICIEN", "institucion": "AgriCien S.A. (Agricultura Científica)", "sector": "Empresa privada", "rol": "Publicador", "funciones": "Investigación aplicada y cartografía agroambiental: potencial eólico, sequía y El Niño, islas de calor, monitoreo de piña y origen de los suelos.", "capas": ["ac_eolico_predio", "ac_eolico_area_apta", "ac_eolico_sitios", "ac_eolico_viento100", "ac_nino_cuenca", "ac_nino_uea", "ac_nino_lluvia_anomalia", "ac_nino_lluvia_media", "ac_nino_vci", "ac_nino_suelo_rojez", "ac_calor_canton", "ac_calor_lst", "ac_calor_delta", "ac_pina_2019", "ac_pina_perdida_cobertura", "ac_trifinio_region", "ac_trifinio_zonas_manejo"], "sal": "981add3440e30410", "huella": "d5b2dd8376e412df4100efb0fc663a3c053b43663b62f93bbf88a25bff4ce96c"},
+  {"usuario": "agricien_editor", "nombre": "Editor AGRICIEN", "alias": "AGRICIEN", "institucion": "AgriCien S.A. (Agricultura Científica)", "sector": "Empresa privada", "rol": "Editor", "funciones": "Investigación aplicada y cartografía agroambiental: potencial eólico, sequía y El Niño, islas de calor, monitoreo de piña y origen de los suelos.", "capas": ["ac_eolico_predio", "ac_eolico_area_apta", "ac_eolico_sitios", "ac_eolico_viento100", "ac_nino_cuenca", "ac_nino_uea", "ac_nino_lluvia_anomalia", "ac_nino_lluvia_media", "ac_nino_vci", "ac_nino_suelo_rojez", "ac_calor_canton", "ac_calor_lst", "ac_calor_delta", "ac_pina_2019", "ac_pina_perdida_cobertura", "ac_trifinio_region", "ac_trifinio_zonas_manejo"], "sal": "5cf98d50f0a31668", "huella": "1876e898805e3f5be707e8d5c1c5bbdcc33a63bf025de291e53e1b6220ade425"},
+  {"usuario": "agricien_lector01", "nombre": "Lector 01 AGRICIEN", "alias": "AGRICIEN", "institucion": "AgriCien S.A. (Agricultura Científica)", "sector": "Empresa privada", "rol": "Lector", "funciones": "Investigación aplicada y cartografía agroambiental: potencial eólico, sequía y El Niño, islas de calor, monitoreo de piña y origen de los suelos.", "capas": ["ac_eolico_predio", "ac_eolico_area_apta", "ac_eolico_sitios", "ac_eolico_viento100", "ac_nino_cuenca", "ac_nino_uea", "ac_nino_lluvia_anomalia", "ac_nino_lluvia_media", "ac_nino_vci", "ac_nino_suelo_rojez", "ac_calor_canton", "ac_calor_lst", "ac_calor_delta", "ac_pina_2019", "ac_pina_perdida_cobertura", "ac_trifinio_region", "ac_trifinio_zonas_manejo"], "sal": "300e6b6338254688", "huella": "9367035e694742b3e44df7a74f7f5a6c9aaba1357b36b7e10357b088fb76d139"},
+  {"usuario": "agricien_lector02", "nombre": "Lector 02 AGRICIEN", "alias": "AGRICIEN", "institucion": "AgriCien S.A. (Agricultura Científica)", "sector": "Empresa privada", "rol": "Lector", "funciones": "Investigación aplicada y cartografía agroambiental: potencial eólico, sequía y El Niño, islas de calor, monitoreo de piña y origen de los suelos.", "capas": ["ac_eolico_predio", "ac_eolico_area_apta", "ac_eolico_sitios", "ac_eolico_viento100", "ac_nino_cuenca", "ac_nino_uea", "ac_nino_lluvia_anomalia", "ac_nino_lluvia_media", "ac_nino_vci", "ac_nino_suelo_rojez", "ac_calor_canton", "ac_calor_lst", "ac_calor_delta", "ac_pina_2019", "ac_pina_perdida_cobertura", "ac_trifinio_region", "ac_trifinio_zonas_manejo"], "sal": "d7dee91cac672d0a", "huella": "75e701295c9edeb8bd42a3d05af5eca2433c5157107c90183832cd669a92c643"},
+  {"usuario": "giz_admin", "nombre": "Administración GIZ", "alias": "GIZ", "institucion": "Cooperación Alemana para el Desarrollo (GIZ)", "sector": "Cooperación internacional", "rol": "Administrador", "funciones": "Agencia de cooperación técnica del Gobierno de Alemania; acompaña fincas piloto de diseño hidrológico del paisaje (hipsolíneas) en Guanacaste.", "capas": ["giz_fincas", "giz_hipsolineas", "giz_cuencas", "giz_reservorios"], "sal": "0a7840f799a7d079", "huella": "c8678eda29e671936d68adb4f4397b5562536e703255781630fef4a2babd32f3"},
+  {"usuario": "giz_publicador", "nombre": "Publicador GIZ", "alias": "GIZ", "institucion": "Cooperación Alemana para el Desarrollo (GIZ)", "sector": "Cooperación internacional", "rol": "Publicador", "funciones": "Agencia de cooperación técnica del Gobierno de Alemania; acompaña fincas piloto de diseño hidrológico del paisaje (hipsolíneas) en Guanacaste.", "capas": ["giz_fincas", "giz_hipsolineas", "giz_cuencas", "giz_reservorios"], "sal": "ccab98899c39de98", "huella": "d74d30e4026a527fc1592278a739acd8a5d3a4fe529780e6d8d5f73a20d06c2a"},
+  {"usuario": "giz_editor", "nombre": "Editor GIZ", "alias": "GIZ", "institucion": "Cooperación Alemana para el Desarrollo (GIZ)", "sector": "Cooperación internacional", "rol": "Editor", "funciones": "Agencia de cooperación técnica del Gobierno de Alemania; acompaña fincas piloto de diseño hidrológico del paisaje (hipsolíneas) en Guanacaste.", "capas": ["giz_fincas", "giz_hipsolineas", "giz_cuencas", "giz_reservorios"], "sal": "9c8123fbd859f8d9", "huella": "aae1983abe88eec2edd028581ea087c3b3cc71733cf1c8b7ab636335e2ff260b"},
+  {"usuario": "giz_lector01", "nombre": "Lector 01 GIZ", "alias": "GIZ", "institucion": "Cooperación Alemana para el Desarrollo (GIZ)", "sector": "Cooperación internacional", "rol": "Lector", "funciones": "Agencia de cooperación técnica del Gobierno de Alemania; acompaña fincas piloto de diseño hidrológico del paisaje (hipsolíneas) en Guanacaste.", "capas": ["giz_fincas", "giz_hipsolineas", "giz_cuencas", "giz_reservorios"], "sal": "de12b0eb9e4d1721", "huella": "b1556cd7a73a2007568c21487813d62c9d8b80075015c88a0955d6b9493e5f28"},
+  {"usuario": "giz_lector02", "nombre": "Lector 02 GIZ", "alias": "GIZ", "institucion": "Cooperación Alemana para el Desarrollo (GIZ)", "sector": "Cooperación internacional", "rol": "Lector", "funciones": "Agencia de cooperación técnica del Gobierno de Alemania; acompaña fincas piloto de diseño hidrológico del paisaje (hipsolíneas) en Guanacaste.", "capas": ["giz_fincas", "giz_hipsolineas", "giz_cuencas", "giz_reservorios"], "sal": "a19295437d0d4b6b", "huella": "5c837e17859fe9d9cfdadc79b7e99e3e003add5aa3aa66be6a509b97971f2cd9"},
+  {"usuario": "fcgg_admin", "nombre": "Administración FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Administrador", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "3453a8ec0e12795a", "huella": "2bf5f708f5a34c0f26014654a761dd54e8183b2c42f055ef0b7f28ebf33b1201"},
+  {"usuario": "fcgg_publicador", "nombre": "Publicador FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Publicador", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "79ef5965eac37c97", "huella": "e88777c7e93d8b5744a80ebb43245d1bb18f9426547bc7762bc4dbbd44e26e12"},
+  {"usuario": "fcgg_editor", "nombre": "Editor FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Editor", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "363d731f9e51e46c", "huella": "ce4fd3b0f63d9683df9c606248f3a2ab9b6f48344faa6d783a0825c6a217fb34"},
+  {"usuario": "fcgg_lector01", "nombre": "Lector 01 FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Lector", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "27acbe0b7aea1d46", "huella": "50ac32747bc03c38ce4647cd3d292a5108b2b3164a46bf8249061ed0ca43b369"},
+  {"usuario": "fcgg_lector02", "nombre": "Lector 02 FCGG", "alias": "FCGG", "institucion": "Federación de Cámaras de Ganaderos de Guanacaste", "sector": "Organización gremial", "rol": "Lector", "funciones": "Reúne a las cámaras de ganaderos de los cantones de Guanacaste; impulsa la ganadería regenerativa y el manejo del agua y del suelo en las fincas de sus afiliados.", "capas": ["fcgg_fincas", "fcgg_hipsolineas", "fcgg_calicatas", "fcgg_suelo_ph"], "sal": "c9e7ed760fabbf8f", "huella": "0074a76d93a3008fed293afa8654eca22fe2fe4df217d9d308708e2fc980141b"},
 ];
 const FUENTE_ENTIDADES = 'Demostración: la Municipalidad de Corredores y entidades que publican servicios en el Sistema Nacional de Información Territorial (SNIT)';
 let sesion = null;
