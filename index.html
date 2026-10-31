@@ -241,6 +241,12 @@ code,.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
 .capas-activas input[type=range]{min-width:40px}
 .ca-cfg{display:flex;align-items:center;gap:6px;margin-top:8px;color:var(--muted)}
 .pb-lista{display:flex;flex-direction:column;gap:8px}
+.prj-lista{display:flex;flex-direction:column;gap:6px}
+.prj-item{padding:0;display:block}
+.prj-abrir{display:flex;align-items:flex-start;gap:8px;width:100%;padding:8px 10px;border:0;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.prj-abierto{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.prj-acciones{padding:8px 10px;display:block;margin-top:-2px}
+.linklike{border:0;background:none;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
 .cl-tabla{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
 .cl-tabla th{text-align:left;font-weight:600;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line)}
 .cl-tabla td{padding:4px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -657,6 +663,7 @@ function I(name, cls = '') { return `<svg class="i ${cls}" viewBox="0 0 24 24" a
    ===================================================================== */
 const MENUS = {
   datos:       {etiqueta:'Datos',       icono:'database'},
+  proyectos:   {etiqueta:'Proyectos',   icono:'folder'},
   mapa:        {etiqueta:'Mapa',        icono:'map'},
   vista:       {etiqueta:'Tipo de vista', icono:'orbit'},
   metricas:    {etiqueta:'Métricas',    icono:'ruler'},
@@ -685,8 +692,11 @@ const COMANDOS = {
   'ogc-externo':     {etiqueta:'Servicios OGC externos', icono:'plug', menu:'datos', panel:'ogc',
     descripcion:'Conecta servicios WMS u OGC API Features de otras instituciones (lee su GetCapabilities) y muestra sus capas junto a las propias. El servidor tiene que permitir CORS.',
     requiere:[], habilita:['capas','leyenda'], alternativas:['catalogo','postgis']},
-  'capas':           {etiqueta:'Capas activas', icono:'layers', menu:'mapa', panel:'catalogo',
-    descripcion:'Las capas que están en el mapa encabezan el Catálogo de datos: visibilidad, transparencia, orden de dibujo, simbología, acercar a su extensión y quitar.',
+  'proyectos':       {etiqueta:'Proyectos por institución', icono:'folder', menu:'proyectos', panel:'proyectos',
+    descripcion:'Elija la institución y el proyecto: al abrirlo quedan sus capas en el mapa, con su orden, opacidad, grupos y vista. Los niveles superiores deciden hasta qué rol se ve cada proyecto; el superadministrador ve todos.',
+    requiere:['catalogo'], habilita:['capas','leyenda'], alternativas:['catalogo']},
+  'capas':           {etiqueta:'Capas activas', icono:'layers', menu:'proyectos', panel:'proyectos',
+    descripcion:'Las capas que están en el mapa, debajo del proyecto abierto: visibilidad, transparencia, orden de dibujo, grupos, simbología, acercar a su extensión y quitar.',
     requiere:['catalogo'], habilita:['leyenda','atributos','mapa-web'], alternativas:['mapas-base']},
   'simbologia':      {etiqueta:'Simbología', icono:'palette', menu:'mapa', panel:'simbologia',
     descripcion:'Tematice una capa: vectorial con símbolo único, categorías o graduado (intervalos iguales, cuantiles o cortes naturales) y etiquetas; ráster con gris, pseudocolor, paleta o RGB. Importa y exporta el estilo como SLD (GeoServer, GeoNode) y QML (QGIS).',
@@ -798,8 +808,8 @@ const DISPOSICION_ORIGINAL = {
   version: 1, nombre: 'Original',
   menus: Object.keys(MENUS).map(m => ({id: m, abierto: ['datos', 'mapa', 'vista', 'metricas'].includes(m), items: Object.keys(COMANDOS).filter(c => COMANDOS[c].menu === m)})),
   barras: {mapa: ['capas', 'vista-3d', 'medir-distancia', 'medir-area', 'coordenadas'], superior: ['catalogo', 'leyenda', 'compartir']},
-  paneles: {izquierda: ['catalogo', 'buscar', 'subir', 'dem', 'postgis', 'ogc'], derecha: ['derivadas', 'simbologia', 'leyenda', 'basemaps', 'medir', 'coordenadas', 'dibujar', 'vertices', 'mapaweb', 'publicado', 'columnas', 'servicioogc', 'compartir', 'usuarios', 'permisos', 'seguridad', 'extensiones', 'extcatalogo', 'crearplugin', 'temas', 'legaladm', 'disposicion', 'sugerencias', 'legal', 'acerca'], abajo: ['atributos', 'historial', 'auditoria']},
-  abiertos: ['catalogo', 'leyenda'],
+  paneles: {izquierda: ['catalogo', 'buscar', 'subir', 'dem', 'postgis', 'ogc'], derecha: ['proyectos', 'derivadas', 'simbologia', 'leyenda', 'basemaps', 'medir', 'coordenadas', 'dibujar', 'vertices', 'mapaweb', 'publicado', 'columnas', 'servicioogc', 'compartir', 'usuarios', 'permisos', 'seguridad', 'extensiones', 'extcatalogo', 'crearplugin', 'temas', 'legaladm', 'disposicion', 'sugerencias', 'legal', 'acerca'], abajo: ['atributos', 'historial', 'auditoria']},
+  abiertos: ['catalogo', 'proyectos'],
   plegados: [],
   navVisible: true
 };
@@ -1203,6 +1213,7 @@ addEventListener('resize', () => { if (!$('#helppop').hidden && hp.ancla) posici
    ===================================================================== */
 const PANELES = {
   catalogo:   {titulo:'Catálogo de datos', icono:'library', render: pCatalogo},
+  proyectos:  {titulo:'Proyectos', icono:'folder', render: pProyectos},
   buscar:     {titulo:'Buscar lugar', icono:'pin', render: pBuscar},
   subir:      {titulo:'Subir capa', icono:'upload', render: pSubir},
   dem:        {titulo:'Elevación (DEM)', icono:'mountain', render: pDem},
@@ -1679,7 +1690,7 @@ function acercarA(fc) {
 }
 function emitirCapas() {
   registrarAgregadas();
-  ['capas', 'leyenda', 'catalogo', 'atributos', 'servicioogc', 'dem', 'derivadas'].forEach(refrescarPanel);
+  ['capas', 'leyenda', 'catalogo', 'proyectos', 'atributos', 'servicioogc', 'dem', 'derivadas'].forEach(refrescarPanel);
   $('#navCuenta').textContent = estado.capas.length;
   cfgUsuario.programar();
 }
@@ -2089,6 +2100,148 @@ function enlazarCatInstituciones(el) {
   }));
   el.querySelectorAll('[data-catvista]').forEach(b => b.addEventListener('click', () => { catInst.vista = b.dataset.catvista; pCatalogo(el); }));
 }
+// proyectos del portal (sitio.py): los mismos que siembra api/usuarios.sql; sirven sin servidor
+const PROYECTOS_BASE = [{"id":"municorredores-capas-de-la-institucion","entidad":"MUNICORREDORES","nombre":"Capas de la institución","descripcion":"14 capas de Municipalidad de Corredores.","datos":{"v":1,"capas":[{"id":"corredores_distritos","vis":true,"op":1},{"id":"corredores_barrios","vis":true,"op":1},{"id":"corredores_catastro","vis":true,"op":1},{"id":"corredores_zonas_homogeneas","vis":true,"op":1},{"id":"corredores_zona_agropecuaria","vis":true,"op":1},{"id":"corredores_red_vial","vis":true,"op":1},{"id":"corredores_cauces","vis":true,"op":1},{"id":"corredores_humedales","vis":true,"op":1},{"id":"corredores_corredor_biologico","vis":true,"op":1},{"id":"corredores_areas_publicas","vis":true,"op":1},{"id":"corredores_puntos_referencia","vis":true,"op":1},{"id":"corredores_rutas_recoleccion","vis":true,"op":1},{"id":"corredores_aseo_vias","vis":true,"op":1},{"id":"corredores_decreto_retiros","vis":true,"op":1}],"grupos":{}}},{"id":"ign-capas-de-la-institucion","entidad":"IGN","nombre":"Capas de la institución","descripcion":"10 capas de Instituto Geográfico Nacional.","datos":{"v":1,"capas":[{"id":"provincias","vis":true,"op":1},{"id":"cantones","vis":true,"op":1},{"id":"distritos","vis":true,"op":1},{"id":"snit_ortofoto_5000","vis":true,"op":1},{"id":"snit_curvas_25k","vis":true,"op":1},{"id":"snit_transporte_25k","vis":true,"op":1},{"id":"snit_cauces_25k","vis":true,"op":1},{"id":"snit_edificaciones_25k","vis":true,"op":1},{"id":"snit_edificaciones_5k","vis":true,"op":1},{"id":"snit_nombres_25k","vis":true,"op":1}],"grupos":{}}},{"id":"inec-capas-de-la-institucion","entidad":"INEC","nombre":"Capas de la institución","descripcion":"4 capas de Instituto Nacional de Estadística y Censos.","datos":{"v":1,"capas":[{"id":"provincias","vis":true,"op":1},{"id":"cantones","vis":true,"op":1},{"id":"distritos","vis":true,"op":1},{"id":"snit_inec_ugm","vis":true,"op":1}],"grupos":{}}},{"id":"ont-capas-de-la-institucion","entidad":"ONT","nombre":"Capas de la institución","descripcion":"4 capas de Órgano de Normalización Técnica (Ministerio de Hacienda).","datos":{"v":1,"capas":[{"id":"cantones","vis":true,"op":1},{"id":"corredores_zonas_homogeneas","vis":true,"op":1},{"id":"corredores_zona_agropecuaria","vis":true,"op":1},{"id":"corredores_catastro","vis":true,"op":1}],"grupos":{}}},{"id":"sinac-capas-de-la-institucion","entidad":"SINAC","nombre":"Capas de la institución","descripcion":"6 capas de Sistema Nacional de Áreas de Conservación.","datos":{"v":1,"capas":[{"id":"areas_conservacion","vis":true,"op":1},{"id":"areas_silvestres_protegidas","vis":true,"op":1},{"id":"corredores_biologicos","vis":true,"op":1},{"id":"humedales","vis":true,"op":1},{"id":"corredores_corredor_biologico","vis":true,"op":1},{"id":"corredores_humedales","vis":true,"op":1}],"grupos":{}}},{"id":"minae-capas-de-la-institucion","entidad":"MINAE","nombre":"Capas de la institución","descripcion":"4 capas de Ministerio de Ambiente y Energía.","datos":{"v":1,"capas":[{"id":"cuencas","vis":true,"op":1},{"id":"rios_principales","vis":true,"op":1},{"id":"zonas_vida","vis":true,"op":1},{"id":"lineas_transmision","vis":true,"op":1}],"grupos":{}}},{"id":"cne-capas-de-la-institucion","entidad":"CNE","nombre":"Capas de la institución","descripcion":"5 capas de Comisión Nacional de Prevención de Riesgos y Atención de Emergencias.","datos":{"v":1,"capas":[{"id":"provincias","vis":true,"op":1},{"id":"fallas_cuaternario","vis":true,"op":1},{"id":"inundaciones","vis":true,"op":1},{"id":"sismos_m5","vis":true,"op":1},{"id":"corredores_cauces","vis":true,"op":1}],"grupos":{}}},{"id":"mopt-capas-de-la-institucion","entidad":"MOPT","nombre":"Capas de la institución","descripcion":"4 capas de Ministerio de Obras Públicas y Transportes.","datos":{"v":1,"capas":[{"id":"provincias","vis":true,"op":1},{"id":"red_vial_nacional","vis":true,"op":1},{"id":"aeropuertos","vis":true,"op":1},{"id":"snit_transporte_25k","vis":true,"op":1}],"grupos":{}}},{"id":"mep-capas-de-la-institucion","entidad":"MEP","nombre":"Capas de la institución","descripcion":"3 capas de Ministerio de Educación Pública.","datos":{"v":1,"capas":[{"id":"cantones","vis":true,"op":1},{"id":"centros_educativos","vis":true,"op":1},{"id":"territorios_indigenas","vis":true,"op":1}],"grupos":{}}},{"id":"ccss-capas-de-la-institucion","entidad":"CCSS","nombre":"Capas de la institución","descripcion":"3 capas de Caja Costarricense de Seguro Social.","datos":{"v":1,"capas":[{"id":"cantones","vis":true,"op":1},{"id":"ebais","vis":true,"op":1},{"id":"centros_salud","vis":true,"op":1}],"grupos":{}}},{"id":"ice-capas-de-la-institucion","entidad":"ICE","nombre":"Capas de la institución","descripcion":"2 capas de Instituto Costarricense de Electricidad.","datos":{"v":1,"capas":[{"id":"provincias","vis":true,"op":1},{"id":"lineas_transmision","vis":true,"op":1}],"grupos":{}}},{"id":"agricien-eolico-la-olla-2026","entidad":"AGRICIEN","nombre":"Eólico La Olla 2026","descripcion":"4 capas de AgriCien S.A. (Agricultura Científica).","datos":{"v":1,"capas":[{"id":"ac_eolico_predio","vis":true,"op":1},{"id":"ac_eolico_area_apta","vis":true,"op":1},{"id":"ac_eolico_sitios","vis":true,"op":1},{"id":"ac_eolico_viento100","vis":true,"op":1}],"grupos":{}}},{"id":"agricien-el-nino-en-el-tempisque-2026","entidad":"AGRICIEN","nombre":"El Niño en el Tempisque 2026","descripcion":"6 capas de AgriCien S.A. (Agricultura Científica).","datos":{"v":1,"capas":[{"id":"ac_nino_cuenca","vis":true,"op":1},{"id":"ac_nino_uea","vis":true,"op":1},{"id":"ac_nino_lluvia_anomalia","vis":true,"op":1},{"id":"ac_nino_lluvia_media","vis":true,"op":1},{"id":"ac_nino_vci","vis":true,"op":1},{"id":"ac_nino_suelo_rojez","vis":true,"op":1}],"grupos":{}}},{"id":"agricien-islas-de-calor-liberia","entidad":"AGRICIEN","nombre":"Islas de calor (Liberia)","descripcion":"3 capas de AgriCien S.A. (Agricultura Científica).","datos":{"v":1,"capas":[{"id":"ac_calor_canton","vis":true,"op":1},{"id":"ac_calor_lst","vis":true,"op":1},{"id":"ac_calor_delta","vis":true,"op":1}],"grupos":{}}},{"id":"agricien-monitoreo-de-pina","entidad":"AGRICIEN","nombre":"Monitoreo de piña","descripcion":"2 capas de AgriCien S.A. (Agricultura Científica).","datos":{"v":1,"capas":[{"id":"ac_pina_2019","vis":true,"op":1},{"id":"ac_pina_perdida_cobertura","vis":true,"op":1}],"grupos":{}}},{"id":"agricien-suelos-del-trifinio-gt-hn-sv","entidad":"AGRICIEN","nombre":"Suelos del Trifinio (GT-HN-SV)","descripcion":"2 capas de AgriCien S.A. (Agricultura Científica).","datos":{"v":1,"capas":[{"id":"ac_trifinio_region","vis":true,"op":1},{"id":"ac_trifinio_zonas_manejo","vis":true,"op":1}],"grupos":{}}},{"id":"agricien-aguas-subterraneas","entidad":"AGRICIEN","nombre":"Aguas subterráneas","descripcion":"1 capa de AgriCien S.A. (Agricultura Científica).","datos":{"v":1,"capas":[{"id":"ac_pozos_senara","vis":true,"op":1}],"grupos":{}}},{"id":"giz-fincas-piloto-de-hipsolineas-ldi","entidad":"GIZ","nombre":"Fincas piloto de hipsolíneas (LDI)","descripcion":"4 capas de Cooperación Alemana para el Desarrollo (GIZ).","datos":{"v":1,"capas":[{"id":"giz_fincas","vis":true,"op":1},{"id":"giz_hipsolineas","vis":true,"op":1},{"id":"giz_cuencas","vis":true,"op":1},{"id":"giz_reservorios","vis":true,"op":1}],"grupos":{}}},{"id":"fcgg-federacion-de-camaras-de-ganaderos-de-guanacaste","entidad":"FCGG","nombre":"Federación de Cámaras de Ganaderos de Guanacaste","descripcion":"4 capas de Federación de Cámaras de Ganaderos de Guanacaste.","datos":{"v":1,"capas":[{"id":"fcgg_fincas","vis":true,"op":1},{"id":"fcgg_hipsolineas","vis":true,"op":1},{"id":"fcgg_calicatas","vis":true,"op":1},{"id":"fcgg_suelo_ph","vis":true,"op":1}],"grupos":{}}}];
+/* ---------- Proyectos ----------
+   Un proyecto es un conjunto de capas de una institución con su orden, visibilidad, opacidad, grupos y la vista del
+   mapa. El panel «Proyectos» pide la institución (el superadministrador elige cualquiera; los demás ven la suya) y el
+   proyecto; al abrirlo deja esas capas en el mapa y debajo están las capas activas con todas sus funciones.
+   Quién ve cada proyecto (app.proyectos, en la base del servidor): dentro de la institución, desde el nivel que diga
+   «ver» hacia arriba (Lector < Editor < Publicador < Administrador) o sólo quien lo creó; el superadministrador ve
+   todos. Un publicador o administrador de la institución (o quien lo creó) cambia sus capas y hasta qué nivel se ve,
+   sin pasar del suyo. Sin servidor se muestran los proyectos del portal (PROYECTOS_BASE) y no se guardan cambios. */
+const NIVELES_PRJ = [['Lector', 'Toda la institución (desde Lector)'], ['Editor', 'Desde Editor'], ['Publicador', 'Desde Publicador'],
+  ['Administrador', 'Sólo administradores'], ['Privado', 'Sólo quien lo creó']];
+const RANGO_PRJ = {Lector: 1, Editor: 2, Publicador: 3, Administrador: 4, Superadministrador: 5};
+const prj = {lista: null, cargando: false, error: '', servidor: false, inst: null, abierto: null, nuevo: false, renombrar: false, borrando: false};
+const describirNivel = v => (NIVELES_PRJ.find(n => n[0] === v) || [, v])[1];
+// las capas del mapa tal como las guarda un proyecto (sin las preferencias del visor ni la selección)
+function datosProyecto() { const d = cfgUsuario.datos(); return {v: 1, capas: d.capas, grupos: d.grupos, vista: d.vista}; }
+const firmaCapas = d => JSON.stringify(((d && d.capas) || []).map(c => [c.id, !!c.vis, Math.round((c.op == null ? 1 : c.op) * 100), c.gm || '']));
+async function cargarProyectos() {
+  const st = window.cfgUsuario && cfgUsuario._st, yo = yoDemo();
+  prj.cargando = true;
+  try {
+    if (!st || !st.servidor || !st.token) throw new Error(st && st.error || 'sin conexión con el servidor del geoportal');
+    prj.lista = (await pedirEnlace(st.base + 'proyectos', {token: st.token, espera: 15000})).proyectos || [];
+    prj.servidor = true; prj.error = '';
+  } catch (e) {
+    // sin servidor: los del portal de las instituciones que ve la cuenta, sólo para abrir
+    const sup = esSuperDemo();
+    prj.lista = PROYECTOS_BASE.filter(p => sup || (yo && p.entidad === yo.alias)).map(p => Object.assign({ver: 'Lector', edita: false, borra: false}, p));
+    prj.servidor = false; prj.error = e.message || String(e);
+  }
+  prj.cargando = false;
+}
+function institucionesPrj() {
+  const yo = yoDemo(), todas = institucionesDemo();
+  return esSuperDemo() ? todas : todas.filter(i => yo && i.alias === yo.alias);
+}
+async function pProyectos(el) {
+  if (!sesion) { el.innerHTML = notaNavegador('Entre con su cuenta para ver los proyectos de su institución.'); return; }
+  if (prj.lista === null) {
+    if (prj.cargando) return;
+    el.innerHTML = `<div class="small muted">Cargando proyectos…</div>`;
+    await cargarProyectos();
+  }
+  const insts = institucionesPrj(), yo = yoDemo(), sup = esSuperDemo(), rol = rolActual();
+  if (!prj.inst || !insts.some(i => i.alias === prj.inst)) prj.inst = (yo && yo.alias) || (insts.find(i => prj.lista.some(p => p.entidad === i.alias)) || insts[0] || {}).alias || null;
+  const inst = insts.find(i => i.alias === prj.inst);
+  const lista = prj.lista.filter(p => p.entidad === prj.inst);
+  const ab = prj.lista.find(p => p.id === prj.abierto) || null;
+  const cambios = ab && firmaCapas(ab.datos) !== firmaCapas(datosProyecto());
+  const niveles = NIVELES_PRJ.filter(([v]) => sup || (v === 'Privado' ? true : RANGO_PRJ[v] <= (RANGO_PRJ[rol] || 0)));
+  const fecha = t => t ? new Date(t).toLocaleString('es-CR', {dateStyle: 'medium', timeStyle: 'short'}) : '';
+  const cuenta = n => `${n} ${n === 1 ? 'capa' : 'capas'}`;
+  const selInst = sup ? `<select class="select" id="prjInst" aria-label="Institución">${insts.map(i => `<option value="${esc(i.alias)}" ${i.alias === prj.inst ? 'selected' : ''}>${esc(i.alias)} · ${esc(i.institucion)}</option>`).join('')}</select>`
+    : inst ? `<div class="row" style="gap:6px"><span class="badge" style="flex:none">${esc(inst.alias)}</span><strong style="font-size:13px">${esc(inst.institucion)}</strong></div>` : '<span class="small muted">Su cuenta no pertenece a una institución.</span>';
+  const tarjeta = p => {
+    const n = ((p.datos && p.datos.capas) || []).length, es = p.id === prj.abierto;
+    return `<li class="card prj-item${es ? ' prj-abierto' : ''}" data-prjid="${esc(p.id)}">
+      <button type="button" class="prj-abrir" data-prj="abrir" data-id="${esc(p.id)}" aria-pressed="${es}" title="${es ? 'Proyecto abierto' : 'Abrir: deja sus capas en el mapa'}">
+        <span style="color:var(--accent)">${I(es ? 'check' : 'folder', 'sm')}</span>
+        <span class="grow" style="min-width:0"><strong>${esc(p.nombre)}</strong><span class="small muted" style="display:block">${cuenta(n)} · ${esc(describirNivel(p.ver))}${p.creado_por ? ' · de ' + esc(p.creado_por) : ' · del portal'}</span></span></button>
+    </li>`;
+  };
+  const acciones = !ab ? '' : `<div class="card prj-acciones">
+      <div class="small muted">${esc(ab.descripcion || '')}${ab.por ? ` Cambiado por ${esc(ab.por)} el ${esc(fecha(ab.actualizado))}.` : ''}</div>
+      ${cambios ? `<div class="note" style="margin:6px 0">${I('info', 'sm')}<span>Las capas del mapa ya no son las del proyecto.${ab.edita && prj.servidor ? ' Guárdelas para que los demás lo abran así.' : ''}</span></div>` : ''}
+      ${prj.renombrar ? `<div class="row" style="gap:6px;margin-top:6px"><input class="input grow" id="prjNombre" value="${esc(ab.nombre)}" maxlength="120" aria-label="Nombre del proyecto"><button class="btn sm primary" type="button" data-prj="nombre">${I('check', 'sm')}Guardar</button><button class="btn sm ghost" type="button" data-prj="cancelar">Cancelar</button></div>` : ''}
+      ${ab.edita && prj.servidor ? `<div class="field" style="margin:8px 0 0"><label for="prjVer">Quién lo ve</label><select class="select" id="prjVer">${niveles.filter(([v]) => v !== 'Privado' || ab.creado_por === sesion.usuario || sup).map(([v, t]) => `<option value="${v}" ${v === ab.ver ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>`
+        : `<div class="small" style="margin-top:6px"><strong>Quién lo ve:</strong> ${esc(describirNivel(ab.ver))}</div>`}
+      <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${ab.edita && prj.servidor ? `<button class="btn sm ${cambios ? 'primary' : ''}" type="button" data-prj="guardar" ${cambios ? '' : 'disabled'}>${I('save', 'sm')}Guardar las capas</button>
+          <button class="btn sm ghost" type="button" data-prj="renombrar">${I('edit', 'sm')}Renombrar</button>` : ''}
+        ${cambios ? `<button class="btn sm ghost" type="button" data-prj="abrir" data-id="${esc(ab.id)}">${I('reset', 'sm')}Volver a abrirlo</button>` : ''}
+        <button class="btn sm ghost" type="button" data-prj="cerrar">Cerrar</button>
+        ${ab.borra && prj.servidor ? (prj.borrando ? `<button class="btn sm danger" type="button" data-prj="borrar">${I('trash', 'sm')}Sí, borrarlo</button><button class="btn sm ghost" type="button" data-prj="cancelar">No</button>`
+          : `<button class="btn sm ghost" type="button" data-prj="preborrar">${I('trash', 'sm')}Borrar</button>`) : ''}
+      </div></div>`;
+  const nuevo = !prj.servidor || !inst ? '' : prj.nuevo ? `<div class="card prj-acciones">
+      <div class="field" style="margin:0"><label for="prjNuevoNombre">Nombre del proyecto nuevo</label><input class="input" id="prjNuevoNombre" maxlength="120" placeholder="Por ejemplo: Cuenca del Tempisque"></div>
+      <div class="field" style="margin:6px 0 0"><label for="prjNuevoVer">Quién lo ve</label><select class="select" id="prjNuevoVer">${niveles.map(([v, t]) => `<option value="${v}" ${v === (rol === 'Superadministrador' ? 'Administrador' : rol) ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>
+      <div class="small muted" style="margin-top:4px">Lleva las ${estado.capas.length} capas del mapa, con su orden, visibilidad, opacidad y grupos, y la vista actual.</div>
+      <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm primary" type="button" data-prj="crear" ${estado.capas.length ? '' : 'disabled'}>${I('check', 'sm')}Crear</button><button class="btn sm ghost" type="button" data-prj="cancelar">Cancelar</button></div></div>`
+    : `<button class="btn sm ghost" type="button" data-prj="nuevo" style="margin-top:6px">${I('plus', 'sm')}Nuevo proyecto con las capas del mapa</button>`;
+  el.innerHTML = `${prj.servidor ? '' : `<div class="note" style="margin-bottom:8px">${I('info', 'sm')}<span>Sin conexión con el servidor del geoportal (${esc(prj.error)}): se muestran los proyectos del portal y no se guardan cambios.</span></div>`}
+    <div class="lbl-s" style="margin-bottom:4px">Institución</div>${selInst}
+    <div class="row" style="gap:6px;margin:12px 0 4px"><span class="lbl-s grow">Proyectos${lista.length ? ' (' + lista.length + ')' : ''}</span><button class="iconbtn" type="button" data-prj="recargar" aria-label="Actualizar la lista de proyectos" title="Actualizar">${I('reset', 'sm')}</button></div>
+    ${lista.length ? `<ul class="list prj-lista">${lista.map(p => tarjeta(p) + (p.id === prj.abierto ? acciones : '')).join('')}</ul>` : `<div class="empty small" style="padding:8px">${inst ? 'Esta institución no tiene proyectos que su cuenta pueda ver.' : ''}</div>`}
+    ${nuevo}
+    <div style="margin-top:14px">${htmlCapasActivas()}</div>`;
+  const s = $('#prjInst', el); if (s) s.addEventListener('change', () => { prj.inst = s.value; prj.nuevo = prj.renombrar = prj.borrando = false; pProyectos(el); });
+  const v = $('#prjVer', el); if (v) v.addEventListener('change', () => guardarProyecto(el, ab, {ver: v.value}, 'cambió quién ve el proyecto'));
+  el.querySelectorAll('[data-prj]').forEach(b => b.addEventListener('click', async () => {
+    const k = b.dataset.prj;
+    if (k === 'recargar') { prj.lista = null; return pProyectos(el); }
+    if (k === 'nuevo') { prj.nuevo = true; pProyectos(el); const n = $('#prjNuevoNombre', el); if (n) n.focus(); return; }
+    if (k === 'renombrar') { prj.renombrar = true; return pProyectos(el); }
+    if (k === 'preborrar') { prj.borrando = true; return pProyectos(el); }
+    if (k === 'cancelar') { prj.nuevo = prj.renombrar = prj.borrando = false; return pProyectos(el); }
+    if (k === 'cerrar') { prj.abierto = null; prj.renombrar = prj.borrando = false; return pProyectos(el); }
+    if (k === 'abrir') return abrirProyecto(el, (prj.lista || []).find(p => p.id === b.dataset.id));
+    if (k === 'guardar') return guardarProyecto(el, ab, {datos: datosProyecto()}, 'guardó las capas del proyecto');
+    if (k === 'nombre') { const n = $('#prjNombre', el).value.trim(); if (!n) return; prj.renombrar = false; return guardarProyecto(el, ab, {nombre: n}, 'renombró el proyecto'); }
+    if (k === 'crear') {
+      const n = $('#prjNuevoNombre', el).value.trim(); if (!n) { toast('Escriba el nombre del proyecto', 'info'); return; }
+      prj.nuevo = false;
+      return guardarProyecto(el, null, {entidad: prj.inst, nombre: n, ver: $('#prjNuevoVer', el).value, datos: datosProyecto(),
+        descripcion: `Creado por ${sesion.usuario}.`}, 'creó un proyecto');
+    }
+    if (k === 'borrar') {
+      const st = cfgUsuario._st; b.disabled = true;
+      try { await pedirEnlace(st.base + 'proyecto/borrar', {metodo: 'POST', token: st.token, cuerpo: {id: ab.id}});
+        auditar('datos', 'borró un proyecto', ab.nombre, {institucion: ab.entidad}); prj.lista = prj.lista.filter(p => p.id !== ab.id); prj.abierto = null; toast('Proyecto borrado', 'trash'); }
+      catch (e) { toast(e.message, 'info'); }
+      prj.borrando = false; pProyectos(el);
+    }
+  }));
+}
+async function abrirProyecto(el, p) {
+  if (!p) return;
+  prj.abierto = p.id; prj.nuevo = prj.renombrar = prj.borrando = false;
+  pProyectos(el);
+  const d = p.datos || {}, faltan = (d.capas || []).filter(c => { const m = estado.catalogo.capas.find(k => k.id === c.id); return !m || !(m.local || veCapa(m.id)); });
+  try { await cfgUsuario.aplicar(Object.assign({sel: []}, d), {vista: !!d.vista}); }
+  catch (e) { toast('No se pudo abrir el proyecto: ' + (e.message || e), 'info'); }
+  // sin vista guardada: a la extensión de sus capas
+  if (!d.vista) { const b = new maplibregl.LngLatBounds(), ir = a => typeof a[0] === 'number' ? b.extend(a) : a.forEach(ir);
+    estado.capas.forEach(c => ((c.datos && c.datos.features) || []).forEach(f => f.geometry && ir(f.geometry.coordinates)));
+    if (!b.isEmpty()) mapa.fitBounds(b, {padding: 40, maxZoom: 14, duration: 600}); }
+  cfgUsuario.programar(); emitirCapas();
+  toast(`Proyecto «${p.nombre}» abierto` + (faltan.length ? ` (${faltan.length} ${faltan.length === 1 ? 'capa no está' : 'capas no están'} a su alcance)` : ''), 'folder');
+}
+async function guardarProyecto(el, p, cambios, accion) {
+  const st = cfgUsuario._st;
+  try {
+    const j = await pedirEnlace(st.base + 'proyecto', {metodo: 'POST', token: st.token, cuerpo: Object.assign(p ? {id: p.id} : {}, cambios)});
+    const i = prj.lista.findIndex(x => x.id === j.id); if (i >= 0) prj.lista[i] = j; else prj.lista.push(j);
+    prj.abierto = j.id;
+    auditar('datos', accion, j.nombre, {institucion: j.entidad, ve: describirNivel(j.ver)});
+    toast(p ? 'Proyecto guardado' : 'Proyecto creado', 'check');
+  } catch (e) { toast(e.message, 'info'); }
+  pProyectos(el);
+}
 function pCatalogo(el) {
   const cat = estado.catalogo, q = (el.querySelector('#catQ') || {}).value || '';
   if (!cat) { el.innerHTML = '<div class="empty">Cargando catálogo…</div>'; return; }
@@ -2126,7 +2279,7 @@ function pCatalogo(el) {
     <div class="searchbox" style="max-width:none;margin-bottom:4px">${I('search', 'sm')}<label for="catQ" class="sr-only">Buscar en el catálogo</label>
       <input id="catQ" type="search" placeholder="Buscar en ${cat.capas.length} capas…" value="${esc(q)}"></div>
     ${srv && srv.q === q && srv.ids ? `<div class="small muted" style="margin:2px 0 6px">Búsqueda en el catálogo del servidor (OGC API Records, <span class="mono">q=</span>)</div>` : ''}
-    ${htmlCapasActivas()}
+    ${estado.capas.length ? `<div class="note small" style="margin:6px 0">${I('layers', 'sm')}<span>${estado.capas.length} ${estado.capas.length === 1 ? 'capa está' : 'capas están'} en el mapa: se ordenan, agrupan y guardan como proyecto en <button type="button" class="linklike" data-abrir-proyectos>Proyectos</button>.</span></div>` : ''}
     <div class="cat-grupo cat-seccion" style="display:flex;align-items:center;gap:6px">${I('library', 'sm')}<span style="flex:1">Capas del catálogo</span>${sesion && esAdminDemo() ? ['institucion', 'tema'].map(v => `<button type="button" class="btn sm ${catInst.vista === v ? '' : 'ghost'}" data-catvista="${v}" aria-pressed="${catInst.vista === v}" style="text-transform:none;letter-spacing:0">${v === 'tema' ? 'Por tema' : 'Por institución'}</button>`).join('') : ''}</div>
     ${Object.keys(grupos).length ? '' : `<div class="empty">${q ? 'Ninguna capa disponible coincide con la búsqueda.' : 'Todas las capas del catálogo están en el mapa.'}</div>`}
     ${catPorInstitucion() ? htmlCatInstituciones(Object.values(grupos).flat(), itemCat, !!q.trim())
@@ -2134,6 +2287,7 @@ function pCatalogo(el) {
   const inp = $('#catQ', el);
   inp.oninput = () => { const pos = inp.selectionStart; pCatalogo(el); const n = $('#catQ', el); n.focus(); n.setSelectionRange(pos, pos); };
   enlazarCatInstituciones(el);
+  { const b = el.querySelector('[data-abrir-proyectos]'); if (b) b.onclick = () => abrirPanel('proyectos'); }
 }
 document.addEventListener('change', e => {
   const s = e.target.closest('[data-capa]'); if (!s) return;
@@ -2718,7 +2872,7 @@ window.cfgUsuario = (() => {
     return `<div class="ca-cfg small" id="cfgEstado" title="${esc(t[2])}">${I(st.estado === 'servidor' ? 'check' : st.estado === 'sinconexion' ? 'info' : 'save', 'sm')}<span>${esc(t[1])}</span></div>`;
   }
   function pintar() { const e = document.getElementById('cfgEstado'); if (e) e.outerHTML = htmlEstado(); }
-  return {alEntrar, restaurar, programar, salir, htmlEstado, get listo() { return st.listo; }, get servidor() { return st.servidor; },
+  return {alEntrar, restaurar, programar, salir, htmlEstado, aplicar, datos, get listo() { return st.listo; }, get servidor() { return st.servidor; },
           cambioStore: k => { if (CLAVES.includes(k)) programar(); }, _st: st};
 })();
 function pLeyenda(el) {
