@@ -3,8 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Geoportal</title>
-<meta name="description" content="Geoportal de datos abiertos de Costa Rica y de la Municipalidad de Corredores.">
+<title>Geoportal Costa Rica</title>
+<meta name="description" content="Software libre y datos abiertos para el mundo: consulte, organice y publique información geográfica con las capas de cada institución y su fuente.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Geoportal Costa Rica">
+<meta property="og:title" content="Geoportal Costa Rica">
+<meta property="og:description" content="Software libre y datos abiertos para el mundo: consulte, organice y publique información geográfica con las capas de cada institución y su fuente.">
+<meta property="og:url" content="https://www.geociencias.net/">
+<meta property="og:image" content="https://www.geociencias.net/compartir.jpg">
+<meta property="og:image:width" content="948">
+<meta property="og:image:height" content="499">
+<meta property="og:image:alt" content="Mapa de la ciudad de Limón en la infografía del geoportal">
+<meta property="og:locale" content="es_CR">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#ffffff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5607,7 +5618,7 @@ function pAcerca(el) {
   capas.filter(c => !c.publicadaDemo).forEach(c => { const f = c.fuente || c.institucion || ''; if (f && !fuentes.has(f)) fuentes.set(f, c.licencia || ''); });
   const enlace = (t, u) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t)}</a>`;
   el.innerHTML = `<div class="row" style="gap:10px;align-items:center;margin-bottom:8px"><span style="color:var(--accent)">${I('map')}</span><span><strong style="font-size:15px">${esc(MARCA.nombre)}</strong><br><span class="small muted">Versión de demostración · ${esc((document.lastModified || '').slice(0, 10))}</span></span></div>
-    <p class="small" style="margin-top:0">Plataforma web libre para publicar, consultar, editar y compartir información geográfica con estándares abiertos (OGC). Este sitio trae datos abiertos de Costa Rica y de la Municipalidad de Corredores.</p>
+    <p class="small" style="margin-top:0">Plataforma web libre para publicar, consultar, editar y compartir información geográfica con estándares abiertos (OGC). Este sitio trae, como ejemplo, datos abiertos de Costa Rica.</p>
     <div class="lbl-s" style="margin:12px 0 4px">Autor</div>
     <div class="card" style="display:block;padding:10px"><strong style="font-size:13.5px">Edgar Méndez Durán</strong>
       <p class="small" style="margin:4px 0">Geógrafo (Licenciatura en Geografía, Universidad de Costa Rica) con maestría en Sistemas de Información Geográfica y Teledetección (UCR–UNA). Más de 25 años en SIG, bases de datos espaciales, inteligencia de negocios y análisis de datos, con proyectos en América, Europa, Asia, Oceanía y África. Profesor universitario de SIG, geografía física, climatología y cartografía (UCR; UNED de 1997 a 2025).</p>
