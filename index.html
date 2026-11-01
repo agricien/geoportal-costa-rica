@@ -4106,6 +4106,7 @@ function formInstitucion(i, insts) {
     <div class="row" style="gap:6px"><button class="btn primary sm" type="submit">${i ? I('check', 'sm') + 'Guardar' : I('plus', 'sm') + 'Crear la institución'}</button><button class="btn sm ghost" type="button" id="inCancel">Cancelar</button></div></form>`;
 }
 function pUsuariosNavegador(el) {
+  traerCuentasServidor(() => { if (el.isConnected) pUsuariosNavegador(el); });
   const lista = cuentasDemo(), yo = lista.find(u => u.usuario === (sesion && sesion.usuario)), admin = esAdminDemo(), sup = esSuperDemo(), ahora = Date.now();
   const insts = institucionesDemo(), miAlias = (yo && yo.alias) || '';
   // cada cuenta ve sólo su institución (o sólo a sí misma si no tiene); el superadministrador ve todas
@@ -4243,13 +4244,15 @@ function pUsuariosNavegador(el) {
       const crear = $('#inCuentas', el).checked, ids = SUFIJOS_INST.map(([x]) => a.toLowerCase() + '_' + x);
       if (crear) { const ya = ids.filter(id => cuentasDemo().some(u => u.usuario === id)); if (ya.length) return err('Ya existen las cuentas ' + ya.join(', ') + '.'); }
       $('#inErr', el).textContent = crear ? 'Creando las cuentas…' : '';
-      guardarInstitucion(a, Object.assign(datos, {creada: new Date().toISOString(), creada_por: sesion.usuario}));
       const nuevas = [];
       if (crear) for (const [x, rol, nom] of SUFIJOS_INST) {
         const id = a.toLowerCase() + '_' + x, clave = claveAleatoria();
+        try { await cuentaAlServidor({usuario: id, nombre: nom + ' ' + a, rol, entidad: a, institucion: datos.institucion, clave}); }
+        catch (x) { err('El servidor no creó «' + id + '»: ' + x.message); re(); return; }
         guardarCuenta(id, {usuario: id, nombre: nom + ' ' + a, alias: a, institucion: datos.institucion, rol, invitada: true, activo: true, pbkdf2: await nuevaHuella(clave), debeCambiar: true, creada: new Date().toISOString(), creada_por: sesion.usuario});
         nuevas.push({usuario: id, clave, rol});
       }
+      guardarInstitucion(a, Object.assign(datos, {creada: new Date().toISOString(), creada_por: sesion.usuario}));
       auditar('usuarios', 'creó la institución', a, {cuentas: nuevas.length});
       usr.editarInst = null; usr.nuevas = nuevas.length ? nuevas : null; usr.abiertas.add(a); toast(`Institución ${a} creada${nuevas.length ? ' con ' + nuevas.length + ' cuentas' : ''}`, 'users'); re();
     };
@@ -4278,6 +4281,9 @@ function pUsuariosNavegador(el) {
       // el administrador de una institución sólo crea cuentas de su institución, y nunca superadministradores
       const alias = sup2 ? $('#usEnt', el).value : (yo && yo.alias) || '', inst = institucionesDemo().find(i => i.alias === alias);
       if (!sup2 && (!alias || rol === 'Superadministrador')) return err('Sólo puede crear cuentas de su institución.');
+      try { await cuentaAlServidor({usuario: id, nombre: $('#usNom', el).value.trim(), rol, entidad: alias || undefined,
+        institucion: inst ? inst.institucion : (($('#usInst', el) || {value: ''}).value.trim()), clave}); }
+      catch (x) { return err('El servidor no creó la cuenta: ' + x.message); }
       guardarCuenta(id, Object.assign({usuario: id, nombre: $('#usNom', el).value.trim(), rol, invitada: true, activo: true, pbkdf2: await nuevaHuella(clave), debeCambiar: $('#usDebe', el).checked, creada: new Date().toISOString(), creada_por: sesion.usuario},
         inst ? {alias, institucion: inst.institucion} : {institucion: ($('#usInst', el) || {value: ''}).value.trim()}));
       auditar('usuarios', 'invitó', id, {rol, institucion: alias || ''});
@@ -4287,17 +4293,22 @@ function pUsuariosNavegador(el) {
   // no se puede dejar la plataforma sin ningún administrador activo
   const quedanSupers = sin => cuentasDemo().filter(u => u.usuario !== sin && u.rol === 'Superadministrador' && u.activo !== false).length > 0;
   const puedeTocar = u => !!u && (esSuperDemo() || (esAdminDemo() && yo && !!yo.alias && u.alias === yo.alias && u.rol !== 'Superadministrador'));
-  $$('[data-usrol]', el).forEach(s => s.onchange = () => {
+  $$('[data-usrol]', el).forEach(s => s.onchange = async () => {
     const id = s.dataset.usrol, cu = cuentasDemo().find(u => u.usuario === id), antes = cu.rol;
     usr.msg = '';
     if (!puedeTocar(cu) || (s.value === 'Superadministrador' && !esSuperDemo())) { usr.msg = 'Sólo puede cambiar cuentas de su institución.'; re(); return; }
     if (antes === 'Superadministrador' && !quedanSupers(id)) { usr.msg = 'Debe quedar al menos un superadministrador activo.'; re(); return; }
+    try { await cuentaAlServidor({usuario: id, rol: s.value}); } catch (x) { usr.msg = 'El servidor no cambió el rol: ' + x.message; re(); return; }
     guardarCuenta(id, {rol: s.value}); auditar('usuarios', 'cambió el rol', id, {antes, despues: s.value}); toast(`Rol de «${id}»: ${s.value}`, 'users'); re();
   });
-  $$('[data-usact]', el).forEach(b => b.onclick = () => {
+  $$('[data-usact]', el).forEach(b => b.onclick = async () => {
     const id = b.dataset.us, a = b.dataset.usact, u = cuentasDemo().find(x => x.usuario === id);
     usr.msg = '';
     if (!puedeTocar(u)) { usr.msg = 'Sólo puede cambiar cuentas de su institución.'; re(); return; }
+    if (['desactivar', 'activar', 'quitar'].includes(a)) {
+      try { await cuentaAlServidor({usuario: id, activo: a === 'activar'}); }
+      catch (x) { if (!(a === 'quitar' && /no está en el servidor/.test(x.message))) { usr.msg = 'El servidor no lo aceptó: ' + x.message; re(); return; } }
+    }
     if (a === 'desactivar') { if (u.rol === 'Superadministrador' && !quedanSupers(id)) { usr.msg = 'Debe quedar al menos un superadministrador activo.'; re(); return; } guardarCuenta(id, {activo: false}); auditar('usuarios', 'desactivó la cuenta', id); }
     if (a === 'activar') { guardarCuenta(id, {activo: true}); auditar('usuarios', 'activó la cuenta', id); }
     if (a === 'desbloquear') { guardarCuenta(id, {bloqueadaHasta: 0, fallos: 0}); auditar('usuarios', 'desbloqueó la cuenta', id); }
@@ -4328,6 +4339,8 @@ function pUsuariosNavegador(el) {
       // si había vencido, la nueva vale un periodo completo
       const cambios = {pbkdf2: await nuevaHuella(clave), debeCambiar: debe, fallos: 0, bloqueadaHasta: 0, claveCambiada: new Date().toISOString()};
       if (claveVencida(u)) cambios.venceClave = masDias(POLITICA.vigenciaDias);
+      try { await cuentaAlServidor({usuario: id, nombre: u.nombre || id, rol: u.rol, entidad: u.alias || undefined, institucion: u.institucion || '', clave}); }
+      catch (x) { $('#usNCErr', el).textContent = 'El servidor no la cambió: ' + x.message; return; }
       guardarCuenta(id, cambios); auditar('usuarios', 'cambió la contraseña de la cuenta', id, {pedir_cambio: debe ? 'sí' : 'no'});
       usr.clave = null; usr.nuevas = [{usuario: id, clave, rol: u.rol, cambiada: true}]; el.scrollTop = 0; toast(`Contraseña de «${id}» cambiada`, 'shield'); re();
     };
@@ -4357,6 +4370,7 @@ function pUsuariosNavegador(el) {
     if (n !== $('#usPwR', el).value) return err('Las dos contraseñas nuevas no coinciden.');
     const p = problemaClave(n, yo.usuario); if (p) return err(p);
     if (await claveCorrecta(yo, n)) return err('La contraseña nueva debe ser distinta de la actual.');
+    try { await claveAlServidor($('#usPwA', el).value, n); } catch (x) { return err('El servidor no la cambió: ' + x.message); }
     guardarCuenta(yo.usuario, Object.assign({pbkdf2: await nuevaHuella(n), debeCambiar: false, claveCambiada: new Date().toISOString()}, claveVencida(yo) ? {venceClave: masDias(POLITICA.vigenciaDias)} : {}));
     auditar('usuarios', 'cambió su contraseña', yo.usuario); toast('Contraseña cambiada', 'shield');
     fp.reset(); err(''); re();
@@ -8574,6 +8588,68 @@ document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-portada]'); if (!b) return;
   e.preventDefault(); mostrarPortada(b.dataset.portada);
 });
+/* ---------- Cuentas en el servidor del geoportal ----------
+   Las cuentas que se crean o cambian en Administrar › Usuarios y roles quedan también en la base (app.guardar_cuenta,
+   app.cambiar_clave): así entran desde cualquier navegador y tienen sesión en el servidor, que es la que da los
+   enlaces cortos, «Publicado» y los proyectos. Si el servidor no las acepta, no se guardan sólo en el navegador:
+   una cuenta que existe en un navegador y no en la base no puede publicar. Sin servidor (el sitio solo, sin API)
+   todo queda como antes, en este navegador. */
+// un servidor anterior a estas rutas responde «No existe»: entonces se sigue como antes, sólo en este navegador
+const sinRuta = e => { if (e.codigo === 404 && e.message === 'No existe') return {local: true}; throw e; };
+async function cuentaAlServidor(cuerpo) {
+  const st = cfgUsuario._st;
+  if (st && st.servidor && st.token && st.base) return pedirEnlace(st.base + 'cuenta', {metodo: 'POST', token: st.token, cuerpo}).catch(sinRuta);
+  if (!await baseEnlaces()) return {local: true};
+  throw new Error('su sesión no está conectada al servidor del geoportal: conéctese en «Publicar › Publicado» con su contraseña');
+}
+async function claveAlServidor(actual, nueva) {
+  const st = cfgUsuario._st;
+  if (st && st.servidor && st.token && st.base) return pedirEnlace(st.base + 'clave', {metodo: 'POST', token: st.token, cuerpo: {actual, nueva}}).catch(sinRuta);
+  if (!await baseEnlaces()) return {local: true};
+  throw new Error('su sesión no está conectada al servidor del geoportal: conéctese en «Publicar › Publicado» con su contraseña');
+}
+// al entrar, si la cuenta no está en este navegador o su contraseña no es la de aquí: la del servidor manda
+async function entrarServidor(usuario, clave) {
+  const b = await baseEnlaces(); if (!b) return null;
+  try {
+    const j = await pedirEnlace(b + 'entrar', {metodo: 'POST', cuerpo: {usuario, clave}});
+    try { localStorage.setItem('cr.cfg.token.' + j.usuario, JSON.stringify(j.token)); } catch (e) {}
+    return j;
+  } catch (e) { return null; }
+}
+async function cuentaDesdeServidor(j, clave) {
+  const alias = j.entidad && institucionesDemo().some(i => i.alias === j.entidad) ? j.entidad : undefined;
+  guardarCuenta(j.usuario, {usuario: j.usuario, nombre: j.nombre || j.usuario, rol: j.rol || 'Lector', alias, institucion: j.institucion || undefined,
+    activo: true, invitada: !USUARIOS.some(u => u.usuario === j.usuario), pbkdf2: await nuevaHuella(clave), fallos: 0, bloqueadaHasta: 0, debeCambiar: false});
+  return cuentasDemo().find(u => u.usuario === j.usuario);
+}
+// «Copiar enlace»: con el servidor a mano y sin sesión en él, primero se pide la contraseña (el enlace largo queda
+// sólo para cuando el servidor no responde, o si la persona lo elige)
+async function listoParaCorto() {
+  const st = cfgUsuario._st;
+  if (st && st.servidor && st.token && st.base) return true;
+  return !await baseEnlaces();
+}
+// «Usuarios y roles»: las cuentas creadas desde otro navegador están en el servidor y no en este; se traen una vez
+// por sesión (sin contraseña local: al entrar con ellas manda la del servidor)
+let cuentasTraidas = null;
+async function traerCuentasServidor(listo) {
+  const st = cfgUsuario._st;
+  if (!(st && st.servidor && st.token && st.base) || !esAdminDemo() || cuentasTraidas === st.token) return;
+  cuentasTraidas = st.token;
+  let j; try { j = await pedirEnlace(st.base + 'cuentas', {token: st.token}); } catch (e) { return; }
+  const locales = new Map(cuentasDemo().map(u => [u.usuario, u])), alias = new Set(institucionesDemo().map(i => i.alias));
+  let cambio = false;
+  (j.cuentas || []).forEach(c => {
+    const u = locales.get(c.usuario), act = c.activo !== false;
+    if (!u) {
+      guardarCuenta(c.usuario, {usuario: c.usuario, nombre: c.nombre || c.usuario, rol: c.rol || 'Lector', alias: alias.has(c.entidad) ? c.entidad : undefined,
+        institucion: c.institucion || undefined, activo: act, invitada: true});
+      cambio = true;
+    } else if (u.rol !== c.rol || (u.activo !== false) !== act) { guardarCuenta(c.usuario, {rol: c.rol, activo: act}); cambio = true; }
+  });
+  if (cambio && listo) listo();
+}
 function pMapaWeb(el) {
   const vis = estado.capas.filter(c => c.visible), restr = FUENTE.tipo === 'geonode' && SESION_GN.token && vis.some(c => c.modo === 'wms' && c.wms);
   const tam = vis.reduce((s, c) => s + (c.modo !== 'wms' && c.datos ? (c.datos.features || []).length : 0), 0);
@@ -8587,6 +8663,7 @@ function pMapaWeb(el) {
     <div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="small">Usar los colores del tema «${esc(temaActual.nombre)}»</span><input class="switch" type="checkbox" role="switch" id="mwTe" ${mw.tema ? 'checked' : ''} aria-label="Usar el tema actual"></div>
     <div class="small muted" style="margin-bottom:10px">Se guarda la vista actual (centro, zoom, giro e inclinación) y las capas visibles: los datos vectoriales van dentro de la página (${fmt(tam)} entidades) y las capas WMS se piden al servidor al abrirla.${restr ? ' Las capas restringidas no se verán: la página no lleva su sesión.' : ''}</div>
     <div class="row" style="flex-wrap:wrap"><button class="btn primary" type="button" id="mwVer" ${vis.length ? '' : 'disabled'}>${I('eye', 'sm')}Vista previa</button>${mw.plantilla === 'formal' ? `<button class="btn" type="button" id="mwPdf" ${vis.length ? '' : 'disabled'}>${I('download', 'sm')}PDF</button>` : ''}<button class="btn" type="button" id="mwEnlace" ${vis.length ? '' : 'disabled'}>${I('link', 'sm')}Copiar enlace</button><button class="btn" type="button" id="mwBajar" ${vis.length ? '' : 'disabled'}>${I('download', 'sm')}Descargar HTML</button></div>
+    ${mw.pideConexion && !mw.enlace ? `<div class="note" style="margin-top:10px">${I('link', 'sm')}<span>Para el enlace corto, que queda en «Publicar › Publicado» y se abre para quien usted elija, conéctese al servidor del geoportal con su contraseña.</span></div>${formConectar()}<button class="btn sm ghost" type="button" id="mwLargo" style="margin-top:6px">Prefiero el enlace largo</button>` : ''}
     ${mw.enlace ? `<div class="field" style="margin-top:10px"><label for="mwUrl">Dirección del mapa · ${mw.enlace.length < 2048 ? mw.enlace.length + ' caracteres' : fmt(Math.round(mw.enlace.length / 1024)) + ' KB'}${mw.enlace.length > 1.5e6 ? ' (demasiado larga para algunos navegadores: descargue el HTML)' : mw.enlace.length > 8000 ? ' (larga: compártala como enlace, no por SMS)' : ''}</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwUrl" readonly value="${esc(mw.enlace)}"><a class="btn sm" href="${esc(mw.enlace)}" target="_blank" rel="noopener">${I('open', 'sm')}Abrir</a></div></div>` : ''}
     ${mw.enlace && mw.sinCorto && mw.enlace === mw.enlaceLargo ? `<div class="note" style="margin-top:6px">${I('info', 'sm')}<span>Salió el enlace largo, que no queda en «Publicado»: ${esc(mw.sinCorto)}. Igual lo abre cualquiera que lo tenga, sin cuenta. Para el corto, conéctese con su contraseña:</span></div>${formConectar()}` : ''}
     ${mw.enlace && mw.enlaceLargo && mw.enlaceLargo !== mw.enlace ? `<div class="field" style="margin-top:6px"><label for="mwUrlLargo">Enlace largo · ${mw.enlaceLargo.length < 2048 ? mw.enlaceLargo.length + ' caracteres' : fmt(Math.round(mw.enlaceLargo.length / 1024)) + ' KB'} · no depende del servidor</label><div class="row" style="gap:6px"><input class="input mono grow" id="mwUrlLargo" readonly value="${esc(mw.enlaceLargo)}"><button class="btn sm" type="button" id="mwCopiarLargo">${I('copy', 'sm')}Copiar</button></div></div>` : ''}
@@ -8599,11 +8676,14 @@ function pMapaWeb(el) {
   $('#mwTe', el).onchange = e => { mw.tema = e.target.checked; };
   $('#mwVer', el).onclick = () => { const u = URL.createObjectURL(new Blob([htmlMapaWeb()], {type: 'text/html'})); window.open(u, '_blank', 'noopener'); setTimeout(() => URL.revokeObjectURL(u), 60000); };
   $('#mwEnlace', el).onclick = async () => {
+    if (!await listoParaCorto()) { mw.pideConexion = true; mw.enlace = ''; pMapaWeb(el); const c = $('#conClave', el); if (c) c.focus(); return; }
+    mw.pideConexion = false;
     try { mw.enlace = await enlaceMapaWeb(); copyText(mw.enlace); auditar('datos', 'publicó un mapa web', mw.titulo, {formato: 'enlace', kb: Math.round(mw.enlace.length / 1024)}); pMapaWeb(el); }
     catch (e) { toast('No se pudo crear el enlace (' + (e.message || e) + ')', 'info'); }
   };
   { const b = $('#mwCopiarLargo', el); if (b) b.addEventListener('click', () => copyText(mw.enlaceLargo)); }
-  enlazarConectar(el, async () => { mw.enlace = await enlaceMapaWeb(); copyText(mw.enlace); pMapaWeb(el); });
+  { const b = $('#mwLargo', el); if (b) b.onclick = async () => { mw.pideConexion = false; mw.enlace = await enlaceMapaWeb(); copyText(mw.enlace); pMapaWeb(el); }; }
+  enlazarConectar(el, async () => { mw.pideConexion = false; mw.enlace = await enlaceMapaWeb(); copyText(mw.enlace); pMapaWeb(el); });
   { const b = $('#mwIfC', el); if (b) b.onclick = () => copyText(codigoIframe(mw.enlace)); }
   if (mw.plantilla === 'formal') enlazarLamina(el);
   enlazarPublicacion(el);
@@ -8958,9 +9038,11 @@ async function acceso() {
       if (n !== $('#accNueva2').value) { err('Las dos contraseñas no coinciden.'); return; }
       const p = problemaClave(n, u.usuario); if (p) { err(p); return; }
       if (n === cambio.clave || await claveCorrecta(u, n)) { err('La contraseña nueva debe ser distinta de la actual.'); return; }
+      { const j = await entrarServidor(u.usuario, cambio.clave), b = j && await baseEnlaces();
+        if (j) try { await pedirEnlace(b + 'clave', {metodo: 'POST', token: j.token, cuerpo: {actual: cambio.clave, nueva: n}}); } catch (x) { err('El servidor no la cambió: ' + x.message); return; } }
       guardarCuenta(u.usuario, Object.assign({pbkdf2: await nuevaHuella(n), debeCambiar: false, claveCambiada: new Date().toISOString()}, claveVencida(u) ? {venceClave: masDias(POLITICA.vigenciaDias)} : {}));
       auditar('usuarios', 'cambió su contraseña', u.usuario, 'al entrar', u.usuario); cambio = null;
-      $('#accNueva').value = $('#accNueva2').value = ''; $('#accClave').value = '';
+      $('#accNueva').value = $('#accNueva2').value = ''; $('#accClave').value = n;
       completar(cuentasDemo().find(x => x.usuario === u.usuario));
       return;
     }
@@ -8981,10 +9063,14 @@ async function acceso() {
     }
     // «José» escribe la cuenta jose; los espacios que se cuelan al copiar la contraseña no cuentan
     const id = $('#accUsuario').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''), clave0 = $('#accClave').value;
-    const u = cuentasDemo().find(x => x.usuario === id), limpiar = () => { $('#accClave').value = ''; $('#accClave').focus(); };
+    let u = cuentasDemo().find(x => x.usuario === id); const limpiar = () => { $('#accClave').value = ''; $('#accClave').focus(); };
     const clave = u && clave0 !== clave0.trim() && !await claveCorrecta(u, clave0) ? clave0.trim() : clave0;
     if (u && u.bloqueadaHasta > Date.now()) { auditar('sesion', 'intento con la cuenta bloqueada', 'Geoportal', '', id); err(`Cuenta bloqueada por ${POLITICA.intentos} intentos fallidos hasta las ${hora(u.bloqueadaHasta)}. Un administrador puede desbloquearla.`); limpiar(); return; }
     if (!u || !await claveCorrecta(u, clave)) {
+      const j = await entrarServidor(id, clave0.trim());
+      if (j) { u = await cuentaDesdeServidor(j, clave0.trim()); $('#accClave').value = clave0.trim(); }
+    }
+    if (!u || !await claveCorrecta(u, clave0.trim()) && !await claveCorrecta(u, clave)) {
       if (u && fallo(u, 'falló la contraseña')) err(`Demasiados intentos: la cuenta queda bloqueada ${POLITICA.bloqueoMin} min.`);
       else { if (!u) auditar('sesion', 'falló la contraseña', 'Geoportal', 'usuario desconocido', id); err('Usuario o contraseña incorrectos.'); }
       limpiar(); return;
